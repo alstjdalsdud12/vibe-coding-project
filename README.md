@@ -42,22 +42,30 @@ npm run dev
 
 ```
 vibe-coding-project/
-├── backend/               # API 서버 (Node.js + Express)
+├── backend/                      # API 서버 (Node.js + Express)
 │   ├── src/
-│   │   ├── routes/        # API 라우트
-│   │   ├── services/      # Claude 서비스, Firebase 서비스
-│   │   └── middleware/    # 에러 핸들링
-│   └── .env.example
-├── game/                  # Unity 2D 게임 프로젝트
-│   └── Assets/
-├── docs/                  # 프로젝트 문서
-│   ├── project-plan.md    # 7주 프로젝트 계획
-│   ├── requirements.md    # 기능 요구사항 명세
-│   ├── architecture.md    # 시스템 아키텍처 설계
-│   └── llm-wiki.md        # AI 노하우 노트
-├── AGENTS.md              # AI Agent 정의서
-├── AUTHORING.md           # 개발 가이드
-├── AUTHORING.choi.md      # AI Agent 행동 지침서
+│   │   ├── routes/
+│   │   │   └── characters.js     # 캐릭터 REST API (POST/GET/DELETE)
+│   │   ├── services/
+│   │   │   ├── claudeService.js  # Claude API 캐릭터 생성
+│   │   │   └── firebaseService.js# Firestore CRUD
+│   │   ├── middleware/
+│   │   │   └── errorHandler.js   # 전역 에러 처리
+│   │   └── app.js                # Express 서버 진입점
+│   ├── .env.example
+│   └── package.json
+├── game/                         # Unity 2D 게임 프로젝트 (예정)
+├── docs/                         # 프로젝트 문서
+│   ├── project-plan.md           # 기획서
+│   ├── wbs.md                    # WBS
+│   ├── schedule.md               # 7주 일정표
+│   ├── requirements.md           # 기능 요구사항
+│   ├── architecture.md           # 시스템 아키텍처
+│   ├── flow.md                   # 앱 실행 흐름
+│   └── llm-wiki.md               # AI 노하우 노트
+├── AGENTS.md                     # AI Agent 정의서
+├── AUTHORING.md                  # 개발 가이드
+├── AUTHORING.choi.md             # AI Agent 행동 지침서
 └── README.md
 ```
 
