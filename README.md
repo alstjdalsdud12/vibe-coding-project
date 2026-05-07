@@ -51,9 +51,13 @@ vibe-coding-project/
 ├── game/                  # Unity 2D 게임 프로젝트
 │   └── Assets/
 ├── docs/                  # 프로젝트 문서
-│   ├── project-plan.md
-│   ├── requirements.md
-│   └── architecture.md
+│   ├── project-plan.md    # 7주 프로젝트 계획
+│   ├── requirements.md    # 기능 요구사항 명세
+│   ├── architecture.md    # 시스템 아키텍처 설계
+│   └── llm-wiki.md        # AI 노하우 노트
+├── AGENTS.md              # AI Agent 정의서
+├── AUTHORING.md           # 개발 가이드
+├── AUTHORING.choi.md      # AI Agent 행동 지침서
 └── README.md
 ```
 
