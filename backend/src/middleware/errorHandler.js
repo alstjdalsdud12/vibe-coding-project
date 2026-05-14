@@ -1,5 +1,6 @@
 const errorHandler = (err, req, res, next) => {
-  console.error(err.message);
+  console.error('[ERROR]', err.message);
+  console.error('[STACK]', err.stack);
   res.status(err.status || 500).json({
     success: false,
     data: null,
