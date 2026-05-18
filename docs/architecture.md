@@ -2,30 +2,31 @@
 
 ## 전체 시스템 구성
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  모바일 클라이언트                      │
-│                  (Unity 2D)                         │
-│                                                     │
-│  [메인 메뉴] → [캐릭터 생성] → [캐릭터 상세] → [게임]  │
-└──────────┬──────────────────────────┬───────────────┘
-           │ HTTPS REST API           │ HTTPS REST API
-           │ (캐릭터 생성)             │ (목록/조회/삭제)
-┌──────────▼──────────────────────────▼───────────────┐
-│                  백엔드 서버                           │
-│              (Node.js + Express)                    │
-│                                                     │
-│  POST /api/characters   → Claude Service            │
-│  GET  /api/characters   → Firebase Service          │
-│  GET  /api/characters/:id → Firebase Service        │
-│  DELETE /api/characters/:id → Firebase Service      │
-└──────────┬──────────────────────────┬───────────────┘
-           │                          │
-┌──────────▼──────────┐   ┌──────────▼──────────┐
-│   Anthropic API     │   │  Firebase Firestore  │
-│  (Claude 생성)      │   │  (캐릭터 저장)        │
-│  claude-sonnet-4-6  │   │  컬렉션: characters  │
-└─────────────────────┘   └─────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Unity["모바일 클라이언트 (Unity 2D)"]
+        A[메인 메뉴] --> B[캐릭터 생성]
+        B --> C[캐릭터 상세]
+        C --> D[게임 씬]
+    end
+
+    subgraph Backend["백엔드 서버 (Node.js + Express)"]
+        E[POST /api/characters]
+        F[GET /api/characters]
+        G[DELETE /api/characters/:id]
+    end
+
+    subgraph External["외부 서비스"]
+        H[Anthropic API\nclaude-sonnet-4-6]
+        I[Firebase Firestore\n컬렉션: characters]
+    end
+
+    Unity -->|HTTPS REST API| Backend
+    E -->|캐릭터 생성 요청| H
+    E -->|캐릭터 저장| I
+    F -->|캐릭터 목록 조회| I
+    G -->|캐릭터 삭제| I
+    Backend -->|캐릭터 데이터 반환| Unity
 ```
 
 ---
