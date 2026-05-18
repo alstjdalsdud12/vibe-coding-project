@@ -5,8 +5,19 @@ using TMPro;
 // 모든 Manager에서 공통으로 쓰는 UI 생성 유틸리티
 public static class UIHelper
 {
+    public static void CreateCamera()
+    {
+        if (Object.FindObjectOfType<Camera>() != null) return;
+        var camGO = new GameObject("Main Camera");
+        var cam = camGO.AddComponent<Camera>();
+        cam.clearFlags = CameraClearFlags.SolidColor;
+        cam.backgroundColor = new Color(0.05f, 0.05f, 0.1f);
+        camGO.tag = "MainCamera";
+    }
+
     public static GameObject CreateCanvas(out Canvas canvas)
     {
+        CreateCamera();
         var go = new GameObject("Canvas");
         canvas = go.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
