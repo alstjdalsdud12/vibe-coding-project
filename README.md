@@ -54,18 +54,24 @@ vibe-coding-project/
 │   │   └── app.js                # Express 서버 진입점
 │   ├── .env.example
 │   └── package.json
-├── game/                         # Unity 2D 게임 프로젝트 (예정)
-├── docs/                         # 프로젝트 문서
-│   ├── project-plan.md           # 기획서
-│   ├── wbs.md                    # WBS
-│   ├── schedule.md               # 7주 일정표
-│   ├── requirements.md           # 기능 요구사항
+├── game/                         # Unity 2D 게임 프로젝트
+│   └── VibeCodingGame/           # Unity 프로젝트 폴더
+├── .planning/                    # 기획 문서 (Session 2)
+│   ├── 00-vision.md              # 비전·목표
+│   ├── 01-requirements.md        # 기능 요구사항
+│   ├── 02-wbs.md                 # WBS
+│   ├── 04-schedule.md            # 7주 일정표
+│   └── decisions/
+│       └── ADR-0001-backend-nodejs.md  # 의사결정 로그
+├── docs/                         # 기술 문서
 │   ├── architecture.md           # 시스템 아키텍처
 │   ├── flow.md                   # 앱 실행 흐름
+│   ├── setup.md                  # 개발 환경 설정
 │   └── llm-wiki.md               # AI 노하우 노트
 ├── AGENTS.md                     # AI Agent 정의서
 ├── AUTHORING.md                  # 개발 가이드
 ├── AUTHORING.choi.md             # AI Agent 행동 지침서
+├── BONUS.md                      # 가산점 트래킹
 └── README.md
 ```
 
