@@ -50,3 +50,26 @@ public class CharacterData
     public UserInputData userInput;
     public GeneratedData generated;
 }
+
+[Serializable]
+public class CharacterListItem
+{
+    public string id;
+    public string name;
+    public string weapon;
+    public string concept;
+}
+
+[Serializable]
+public class CharacterListResponse
+{
+    public bool success;
+    public CharacterListItem[] data;
+}
+
+[Serializable]
+public class CharacterResponse
+{
+    public bool success;
+    public CharacterData data;
+}

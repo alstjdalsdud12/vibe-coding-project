@@ -1,62 +1,88 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
 public class CharacterCreationManager : MonoBehaviour
 {
-    [Header("입력 필드")]
-    public TMP_InputField appearanceInput;
-    public TMP_InputField weaponInput;
-    public TMP_InputField conceptInput;
-    public TMP_InputField worldviewInput;
-
-    [Header("UI")]
-    public Button createButton;
-    public GameObject loadingPanel;
-    public TMP_Text errorText;
-
     private ApiClient _api;
+    private TMP_InputField _appearance, _weapon, _concept, _worldview;
+    private TextMeshProUGUI _errorText;
+    private GameObject _loadingPanel;
 
     private void Start()
     {
-        _api = GetComponent<ApiClient>();
-        loadingPanel.SetActive(false);
-        errorText.text = "";
+        _api = gameObject.AddComponent<ApiClient>();
+        UIHelper.CreateCanvas(out _);
+        var canvas = FindObjectOfType<Canvas>().transform;
+        BuildUI(canvas);
     }
 
-    public void OnCreateButtonClick()
+    private void BuildUI(Transform canvas)
     {
-        string appearance = appearanceInput.text.Trim();
-        string weapon = weaponInput.text.Trim();
-        string concept = conceptInput.text.Trim();
-        string worldview = worldviewInput.text.Trim();
+        var bg = UIHelper.CreatePanel(canvas, new Color(0.05f, 0.05f, 0.1f), "BG");
+        UIHelper.Stretch(bg.GetComponent<RectTransform>());
 
-        if (string.IsNullOrEmpty(appearance) || string.IsNullOrEmpty(weapon) ||
-            string.IsNullOrEmpty(concept) || string.IsNullOrEmpty(worldview))
+        UIHelper.CreateText(canvas, "캐릭터 생성", 60,
+            new Vector2(0.1f, 0.88f), new Vector2(0.9f, 0.97f));
+
+        _appearance = UIHelper.CreateInputField(canvas, "외형 (예: 검은 머리, 키 큰 여성)",
+            new Vector2(0.05f, 0.73f), new Vector2(0.95f, 0.83f));
+
+        _weapon = UIHelper.CreateInputField(canvas, "무기 (예: 지팡이)",
+            new Vector2(0.05f, 0.60f), new Vector2(0.95f, 0.70f));
+
+        _concept = UIHelper.CreateInputField(canvas, "컨셉 (예: 신중한 마법사)",
+            new Vector2(0.05f, 0.47f), new Vector2(0.95f, 0.57f));
+
+        _worldview = UIHelper.CreateInputField(canvas, "세계관 (예: 중세 마법 왕국)",
+            new Vector2(0.05f, 0.34f), new Vector2(0.95f, 0.44f));
+
+        _errorText = UIHelper.CreateText(canvas, "", 28,
+            new Vector2(0.05f, 0.27f), new Vector2(0.95f, 0.33f));
+        _errorText.color = new Color(1f, 0.4f, 0.4f);
+
+        var createBtn = UIHelper.CreateButton(canvas, "생성",
+            new Vector2(0.1f, 0.15f), new Vector2(0.9f, 0.25f));
+        createBtn.onClick.AddListener(OnCreate);
+
+        var backBtn = UIHelper.CreateButton(canvas, "뒤로",
+            new Vector2(0.1f, 0.04f), new Vector2(0.9f, 0.13f), new Color(0.3f, 0.3f, 0.35f));
+        backBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
+
+        _loadingPanel = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0.7f), "Loading");
+        UIHelper.Stretch(_loadingPanel.GetComponent<RectTransform>());
+        UIHelper.CreateText(_loadingPanel.transform, "AI가 캐릭터를 생성중...", 48,
+            new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.55f));
+        _loadingPanel.SetActive(false);
+    }
+
+    private void OnCreate()
+    {
+        string a = _appearance.text.Trim();
+        string w = _weapon.text.Trim();
+        string c = _concept.text.Trim();
+        string wv = _worldview.text.Trim();
+
+        if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(w) ||
+            string.IsNullOrEmpty(c) || string.IsNullOrEmpty(wv))
         {
-            errorText.text = "모든 항목을 입력해주세요.";
+            _errorText.text = "모든 항목을 입력해주세요.";
             return;
         }
 
-        errorText.text = "";
-        loadingPanel.SetActive(true);
-        createButton.interactable = false;
+        _errorText.text = "";
+        _loadingPanel.SetActive(true);
 
-        StartCoroutine(_api.CreateCharacter(appearance, weapon, concept, worldview, OnSuccess, OnError));
-    }
-
-    private void OnSuccess(CharacterData character)
-    {
-        loadingPanel.SetActive(false);
-        GameState.CurrentCharacter = character;
-        SceneManager.LoadScene("GameScene");
-    }
-
-    private void OnError(string message)
-    {
-        loadingPanel.SetActive(false);
-        createButton.interactable = true;
-        errorText.text = "오류: " + message;
+        StartCoroutine(_api.CreateCharacter(a, w, c, wv,
+            character =>
+            {
+                GameState.CurrentCharacter = character;
+                SceneManager.LoadScene("GameScene");
+            },
+            err =>
+            {
+                _loadingPanel.SetActive(false);
+                _errorText.text = "오류: " + err;
+            }));
     }
 }
