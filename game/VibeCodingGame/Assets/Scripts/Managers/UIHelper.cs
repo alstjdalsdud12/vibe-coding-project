@@ -92,10 +92,13 @@ public static class UIHelper
         textAreaGO.AddComponent<RectMask2D>();
         SetAnchors(textAreaRT, new Vector2(0.02f, 0.1f), new Vector2(0.98f, 0.9f));
 
+        var font = TMP_Settings.defaultFontAsset;
+
         var textGO = new GameObject("Text");
         textGO.transform.SetParent(textAreaGO.transform, false);
         var textRT = textGO.AddComponent<RectTransform>();
         var text = textGO.AddComponent<TextMeshProUGUI>();
+        if (font != null) text.font = font;
         text.fontSize = 34;
         text.color = Color.white;
         text.enableWordWrapping = false;
@@ -105,6 +108,7 @@ public static class UIHelper
         phGO.transform.SetParent(textAreaGO.transform, false);
         var phRT = phGO.AddComponent<RectTransform>();
         var ph = phGO.AddComponent<TextMeshProUGUI>();
+        if (font != null) ph.font = font;
         ph.text = placeholder;
         ph.fontSize = 34;
         ph.color = new Color(0.6f, 0.6f, 0.6f);
