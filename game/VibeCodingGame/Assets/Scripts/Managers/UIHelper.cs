@@ -86,27 +86,33 @@ public static class UIHelper
         var field = go.AddComponent<TMP_InputField>();
         SetAnchors(go.GetComponent<RectTransform>(), anchorMin, anchorMax);
 
-        var textArea = new GameObject("Text Area");
-        textArea.transform.SetParent(go.transform, false);
-        Stretch(textArea.GetComponent<RectTransform>() ?? textArea.AddComponent<RectTransform>());
+        var textAreaGO = new GameObject("Text Area");
+        textAreaGO.transform.SetParent(go.transform, false);
+        var textAreaRT = textAreaGO.AddComponent<RectTransform>();
+        textAreaGO.AddComponent<RectMask2D>();
+        SetAnchors(textAreaRT, new Vector2(0.02f, 0.1f), new Vector2(0.98f, 0.9f));
 
         var textGO = new GameObject("Text");
-        textGO.transform.SetParent(textArea.transform, false);
+        textGO.transform.SetParent(textAreaGO.transform, false);
+        var textRT = textGO.AddComponent<RectTransform>();
         var text = textGO.AddComponent<TextMeshProUGUI>();
         text.fontSize = 34;
         text.color = Color.white;
-        Stretch(textGO.GetComponent<RectTransform>());
+        text.enableWordWrapping = false;
+        Stretch(textRT);
 
         var phGO = new GameObject("Placeholder");
-        phGO.transform.SetParent(textArea.transform, false);
+        phGO.transform.SetParent(textAreaGO.transform, false);
+        var phRT = phGO.AddComponent<RectTransform>();
         var ph = phGO.AddComponent<TextMeshProUGUI>();
         ph.text = placeholder;
         ph.fontSize = 34;
         ph.color = new Color(0.6f, 0.6f, 0.6f);
         ph.fontStyle = FontStyles.Italic;
-        Stretch(phGO.GetComponent<RectTransform>());
+        ph.enableWordWrapping = false;
+        Stretch(phRT);
 
-        field.textViewport = textArea.GetComponent<RectTransform>() ?? textArea.AddComponent<RectTransform>();
+        field.textViewport = textAreaRT;
         field.textComponent = text;
         field.placeholder = ph;
         return field;
