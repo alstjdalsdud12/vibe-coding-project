@@ -58,13 +58,13 @@ public static class UIHelper
         _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
         if (_cachedFont == null) return;
 
-        // 다이나믹 모드 강제 설정 (아틀라스에 없는 글자를 자동 추가)
-        _cachedFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+        // 소스 폰트 파일 연결 (Dynamic 모드에서 새 글자 래스터라이즈에 필요)
+        var sourceFont = Resources.Load<Font>("malgun");
+        if (sourceFont != null)
+            _cachedFont.sourceFontFile = sourceFont;
 
-        // 자주 쓰는 한글 자모 미리 추가 (조합 중 글자 표시용)
-        var jamo = new System.Text.StringBuilder();
-        for (int i = 0x3131; i <= 0x3163; i++) jamo.Append((char)i); // ㄱ~ㅣ
-        _cachedFont.TryAddCharacters(jamo.ToString());
+        // Dynamic 모드로 설정 (아틀라스에 없는 글자를 자동 추가)
+        _cachedFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
     }
 
     public static TextMeshProUGUI CreateText(Transform parent, string text, float fontSize,
