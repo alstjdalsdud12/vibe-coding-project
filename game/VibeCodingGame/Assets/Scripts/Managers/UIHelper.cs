@@ -126,7 +126,7 @@ public static class UIHelper
         field.textViewport = textAreaRT;
         field.textComponent = text;
         field.placeholder = ph;
-        field.onValueChanged.AddListener(_ => text.ForceMeshUpdate());
+        KoreanInputRefresher.Attach(go, field);
         return field;
     }
 
@@ -142,5 +142,21 @@ public static class UIHelper
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
         rt.offsetMin = rt.offsetMax = Vector2.zero;
+    }
+
+    private class KoreanInputRefresher : MonoBehaviour
+    {
+        private TMP_InputField _field;
+
+        public static void Attach(GameObject go, TMP_InputField field)
+        {
+            go.AddComponent<KoreanInputRefresher>()._field = field;
+        }
+
+        private void LateUpdate()
+        {
+            if (_field != null && _field.isFocused)
+                _field.textComponent.ForceMeshUpdate(true, true);
+        }
     }
 }
