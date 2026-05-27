@@ -101,15 +101,27 @@ public static class UIHelper
 
         var font = GetFont();
 
+        // TMP_InputField 내부용 (투명 - 실제 입력 처리만 담당)
         var textGO = new GameObject("Text");
         textGO.transform.SetParent(textAreaGO.transform, false);
         var textRT = textGO.AddComponent<RectTransform>();
         var text = textGO.AddComponent<TextMeshProUGUI>();
         if (font != null) text.font = font;
         text.fontSize = 34;
-        text.color = Color.white;
+        text.color = new Color(1, 1, 1, 0); // 투명
         text.enableWordWrapping = false;
         Stretch(textRT);
+
+        // 실제 화면에 보이는 텍스트 (한글 IME 버그 우회)
+        var displayGO = new GameObject("Display");
+        displayGO.transform.SetParent(textAreaGO.transform, false);
+        var displayRT = displayGO.AddComponent<RectTransform>();
+        var displayText = displayGO.AddComponent<TextMeshProUGUI>();
+        if (font != null) displayText.font = font;
+        displayText.fontSize = 34;
+        displayText.color = Color.white;
+        displayText.enableWordWrapping = false;
+        Stretch(displayRT);
 
         var phGO = new GameObject("Placeholder");
         phGO.transform.SetParent(textAreaGO.transform, false);
@@ -126,7 +138,10 @@ public static class UIHelper
         field.textViewport = textAreaRT;
         field.textComponent = text;
         field.placeholder = ph;
-        KoreanInputRefresher.Attach(go, field);
+        field.customCaretColor = true;
+        field.caretColor = new Color(0, 0, 0, 0); // 기본 커서 숨김
+
+        KoreanInputRefresher.Attach(go, field, displayText, ph);
         return field;
     }
 
@@ -147,16 +162,38 @@ public static class UIHelper
     private class KoreanInputRefresher : MonoBehaviour
     {
         private TMP_InputField _field;
+        private TextMeshProUGUI _display;
+        private TMP_Text _placeholder;
+        private float _caretTimer;
 
-        public static void Attach(GameObject go, TMP_InputField field)
+        public static void Attach(GameObject go, TMP_InputField field, TextMeshProUGUI display, TMP_Text placeholder)
         {
-            go.AddComponent<KoreanInputRefresher>()._field = field;
+            var r = go.AddComponent<KoreanInputRefresher>();
+            r._field = field;
+            r._display = display;
+            r._placeholder = placeholder;
         }
 
-        private void LateUpdate()
+        private void Update()
         {
-            if (_field != null && _field.isFocused)
-                _field.textComponent.ForceMeshUpdate(true, true);
+            if (_field == null || _display == null) return;
+
+            bool hasText = !string.IsNullOrEmpty(_field.text);
+            if (_placeholder != null)
+                _placeholder.gameObject.SetActive(!hasText && !_field.isFocused);
+
+            if (_field.isFocused)
+            {
+                _caretTimer += Time.deltaTime;
+                bool caretOn = (int)(_caretTimer * 2) % 2 == 0;
+                string comp = Input.compositionString;
+                _display.text = _field.text + comp + (caretOn ? "|" : " ");
+            }
+            else
+            {
+                _caretTimer = 0;
+                _display.text = _field.text;
+            }
         }
     }
 }
