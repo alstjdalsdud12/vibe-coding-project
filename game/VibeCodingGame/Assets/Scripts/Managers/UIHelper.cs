@@ -5,6 +5,9 @@ using TMPro;
 // 모든 Manager에서 공통으로 쓰는 UI 생성 유틸리티
 public static class UIHelper
 {
+    private static TMP_FontAsset _cachedFont;
+    private static bool _fontReady;
+
     public static void CreateCamera()
     {
         if (Object.FindObjectOfType<Camera>() != null) return;
@@ -43,8 +46,26 @@ public static class UIHelper
         return go;
     }
 
-    private static TMPro.TMP_FontAsset GetFont()
-        => Resources.Load<TMPro.TMP_FontAsset>("malgun SDF") ?? TMP_Settings.defaultFontAsset;
+    private static TMP_FontAsset GetFont()
+    {
+        if (!_fontReady) SetupFont();
+        return _cachedFont ?? TMP_Settings.defaultFontAsset;
+    }
+
+    private static void SetupFont()
+    {
+        _fontReady = true;
+        _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
+        if (_cachedFont == null) return;
+
+        // 다이나믹 모드 강제 설정 (아틀라스에 없는 글자를 자동 추가)
+        _cachedFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+
+        // 자주 쓰는 한글 자모 미리 추가 (조합 중 글자 표시용)
+        var jamo = new System.Text.StringBuilder();
+        for (int i = 0x3131; i <= 0x3163; i++) jamo.Append((char)i); // ㄱ~ㅣ
+        _cachedFont.TryAddCharacters(jamo.ToString());
+    }
 
     public static TextMeshProUGUI CreateText(Transform parent, string text, float fontSize,
         Vector2 anchorMin, Vector2 anchorMax, TextAlignmentOptions align = TextAlignmentOptions.Center)
@@ -108,11 +129,11 @@ public static class UIHelper
         var text = textGO.AddComponent<TextMeshProUGUI>();
         if (font != null) text.font = font;
         text.fontSize = 34;
-        text.color = new Color(1, 1, 1, 0); // 투명
+        text.color = new Color(1, 1, 1, 0);
         text.enableWordWrapping = false;
         Stretch(textRT);
 
-        // 실제 화면에 보이는 텍스트 (한글 IME 버그 우회)
+        // 화면에 실제로 표시되는 텍스트
         var displayGO = new GameObject("Display");
         displayGO.transform.SetParent(textAreaGO.transform, false);
         var displayRT = displayGO.AddComponent<RectTransform>();
@@ -139,7 +160,7 @@ public static class UIHelper
         field.textComponent = text;
         field.placeholder = ph;
         field.customCaretColor = true;
-        field.caretColor = new Color(0, 0, 0, 0); // 기본 커서 숨김
+        field.caretColor = new Color(0, 0, 0, 0);
 
         KoreanInputRefresher.Attach(go, field, displayText, ph);
         return field;
@@ -182,18 +203,23 @@ public static class UIHelper
             if (_placeholder != null)
                 _placeholder.gameObject.SetActive(!hasText && !_field.isFocused);
 
+            string comp = Input.compositionString;
+            string fullText = _field.text + comp;
+
             if (_field.isFocused)
             {
                 _caretTimer += Time.deltaTime;
                 bool caretOn = (int)(_caretTimer * 2) % 2 == 0;
-                string comp = Input.compositionString;
-                _display.text = _field.text + comp + (caretOn ? "|" : " ");
+                _display.text = fullText + (caretOn ? "|" : " ");
             }
             else
             {
                 _caretTimer = 0;
-                _display.text = _field.text;
+                _display.text = fullText;
             }
+
+            // 아틀라스에 없는 글자를 강제로 추가하고 mesh 재빌드
+            _display.ForceMeshUpdate(false, true);
         }
     }
 }
