@@ -43,12 +43,17 @@ public static class UIHelper
         return go;
     }
 
+    private static TMPro.TMP_FontAsset GetFont()
+        => Resources.Load<TMPro.TMP_FontAsset>("malgun SDF") ?? TMP_Settings.defaultFontAsset;
+
     public static TextMeshProUGUI CreateText(Transform parent, string text, float fontSize,
         Vector2 anchorMin, Vector2 anchorMax, TextAlignmentOptions align = TextAlignmentOptions.Center)
     {
         var go = new GameObject("Text_" + text.Replace("\n", ""));
         go.transform.SetParent(parent, false);
         var tmp = go.AddComponent<TextMeshProUGUI>();
+        var font = GetFont();
+        if (font != null) tmp.font = font;
         tmp.text = text;
         tmp.fontSize = fontSize;
         tmp.alignment = align;
@@ -69,6 +74,8 @@ public static class UIHelper
         var textGO = new GameObject("Label");
         textGO.transform.SetParent(go.transform, false);
         var tmp = textGO.AddComponent<TextMeshProUGUI>();
+        var font = GetFont();
+        if (font != null) tmp.font = font;
         tmp.text = label;
         tmp.fontSize = 40;
         tmp.alignment = TextAlignmentOptions.Center;
@@ -92,7 +99,7 @@ public static class UIHelper
         textAreaGO.AddComponent<RectMask2D>();
         SetAnchors(textAreaRT, new Vector2(0.02f, 0.1f), new Vector2(0.98f, 0.9f));
 
-        var font = TMP_Settings.defaultFontAsset;
+        var font = GetFont();
 
         var textGO = new GameObject("Text");
         textGO.transform.SetParent(textAreaGO.transform, false);
