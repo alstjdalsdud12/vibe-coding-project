@@ -126,6 +126,7 @@ public static class UIHelper
         field.textViewport = textAreaRT;
         field.textComponent = text;
         field.placeholder = ph;
+        field.onValueChanged.AddListener(_ => text.ForceMeshUpdate());
         return field;
     }
 
