@@ -55,16 +55,18 @@ public static class UIHelper
     private static void SetupFont()
     {
         _fontReady = true;
-        _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
-        if (_cachedFont == null) return;
 
-        // 소스 폰트 파일 연결 (Dynamic 모드에서 새 글자 래스터라이즈에 필요)
+        // malgun.ttf로 Dynamic 폰트 에셋을 런타임에 직접 생성 (한글 전체 지원)
         var sourceFont = Resources.Load<Font>("malgun");
         if (sourceFont != null)
-            _cachedFont.sourceFontFile = sourceFont;
+        {
+            _cachedFont = TMP_FontAsset.CreateFontAsset(
+                sourceFont, 90, 9, GlyphRenderMode.SDFAA,
+                4096, 4096, AtlasPopulationMode.Dynamic, true);
+        }
 
-        // Dynamic 모드로 설정 (아틀라스에 없는 글자를 자동 추가)
-        _cachedFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+        if (_cachedFont == null)
+            _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
     }
 
     public static TextMeshProUGUI CreateText(Transform parent, string text, float fontSize,
