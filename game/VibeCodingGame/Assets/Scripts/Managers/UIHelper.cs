@@ -59,14 +59,13 @@ public static class UIHelper
         // malgun.ttf로 Dynamic 폰트 에셋을 런타임에 직접 생성 (한글 전체 지원)
         var sourceFont = Resources.Load<Font>("malgun");
         if (sourceFont != null)
-        {
-            _cachedFont = TMP_FontAsset.CreateFontAsset(
-                sourceFont, 90, 9, GlyphRenderMode.SDFAA,
-                4096, 4096, AtlasPopulationMode.Dynamic, true);
-        }
+            _cachedFont = TMP_FontAsset.CreateFontAsset(sourceFont);
 
         if (_cachedFont == null)
             _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
+
+        if (_cachedFont != null)
+            _cachedFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
     }
 
     public static TextMeshProUGUI CreateText(Transform parent, string text, float fontSize,
