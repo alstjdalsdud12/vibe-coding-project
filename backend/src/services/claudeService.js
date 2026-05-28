@@ -69,7 +69,9 @@ const generateCharacter = async (appearance, weapon, concept, worldview) => {
     ],
   });
 
-  const text = response.content[0].text;
+  let text = response.content[0].text.trim();
+  const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (match) text = match[1].trim();
   return JSON.parse(text);
 };
 
