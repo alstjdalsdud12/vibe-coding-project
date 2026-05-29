@@ -11,6 +11,7 @@ public class ApiClient : MonoBehaviour
     [Serializable]
     private class CreateRequest
     {
+        public string name;
         public string appearance;
         public string weapon;
         public string concept;
@@ -18,10 +19,10 @@ public class ApiClient : MonoBehaviour
     }
 
     public IEnumerator CreateCharacter(
-        string appearance, string weapon, string concept, string worldview,
+        string name, string appearance, string weapon, string concept, string worldview,
         Action<CharacterData> onSuccess, Action<string> onError)
     {
-        var body = new CreateRequest { appearance = appearance, weapon = weapon, concept = concept, worldview = worldview };
+        var body = new CreateRequest { name = name, appearance = appearance, weapon = weapon, concept = concept, worldview = worldview };
         string json = JsonUtility.ToJson(body);
 
         using var req = new UnityWebRequest(BASE_URL + "/characters", "POST");

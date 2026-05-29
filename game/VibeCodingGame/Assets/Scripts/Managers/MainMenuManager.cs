@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-using System.Collections;
 
 public class MainMenuManager : MonoBehaviour
 {
@@ -83,30 +82,17 @@ public class MainMenuManager : MonoBehaviour
                 _cardIndex = 0;
                 _statusText.text = items.Length == 0 ? "저장된 캐릭터가 없습니다.\n아래 버튼으로 새 캐릭터를 만드세요." : "";
                 foreach (var item in items) AddCharacterCard(item);
-                StartCoroutine(RefreshCardTexts());
             },
             err => _statusText.text = "오류: " + err));
-    }
-
-    private IEnumerator RefreshCardTexts()
-    {
-        for (int i = 0; i < 60; i++)
-        {
-            yield return null;
-            foreach (var tmp in _listContent.GetComponentsInChildren<TextMeshProUGUI>())
-                tmp.ForceMeshUpdate(false, true);
-        }
     }
 
     private void AddCharacterCard(CharacterListItem item)
     {
         _cardIndex++;
 
-        // 카드 컨테이너
         var card = new GameObject("Card_" + item.name);
         card.transform.SetParent(_listContent, false);
-        var cardImg = card.AddComponent<Image>();
-        cardImg.color = new Color(0.15f, 0.18f, 0.28f);
+        card.AddComponent<Image>().color = new Color(0.15f, 0.18f, 0.28f);
         var le = card.AddComponent<LayoutElement>();
         le.preferredWidth = 300;
         le.minWidth = 300;
@@ -118,69 +104,37 @@ public class MainMenuManager : MonoBehaviour
         string capturedId = item.id;
         btn.onClick.AddListener(() => OnCharacterSelected(capturedId));
 
-        var font = UIHelper.GetFont();
-
         // 상단 컬러 헤더 (슬롯 번호)
         var header = new GameObject("Header");
         header.transform.SetParent(card.transform, false);
         header.AddComponent<Image>().color = new Color(0.2f, 0.45f, 0.75f);
-        UIHelper.SetAnchors(header.AddComponent<RectTransform>(),
+        UIHelper.SetAnchors(header.GetComponent<RectTransform>(),
             new Vector2(0, 0.72f), new Vector2(1, 1f));
-
-        var numGO = new GameObject("Num");
-        numGO.transform.SetParent(header.transform, false);
-        var numTmp = numGO.AddComponent<TextMeshProUGUI>();
-        if (font != null) numTmp.font = font;
-        numTmp.text = $"No.{_cardIndex}";
-        numTmp.fontSize = 36;
-        numTmp.alignment = TextAlignmentOptions.Center;
-        numTmp.color = Color.white;
-        UIHelper.Stretch(numGO.GetComponent<RectTransform>());
+        UIHelper.CreateText(header.transform, $"No.{_cardIndex}", 36,
+            Vector2.zero, Vector2.one);
 
         // 캐릭터 이름
-        var nameGO = new GameObject("Name");
-        nameGO.transform.SetParent(card.transform, false);
-        var nameTmp = nameGO.AddComponent<TextMeshProUGUI>();
-        if (font != null) nameTmp.font = font;
-        nameTmp.text = item.name;
-        nameTmp.fontSize = 30;
-        nameTmp.fontStyle = FontStyles.Bold;
-        nameTmp.alignment = TextAlignmentOptions.Center;
-        nameTmp.color = Color.white;
-        nameTmp.enableWordWrapping = true;
-        UIHelper.SetAnchors(nameGO.AddComponent<RectTransform>(),
+        var nameTmp = UIHelper.CreateText(card.transform, item.name, 30,
             new Vector2(0.05f, 0.50f), new Vector2(0.95f, 0.72f));
+        nameTmp.fontStyle = FontStyles.Bold;
+        nameTmp.enableWordWrapping = true;
 
         // 구분선
         var line = new GameObject("Line");
         line.transform.SetParent(card.transform, false);
         line.AddComponent<Image>().color = new Color(1, 1, 1, 0.15f);
-        UIHelper.SetAnchors(line.AddComponent<RectTransform>(),
+        UIHelper.SetAnchors(line.GetComponent<RectTransform>(),
             new Vector2(0.1f, 0.485f), new Vector2(0.9f, 0.495f));
 
         // 무기
-        var weaponGO = new GameObject("Weapon");
-        weaponGO.transform.SetParent(card.transform, false);
-        var weaponTmp = weaponGO.AddComponent<TextMeshProUGUI>();
-        if (font != null) weaponTmp.font = font;
-        weaponTmp.text = "⚔ " + item.weapon;
-        weaponTmp.fontSize = 26;
-        weaponTmp.alignment = TextAlignmentOptions.Center;
-        weaponTmp.color = new Color(0.85f, 0.85f, 1f);
-        UIHelper.SetAnchors(weaponGO.AddComponent<RectTransform>(),
+        var weaponTmp = UIHelper.CreateText(card.transform, "[무기] " + item.weapon, 26,
             new Vector2(0.05f, 0.30f), new Vector2(0.95f, 0.48f));
+        weaponTmp.color = new Color(0.85f, 0.85f, 1f);
 
         // 컨셉
-        var conceptGO = new GameObject("Concept");
-        conceptGO.transform.SetParent(card.transform, false);
-        var conceptTmp = conceptGO.AddComponent<TextMeshProUGUI>();
-        if (font != null) conceptTmp.font = font;
-        conceptTmp.text = item.concept;
-        conceptTmp.fontSize = 24;
-        conceptTmp.alignment = TextAlignmentOptions.Center;
-        conceptTmp.color = new Color(0.7f, 0.9f, 0.7f);
-        UIHelper.SetAnchors(conceptGO.AddComponent<RectTransform>(),
+        var conceptTmp = UIHelper.CreateText(card.transform, item.concept, 24,
             new Vector2(0.05f, 0.10f), new Vector2(0.95f, 0.30f));
+        conceptTmp.color = new Color(0.7f, 0.9f, 0.7f);
     }
 
     private void OnCharacterSelected(string id)

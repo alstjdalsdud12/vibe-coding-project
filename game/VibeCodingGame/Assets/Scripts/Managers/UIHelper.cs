@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.TextCore.LowLevel;
 using TMPro;
 
 // 모든 Manager에서 공통으로 쓰는 UI 생성 유틸리티
@@ -55,21 +56,16 @@ public static class UIHelper
     private static void SetupFont()
     {
         _fontReady = true;
+        var sourceFont = Resources.Load<Font>("malgun");
+        if (sourceFont != null)
+            _cachedFont = TMP_FontAsset.CreateFontAsset(
+                sourceFont, 90, 9, GlyphRenderMode.SDFAA, 4096, 4096, AtlasPopulationMode.Dynamic);
 
-        // 4096x4096으로 미리 만들어진 malgun SDF 에셋 사용
-        _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
-
-        if (_cachedFont != null)
+        if (_cachedFont == null)
         {
-            // 리플렉션으로 source font 연결 (Dynamic 래스터라이즈에 필요)
-            var sourceFont = Resources.Load<Font>("malgun");
-            if (sourceFont != null)
-            {
-                var field = typeof(TMP_FontAsset).GetField("m_SourceFontFile",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                field?.SetValue(_cachedFont, sourceFont);
-            }
-            _cachedFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+            _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
+            if (_cachedFont != null)
+                _cachedFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
         }
     }
 

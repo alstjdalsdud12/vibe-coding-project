@@ -6,17 +6,18 @@ const { saveCharacter, getAllCharacters, getCharacterById, deleteCharacter } = r
 // 캐릭터 생성
 router.post('/', async (req, res, next) => {
   try {
-    const { appearance, weapon, concept, worldview } = req.body;
+    const { name, appearance, weapon, concept, worldview } = req.body;
 
-    if (!appearance || !weapon || !concept || !worldview) {
+    if (!name || !appearance || !weapon || !concept || !worldview) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'MISSING_FIELDS', message: '외형, 무기, 컨셉, 세계관을 모두 입력해주세요.' },
+        error: { code: 'MISSING_FIELDS', message: '이름, 외형, 무기, 컨셉, 세계관을 모두 입력해주세요.' },
       });
     }
 
     const generated = await generateCharacter(appearance, weapon, concept, worldview);
+    generated.name = name;
     const character = await saveCharacter({ appearance, weapon, concept, worldview }, generated);
 
     res.status(201).json({ success: true, data: character, error: null });

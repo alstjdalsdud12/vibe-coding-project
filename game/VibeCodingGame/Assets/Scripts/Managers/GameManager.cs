@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
@@ -9,15 +10,36 @@ public class GameManager : MonoBehaviour
     private CharacterData _player;
     private int _playerHp, _playerMp;
     private int _enemyHp, _enemyMaxHp, _enemyAtk, _enemyDef;
-    private string _enemyName, _currentLocation;
-    private int _currentWave;
-    private const int MAX_WAVE = 5;
+    private string _enemyName;
 
-    // UI 참조
-    private GameObject _locationPanel, _battlePanel, _resultPanel;
-    private Transform _locationList;
-    private TextMeshProUGUI _battleLog, _playerHpText, _playerMpText, _enemyNameText, _enemyHpText, _resultText;
+    private MapPlayerController _playerController;
+    private MonsterController _currentMonster;
+
+    // HUD
+    private TextMeshProUGUI _hudHpText, _hudMpText, _zoneNameText;
+
+    // Battle panel
+    private GameObject _battlePanel, _resultPanel;
+    private TextMeshProUGUI _battleLog, _playerHpText, _playerMpText,
+                            _enemyNameText, _enemyHpText, _resultText;
     private Button _attackBtn, _skillBtn, _fleeBtn;
+
+    private Sprite _squareSprite;
+
+    // 구역 배치 (center position, size)
+    private static readonly Vector2[] ZonePositions = {
+        new Vector2(0,  12), new Vector2(9,  30), new Vector2(-8, 48),
+        new Vector2(5,  66), new Vector2(0,  82),
+    };
+    private static readonly Vector2[] ZoneSizes = {
+        new Vector2(28, 24), new Vector2(24, 22), new Vector2(24, 22),
+        new Vector2(20, 20), new Vector2(16, 16),
+    };
+    private static readonly Color[] ZoneColors = {
+        new Color(0.12f, 0.38f, 0.22f), new Color(0.36f, 0.40f, 0.12f),
+        new Color(0.32f, 0.22f, 0.08f), new Color(0.12f, 0.12f, 0.28f),
+        new Color(0.28f, 0.04f, 0.08f),
+    };
 
     private void Start()
     {
@@ -25,203 +47,278 @@ public class GameManager : MonoBehaviour
         _player = GameState.CurrentCharacter;
         _playerHp = _player.generated.stats.hp;
         _playerMp = _player.generated.stats.mp;
+        _squareSprite = CreateSquareSprite();
 
-        UIHelper.CreateCanvas(out _);
-        var canvas = FindObjectOfType<Canvas>().transform;
-
-        var bg = UIHelper.CreatePanel(canvas, new Color(0.05f, 0.05f, 0.1f), "BG");
-        UIHelper.Stretch(bg.GetComponent<RectTransform>());
-
-        BuildLocationPanel(canvas);
-        BuildBattlePanel(canvas);
-        BuildResultPanel(canvas);
-        ShowLocationPanel();
+        SetupCamera();
+        SetupMap();
+        SetupUI();
     }
 
-    // ───── 장소 선택 패널 ─────
-    private void BuildLocationPanel(Transform canvas)
+    // ─── 카메라 ────────────────────────────────────────
+    private void SetupCamera()
     {
-        _locationPanel = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0), "LocationPanel");
-        UIHelper.Stretch(_locationPanel.GetComponent<RectTransform>());
-        var lp = _locationPanel.transform;
-
-        UIHelper.CreateText(lp, $"{_player.generated.name}\nHP {_playerHp}  MP {_playerMp}", 34,
-            new Vector2(0.05f, 0.88f), new Vector2(0.95f, 0.97f));
-
-        UIHelper.CreateText(lp, "장소를 선택하세요", 48,
-            new Vector2(0.05f, 0.80f), new Vector2(0.95f, 0.88f));
-
-        // 스크롤 리스트
-        var scrollGO = new GameObject("LocationScroll");
-        scrollGO.transform.SetParent(lp, false);
-        UIHelper.SetAnchors(scrollGO.AddComponent<RectTransform>(),
-            new Vector2(0.05f, 0.30f), new Vector2(0.95f, 0.80f));
-        scrollGO.AddComponent<Image>().color = new Color(0, 0, 0, 0);
-        var scroll = scrollGO.AddComponent<ScrollRect>();
-
-        var viewport = new GameObject("Viewport");
-        viewport.transform.SetParent(scrollGO.transform, false);
-        UIHelper.Stretch(viewport.AddComponent<RectTransform>());
-        viewport.AddComponent<Image>().color = new Color(0, 0, 0, 0);
-        viewport.AddComponent<Mask>().showMaskGraphic = false;
-        scroll.viewport = viewport.GetComponent<RectTransform>();
-
-        var content = new GameObject("Content");
-        content.transform.SetParent(viewport.transform, false);
-        var contentRT = content.AddComponent<RectTransform>();
-        contentRT.anchorMin = new Vector2(0, 1);
-        contentRT.anchorMax = new Vector2(1, 1);
-        contentRT.pivot = new Vector2(0.5f, 1);
-        var vlg = content.AddComponent<VerticalLayoutGroup>();
-        vlg.spacing = 8;
-        vlg.padding = new RectOffset(0, 0, 0, 0);
-        vlg.childForceExpandWidth = true;
-        vlg.childForceExpandHeight = false;
-        content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        scroll.content = contentRT;
-        _locationList = content.transform;
-
-        // 커스텀 장소
-        var customInput = UIHelper.CreateInputField(lp, "직접 입력 (예: 폐허 도시)",
-            new Vector2(0.05f, 0.16f), new Vector2(0.72f, 0.26f));
-        var goBtn = UIHelper.CreateButton(lp, "이동",
-            new Vector2(0.74f, 0.16f), new Vector2(0.95f, 0.26f), new Color(0.5f, 0.3f, 0.7f));
-        goBtn.onClick.AddListener(() =>
-        {
-            string loc = customInput.text.Trim();
-            if (!string.IsNullOrEmpty(loc)) StartLocation(loc);
-        });
-
-        var backBtn = UIHelper.CreateButton(lp, "메인 메뉴",
-            new Vector2(0.1f, 0.04f), new Vector2(0.9f, 0.13f), new Color(0.3f, 0.3f, 0.35f));
-        backBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
+        if (Camera.main != null) return;
+        var camGO = new GameObject("Main Camera");
+        camGO.tag = "MainCamera";
+        var cam = camGO.AddComponent<Camera>();
+        cam.orthographic = true;
+        cam.orthographicSize = 10;
+        cam.clearFlags = CameraClearFlags.SolidColor;
+        cam.backgroundColor = new Color(0.03f, 0.03f, 0.06f);
     }
 
-    private void ShowLocationPanel()
+    // ─── 맵 생성 ──────────────────────────────────────
+    private void SetupMap()
     {
-        _locationPanel.SetActive(true);
-        _battlePanel.SetActive(false);
-        _resultPanel.SetActive(false);
+        var locs = _player.generated.locations;
+        for (int i = 0; i < Mathf.Min(5, locs.Count); i++)
+            CreateZone(locs[i].name, locs[i].description, i,
+                ZonePositions[i], ZoneSizes[i], ZoneColors[i]);
 
-        foreach (Transform child in _locationList) Destroy(child.gameObject);
+        CreatePlayer(new Vector3(0, 3, 0));
+    }
 
-        foreach (var loc in _player.generated.locations)
+    private void CreateZone(string name, string desc, int index, Vector2 pos, Vector2 size, Color color)
+    {
+        // 구역 배경
+        var zoneGO = new GameObject("Zone_" + name);
+        zoneGO.transform.position = new Vector3(pos.x, pos.y, 0);
+        zoneGO.transform.localScale = new Vector3(size.x, size.y, 1);
+        var sr = zoneGO.AddComponent<SpriteRenderer>();
+        sr.sprite = _squareSprite;
+        sr.color = color;
+        sr.sortingOrder = 0;
+        var col = zoneGO.AddComponent<BoxCollider2D>();
+        col.isTrigger = true;
+        var zone = zoneGO.AddComponent<ZoneController>();
+        zone.ZoneName = name;
+        zone.ZoneDescription = desc;
+        zone.ZoneIndex = index;
+        zone.OnPlayerEnter = OnPlayerEnterZone;
+
+        // 구역 이름 라벨 (월드 스페이스 TMP)
+        var labelGO = new GameObject("Label_" + name);
+        labelGO.transform.position = new Vector3(pos.x, pos.y + size.y * 0.3f, -1);
+        var tmp = labelGO.AddComponent<TextMeshPro>();
+        tmp.font = UIHelper.GetFont();
+        tmp.text = "<b>" + name + "</b>";
+        tmp.fontSize = 3.5f;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.color = new Color(1, 1, 1, 0.85f);
+        tmp.sortingOrder = 5;
+        tmp.GetComponent<RectTransform>().sizeDelta = new Vector2(14, 5);
+        tmp.ForceMeshUpdate();
+
+        // 구역당 몬스터 2마리 생성
+        for (int m = 0; m < 2; m++)
         {
-            var card = new GameObject("Loc_" + loc.name);
-            card.transform.SetParent(_locationList, false);
-            card.AddComponent<Image>().color = new Color(0.15f, 0.15f, 0.22f);
-            var le = card.AddComponent<LayoutElement>();
-            le.preferredHeight = 110;
-            var btn = card.AddComponent<Button>();
-            string locName = loc.name;
-            btn.onClick.AddListener(() => StartLocation(locName));
-
-            var textGO = new GameObject("Label");
-            textGO.transform.SetParent(card.transform, false);
-            var tmp = textGO.AddComponent<TextMeshProUGUI>();
-            var font = UIHelper.GetFont();
-            if (font != null) tmp.font = font;
-            tmp.text = $"<b>{loc.name}</b>\n{loc.description}";
-            tmp.fontSize = 28;
-            tmp.color = Color.white;
-            tmp.alignment = TextAlignmentOptions.MidlineLeft;
-            tmp.margin = new Vector4(16, 0, 16, 0);
-            UIHelper.Stretch(textGO.GetComponent<RectTransform>());
-            tmp.ForceMeshUpdate();
+            float ox = (m == 0 ? -1 : 1) * size.x * 0.22f;
+            var a = new Vector2(pos.x + ox - 2f, pos.y - size.y * 0.12f);
+            var b = new Vector2(pos.x + ox + 2f, pos.y + size.y * 0.12f);
+            CreateMonster(name, index, a, b);
         }
     }
 
-    // ───── 전투 패널 ─────
+    private void CreateMonster(string zoneName, int zoneIndex, Vector2 patrolA, Vector2 patrolB)
+    {
+        var monGO = new GameObject("Monster_" + zoneName);
+        monGO.transform.position = new Vector3(patrolA.x, patrolA.y, 0);
+        var sr = monGO.AddComponent<SpriteRenderer>();
+        sr.sprite = _squareSprite;
+        sr.color = Color.Lerp(new Color(0.85f, 0.25f, 0.1f), new Color(0.55f, 0.0f, 0.75f), zoneIndex / 4f);
+        sr.sortingOrder = 8;
+
+        var rb = monGO.AddComponent<Rigidbody2D>();
+        rb.gravityScale = 0;
+        rb.isKinematic = true;
+        rb.freezeRotation = true;
+
+        var col = monGO.AddComponent<BoxCollider2D>();
+        col.isTrigger = true;
+        col.size = new Vector2(2.5f, 2.5f);
+
+        var mon = monGO.AddComponent<MonsterController>();
+        mon.ZoneName = zoneName;
+        mon.ZoneIndex = zoneIndex;
+        mon.OnPlayerContact = OnMonsterEncountered;
+        mon.Init(patrolA, patrolB, 1.5f + zoneIndex * 0.4f);
+    }
+
+    private void CreatePlayer(Vector3 startPos)
+    {
+        var playerGO = new GameObject("Player");
+        playerGO.tag = "Player";
+        var sr = playerGO.AddComponent<SpriteRenderer>();
+        sr.sprite = CreateCircleSprite();
+        sr.color = new Color(0.95f, 0.88f, 0.45f);
+        sr.sortingOrder = 10;
+        var rb = playerGO.AddComponent<Rigidbody2D>();
+        rb.gravityScale = 0;
+        rb.freezeRotation = true;
+        playerGO.AddComponent<CircleCollider2D>().radius = 0.5f;
+        playerGO.transform.position = startPos;
+        _playerController = playerGO.AddComponent<MapPlayerController>();
+    }
+
+    // ─── UI ───────────────────────────────────────────
+    private void SetupUI()
+    {
+        UIHelper.CreateCanvas(out _);
+        var canvas = FindObjectOfType<Canvas>().transform;
+
+        // 상단 HUD
+        var hudBG = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0.6f), "HUD");
+        UIHelper.SetAnchors(hudBG.GetComponent<RectTransform>(), new Vector2(0, 0.91f), Vector2.one);
+        _hudHpText = UIHelper.CreateText(hudBG.transform, "", 24,
+            new Vector2(0.02f, 0.05f), new Vector2(0.52f, 0.95f), TextAlignmentOptions.MidlineLeft);
+        _hudMpText = UIHelper.CreateText(hudBG.transform, "", 24,
+            new Vector2(0.52f, 0.05f), new Vector2(0.78f, 0.95f), TextAlignmentOptions.MidlineLeft);
+
+        var menuBtn = UIHelper.CreateButton(canvas, "메뉴",
+            new Vector2(0.80f, 0.92f), new Vector2(0.98f, 0.99f), new Color(0.25f, 0.25f, 0.3f));
+        menuBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
+
+        // 구역 진입 알림
+        _zoneNameText = UIHelper.CreateText(canvas, "", 36,
+            new Vector2(0.05f, 0.55f), new Vector2(0.95f, 0.65f));
+
+        BuildMinimap(canvas);
+        BuildBattlePanel(canvas);
+        BuildResultPanel(canvas);
+        _battlePanel.SetActive(false);
+        _resultPanel.SetActive(false);
+        RefreshHUD();
+    }
+
+    private void RefreshHUD()
+    {
+        _hudHpText.text = $"HP {Mathf.Max(0, _playerHp)}/{_player.generated.stats.hp}";
+        _hudMpText.text = $"MP {_playerMp}/{_player.generated.stats.mp}";
+    }
+
+    // ─── 구역 / 몬스터 이벤트 ─────────────────────────
+    private void OnPlayerEnterZone(ZoneController zone)
+    {
+        _zoneNameText.text = zone.ZoneName;
+        StartCoroutine(ClearZoneText());
+    }
+
+    private IEnumerator ClearZoneText()
+    {
+        yield return new WaitForSeconds(2.5f);
+        _zoneNameText.text = "";
+    }
+
+    private void OnMonsterEncountered(MonsterController monster)
+    {
+        if (_battlePanel.activeSelf) return;
+        _currentMonster = monster;
+        monster.SetPaused(true);
+        _playerController.SetMovementEnabled(false);
+
+        _enemyName = monster.ZoneName + "의 몬스터";
+        int idx = monster.ZoneIndex;
+        _enemyHp = _enemyMaxHp = 40 + idx * 25;
+        _enemyAtk = 8 + idx * 6;
+        _enemyDef = 2 + idx * 2;
+
+        _battleLog.text = $"[{monster.ZoneName}]\n{_enemyName} 출현!\n";
+        _battlePanel.SetActive(true);
+        RefreshBattleUI();
+        SetButtonsInteractable(true);
+    }
+
+    // ─── 미니맵 ───────────────────────────────────────
+    private void BuildMinimap(Transform canvas)
+    {
+        var worldMin  = new Vector2(-22f, -5f);
+        var worldSize = new Vector2(45f, 100f);
+
+        // 테두리
+        var border = UIHelper.CreatePanel(canvas, new Color(0.55f, 0.55f, 0.6f, 0.75f), "MinimapBorder");
+        UIHelper.SetAnchors(border.GetComponent<RectTransform>(),
+            new Vector2(0.005f, 0.645f), new Vector2(0.227f, 0.895f));
+
+        // 배경
+        var minimapPanel = UIHelper.CreatePanel(canvas, new Color(0.04f, 0.04f, 0.09f, 0.92f), "Minimap");
+        UIHelper.SetAnchors(minimapPanel.GetComponent<RectTransform>(),
+            new Vector2(0.01f, 0.65f), new Vector2(0.222f, 0.89f));
+        var mapT = minimapPanel.transform;
+
+        // 구역 표시
+        var locs = _player.generated.locations;
+        for (int i = 0; i < Mathf.Min(5, locs.Count); i++)
+        {
+            var uvCenter = new Vector2(
+                (ZonePositions[i].x - worldMin.x) / worldSize.x,
+                (ZonePositions[i].y - worldMin.y) / worldSize.y);
+            var uvSize = new Vector2(
+                ZoneSizes[i].x / worldSize.x,
+                ZoneSizes[i].y / worldSize.y);
+
+            var zoneImg = new GameObject("MZ_" + i);
+            zoneImg.transform.SetParent(mapT, false);
+            var c = ZoneColors[i];
+            zoneImg.AddComponent<UnityEngine.UI.Image>().color =
+                new Color(Mathf.Min(c.r * 2.2f, 1), Mathf.Min(c.g * 2.2f, 1), Mathf.Min(c.b * 2.2f, 1));
+            var rt = zoneImg.GetComponent<RectTransform>();
+            rt.anchorMin = uvCenter - uvSize * 0.5f;
+            rt.anchorMax = uvCenter + uvSize * 0.5f;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+        }
+
+        // 플레이어 위치 점
+        var dotGO = new GameObject("PlayerDot");
+        dotGO.transform.SetParent(mapT, false);
+        dotGO.AddComponent<UnityEngine.UI.Image>().color = new Color(1f, 0.95f, 0.25f);
+        var dotRT = dotGO.GetComponent<RectTransform>();
+        dotRT.anchorMin = dotRT.anchorMax = new Vector2(0.1f, 0.01f);
+        dotRT.sizeDelta = new Vector2(7, 7);
+        var dot = dotGO.AddComponent<MinimapDot>();
+        dot.WorldMin  = worldMin;
+        dot.WorldSize = worldSize;
+    }
+
+    // ─── 전투 패널 ────────────────────────────────────
     private void BuildBattlePanel(Transform canvas)
     {
-        _battlePanel = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0), "BattlePanel");
+        _battlePanel = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0.93f), "BattlePanel");
         UIHelper.Stretch(_battlePanel.GetComponent<RectTransform>());
         var bp = _battlePanel.transform;
 
-        _playerHpText = UIHelper.CreateText(bp, "", 30,
+        _playerHpText = UIHelper.CreateText(bp, "", 28,
             new Vector2(0.02f, 0.90f), new Vector2(0.50f, 0.97f), TextAlignmentOptions.MidlineLeft);
-        _playerMpText = UIHelper.CreateText(bp, "", 30,
-            new Vector2(0.02f, 0.84f), new Vector2(0.50f, 0.90f), TextAlignmentOptions.MidlineLeft);
-        _enemyNameText = UIHelper.CreateText(bp, "", 30,
+        _playerMpText = UIHelper.CreateText(bp, "", 28,
+            new Vector2(0.02f, 0.83f), new Vector2(0.50f, 0.90f), TextAlignmentOptions.MidlineLeft);
+        _enemyNameText = UIHelper.CreateText(bp, "", 28,
             new Vector2(0.50f, 0.90f), new Vector2(0.98f, 0.97f), TextAlignmentOptions.MidlineRight);
-        _enemyHpText = UIHelper.CreateText(bp, "", 30,
-            new Vector2(0.50f, 0.84f), new Vector2(0.98f, 0.90f), TextAlignmentOptions.MidlineRight);
+        _enemyHpText = UIHelper.CreateText(bp, "", 28,
+            new Vector2(0.50f, 0.83f), new Vector2(0.98f, 0.90f), TextAlignmentOptions.MidlineRight);
 
-        // 전투 로그
-        var logBG = UIHelper.CreatePanel(bp, new Color(0.08f, 0.08f, 0.12f), "LogBG");
+        var logBG = UIHelper.CreatePanel(bp, new Color(0.06f, 0.06f, 0.10f), "LogBG");
         UIHelper.SetAnchors(logBG.GetComponent<RectTransform>(),
-            new Vector2(0.02f, 0.25f), new Vector2(0.98f, 0.83f));
-        var scrollGO = new GameObject("LogScroll");
-        scrollGO.transform.SetParent(logBG.transform, false);
-        UIHelper.Stretch(scrollGO.AddComponent<RectTransform>());
-        var scroll = scrollGO.AddComponent<ScrollRect>();
-        scroll.horizontal = false;
-
-        var viewport = new GameObject("Viewport");
-        viewport.transform.SetParent(scrollGO.transform, false);
-        UIHelper.Stretch(viewport.AddComponent<RectTransform>());
-        viewport.AddComponent<Image>().color = new Color(0, 0, 0, 0);
-        viewport.AddComponent<Mask>().showMaskGraphic = false;
-        scroll.viewport = viewport.GetComponent<RectTransform>();
-
-        var content = new GameObject("Content");
-        content.transform.SetParent(viewport.transform, false);
-        var contentRT = content.AddComponent<RectTransform>();
-        contentRT.anchorMin = new Vector2(0, 1);
-        contentRT.anchorMax = new Vector2(1, 1);
-        contentRT.pivot = new Vector2(0.5f, 1);
-        content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        scroll.content = contentRT;
-
-        var logTextGO = new GameObject("LogText");
-        logTextGO.transform.SetParent(content.transform, false);
-        _battleLog = logTextGO.AddComponent<TextMeshProUGUI>();
+            new Vector2(0.02f, 0.27f), new Vector2(0.98f, 0.82f));
+        var logGO = new GameObject("LogText");
+        logGO.transform.SetParent(logBG.transform, false);
+        _battleLog = logGO.AddComponent<TextMeshProUGUI>();
+        var font = UIHelper.GetFont();
+        if (font != null) _battleLog.font = font;
         _battleLog.fontSize = 28;
         _battleLog.color = Color.white;
         _battleLog.alignment = TextAlignmentOptions.TopLeft;
         _battleLog.margin = new Vector4(10, 10, 10, 10);
-        var logRT = logTextGO.GetComponent<RectTransform>();
-        logRT.anchorMin = new Vector2(0, 1);
-        logRT.anchorMax = new Vector2(1, 1);
-        logRT.pivot = new Vector2(0.5f, 1);
-        logTextGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        UIHelper.Stretch(logGO.GetComponent<RectTransform>());
 
         _attackBtn = UIHelper.CreateButton(bp, "공격",
-            new Vector2(0.02f, 0.13f), new Vector2(0.32f, 0.23f), new Color(0.7f, 0.2f, 0.2f));
+            new Vector2(0.02f, 0.14f), new Vector2(0.32f, 0.24f), new Color(0.7f, 0.2f, 0.2f));
         _skillBtn = UIHelper.CreateButton(bp, "스킬",
-            new Vector2(0.35f, 0.13f), new Vector2(0.65f, 0.23f), new Color(0.2f, 0.3f, 0.75f));
+            new Vector2(0.35f, 0.14f), new Vector2(0.65f, 0.24f), new Color(0.2f, 0.3f, 0.75f));
         _fleeBtn = UIHelper.CreateButton(bp, "도망",
-            new Vector2(0.68f, 0.13f), new Vector2(0.98f, 0.23f), new Color(0.4f, 0.4f, 0.15f));
-    }
+            new Vector2(0.68f, 0.14f), new Vector2(0.98f, 0.24f), new Color(0.4f, 0.4f, 0.15f));
 
-    private void StartLocation(string locationName)
-    {
-        _currentLocation = locationName;
-        _currentWave = 1;
-        _battleLog.text = "";
-        _locationPanel.SetActive(false);
-        _battlePanel.SetActive(true);
-        SpawnEnemy();
-    }
-
-    private void SpawnEnemy()
-    {
-        _enemyName = $"{_currentLocation}의 몬스터";
-        _enemyHp = _enemyMaxHp = 50 + _currentWave * 20;
-        _enemyAtk = 10 + _currentWave * 5;
-        _enemyDef = 3 + _currentWave * 2;
-
-        RefreshBattleUI();
-        AppendLog($"=== 웨이브 {_currentWave} / {MAX_WAVE} ===");
-        AppendLog($"{_enemyName} 등장!");
-
-        _attackBtn.onClick.RemoveAllListeners();
-        _skillBtn.onClick.RemoveAllListeners();
-        _fleeBtn.onClick.RemoveAllListeners();
         _attackBtn.onClick.AddListener(OnAttack);
         _skillBtn.onClick.AddListener(OnSkill);
         _fleeBtn.onClick.AddListener(OnFlee);
-        SetButtonsInteractable(true);
     }
 
     private void OnAttack()
@@ -237,10 +334,8 @@ public class GameManager : MonoBehaviour
     {
         if (_player.generated.abilities == null || _player.generated.abilities.Count == 0)
         { AppendLog("사용 가능한 스킬이 없습니다."); return; }
-
         int mpCost = 20;
         if (_playerMp < mpCost) { AppendLog("MP가 부족합니다!"); return; }
-
         SetButtonsInteractable(false);
         _playerMp -= mpCost;
         int dmg = Mathf.Max(1, (int)(_player.generated.stats.atk * 1.8f) - _enemyDef);
@@ -251,8 +346,8 @@ public class GameManager : MonoBehaviour
 
     private void OnFlee()
     {
-        AppendLog("전투에서 도망쳤습니다.");
-        ShowLocationPanel();
+        AppendLog("도망쳤습니다.");
+        StartCoroutine(DelayEndBattle(0.8f));
     }
 
     private void AfterPlayerAction()
@@ -261,34 +356,49 @@ public class GameManager : MonoBehaviour
         if (_enemyHp <= 0)
         {
             AppendLog($"{_enemyName} 처치!");
-            if (_currentWave >= MAX_WAVE) { ShowResult(true); return; }
-            _currentWave++;
-            SpawnEnemy();
+            StartCoroutine(DelayEndBattle(1.5f));
             return;
         }
-
         int dmg = Mathf.Max(1, _enemyAtk - _player.generated.stats.def);
         _playerHp -= dmg;
         AppendLog($"{_enemyName}의 반격! {dmg} 피해!");
         RefreshBattleUI();
-
         if (_playerHp <= 0)
         {
             AppendLog($"{_player.generated.name} 사망...");
             StartCoroutine(_api.DeleteCharacter(_player.id,
-                () => Debug.Log("[DELETE] 캐릭터 삭제 완료: " + _player.id),
-                err => Debug.LogError("[DELETE] 삭제 실패: " + err)));
-            ShowResult(false);
+                () => Debug.Log("[DELETE] 삭제 완료"),
+                err => Debug.LogError("[DELETE] 실패: " + err)));
+            ShowResult();
             return;
         }
         SetButtonsInteractable(true);
     }
 
-    private void SetButtonsInteractable(bool value)
+    private IEnumerator DelayEndBattle(float delay)
     {
-        _attackBtn.interactable = value;
-        _skillBtn.interactable = value;
-        _fleeBtn.interactable = value;
+        SetButtonsInteractable(false);
+        yield return new WaitForSeconds(delay);
+        EndBattle();
+    }
+
+    private void EndBattle()
+    {
+        _battlePanel.SetActive(false);
+        if (_currentMonster != null)
+        {
+            StartCoroutine(RespawnMonster(_currentMonster));
+            _currentMonster = null;
+        }
+        _playerController.SetMovementEnabled(true);
+        RefreshHUD();
+    }
+
+    private IEnumerator RespawnMonster(MonsterController monster)
+    {
+        monster.gameObject.SetActive(false);
+        yield return new WaitForSeconds(8f);
+        if (monster != null) monster.gameObject.SetActive(true);
     }
 
     private void RefreshBattleUI()
@@ -299,32 +409,56 @@ public class GameManager : MonoBehaviour
         _enemyHpText.text = $"HP: {Mathf.Max(0, _enemyHp)} / {_enemyMaxHp}";
     }
 
-    private void AppendLog(string msg)
+    private void SetButtonsInteractable(bool v)
     {
-        _battleLog.text += msg + "\n";
+        _attackBtn.interactable = v;
+        _skillBtn.interactable = v;
+        _fleeBtn.interactable = v;
     }
 
-    // ───── 결과 패널 ─────
+    private void AppendLog(string msg) => _battleLog.text += msg + "\n";
+
+    // ─── 결과 패널 ────────────────────────────────────
     private void BuildResultPanel(Transform canvas)
     {
-        _resultPanel = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0.85f), "ResultPanel");
+        _resultPanel = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0.9f), "ResultPanel");
         UIHelper.Stretch(_resultPanel.GetComponent<RectTransform>());
         var rp = _resultPanel.transform;
-
         _resultText = UIHelper.CreateText(rp, "", 44,
             new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.65f));
-
         var backBtn = UIHelper.CreateButton(rp, "메인 메뉴로",
             new Vector2(0.2f, 0.32f), new Vector2(0.8f, 0.42f));
         backBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
     }
 
-    private void ShowResult(bool victory)
+    private void ShowResult()
     {
         _battlePanel.SetActive(false);
         _resultPanel.SetActive(true);
-        _resultText.text = victory
-            ? $"{_currentLocation} 클리어!\n모든 웨이브 돌파!"
-            : $"{_player.generated.name} 사망\n캐릭터가 삭제되었습니다.";
+        _resultText.text = $"{_player.generated.name} 사망\n캐릭터가 삭제되었습니다.";
+    }
+
+    // ─── 스프라이트 생성 ──────────────────────────────
+    private Sprite CreateSquareSprite()
+    {
+        var tex = new Texture2D(1, 1);
+        tex.SetPixel(0, 0, Color.white);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1);
+    }
+
+    private Sprite CreateCircleSprite(int res = 128)
+    {
+        var tex = new Texture2D(res, res);
+        tex.filterMode = FilterMode.Bilinear;
+        float r = res * 0.5f;
+        for (int x = 0; x < res; x++)
+            for (int y = 0; y < res; y++)
+            {
+                float dx = x - r, dy = y - r;
+                tex.SetPixel(x, y, dx * dx + dy * dy <= r * r ? Color.white : Color.clear);
+            }
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, res, res), new Vector2(0.5f, 0.5f), res);
     }
 }
