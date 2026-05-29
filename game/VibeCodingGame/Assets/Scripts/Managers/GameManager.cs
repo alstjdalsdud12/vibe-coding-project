@@ -127,6 +127,7 @@ public class GameManager : MonoBehaviour
             tmp.alignment = TextAlignmentOptions.MidlineLeft;
             tmp.margin = new Vector4(16, 0, 16, 0);
             UIHelper.Stretch(textGO.GetComponent<RectTransform>());
+            tmp.ForceMeshUpdate();
         }
     }
 
@@ -274,7 +275,9 @@ public class GameManager : MonoBehaviour
         if (_playerHp <= 0)
         {
             AppendLog($"{_player.generated.name} 사망...");
-            StartCoroutine(_api.DeleteCharacter(_player.id, () => { }, _ => { }));
+            StartCoroutine(_api.DeleteCharacter(_player.id,
+                () => Debug.Log("[DELETE] 캐릭터 삭제 완료: " + _player.id),
+                err => Debug.LogError("[DELETE] 삭제 실패: " + err)));
             ShowResult(false);
             return;
         }

@@ -100,6 +100,7 @@ public class MainMenuManager : MonoBehaviour
         tmp.alignment = TextAlignmentOptions.MidlineLeft;
         tmp.margin = new Vector4(20, 0, 20, 0);
         UIHelper.Stretch(textGO.GetComponent<RectTransform>());
+        tmp.ForceMeshUpdate();
     }
 
     private void OnCharacterSelected(string id)
