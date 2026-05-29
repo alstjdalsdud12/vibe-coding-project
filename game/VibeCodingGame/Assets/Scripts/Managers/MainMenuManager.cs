@@ -57,14 +57,17 @@ public class MainMenuManager : MonoBehaviour
         contentRT.anchorMin = new Vector2(0, 0);
         contentRT.anchorMax = new Vector2(0, 1);
         contentRT.pivot = new Vector2(0, 0.5f);
+        contentRT.sizeDelta = Vector2.zero;
         contentRT.anchoredPosition = Vector2.zero;
         var hlg = content.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing = 24;
-        hlg.padding = new RectOffset(40, 40, 20, 20);
+        hlg.spacing = 30;
+        hlg.padding = new RectOffset(40, 40, 30, 30);
         hlg.childForceExpandWidth = false;
-        hlg.childForceExpandHeight = true;
+        hlg.childForceExpandHeight = false;
         hlg.childAlignment = TextAnchor.MiddleLeft;
-        content.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        var csf = content.AddComponent<ContentSizeFitter>();
+        csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         scroll.content = contentRT;
         _listContent = content.transform;
 
@@ -105,8 +108,10 @@ public class MainMenuManager : MonoBehaviour
         var cardImg = card.AddComponent<Image>();
         cardImg.color = new Color(0.15f, 0.18f, 0.28f);
         var le = card.AddComponent<LayoutElement>();
-        le.preferredWidth = 280;
-        le.flexibleHeight = 1;
+        le.preferredWidth = 300;
+        le.preferredHeight = 560;
+        le.minWidth = 300;
+        le.minHeight = 560;
         var btn = card.AddComponent<Button>();
         var colors = btn.colors;
         colors.highlightedColor = new Color(0.25f, 0.3f, 0.45f);
