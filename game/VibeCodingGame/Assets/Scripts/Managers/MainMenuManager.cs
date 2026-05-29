@@ -73,8 +73,17 @@ public class MainMenuManager : MonoBehaviour
             {
                 _statusText.text = items.Length == 0 ? "저장된 캐릭터가 없습니다." : "";
                 foreach (var item in items) AddCharacterCard(item);
+                StartCoroutine(RefreshCardTexts());
             },
             err => _statusText.text = "오류: " + err));
+    }
+
+    private System.Collections.IEnumerator RefreshCardTexts()
+    {
+        yield return null;
+        yield return null;
+        foreach (var tmp in _listContent.GetComponentsInChildren<TextMeshProUGUI>())
+            tmp.ForceMeshUpdate(false, true);
     }
 
     private void AddCharacterCard(CharacterListItem item)
