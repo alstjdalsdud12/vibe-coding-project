@@ -56,20 +56,21 @@ public static class UIHelper
     {
         _fontReady = true;
 
-        var sourceFont = Resources.Load<Font>("malgun");
-        if (sourceFont != null)
-        {
-            // 4096x4096 Dynamic 아틀라스로 생성 (한글 전체 수용)
-            _cachedFont = TMP_FontAsset.CreateFontAsset(
-                sourceFont, 90, 9, GlyphRenderMode.SDF32,
-                4096, 4096, AtlasPopulationMode.Dynamic);
-        }
-
-        if (_cachedFont == null)
-            _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
+        // 4096x4096으로 미리 만들어진 malgun SDF 에셋 사용
+        _cachedFont = Resources.Load<TMP_FontAsset>("malgun SDF");
 
         if (_cachedFont != null)
+        {
+            // 리플렉션으로 source font 연결 (Dynamic 래스터라이즈에 필요)
+            var sourceFont = Resources.Load<Font>("malgun");
+            if (sourceFont != null)
+            {
+                var field = typeof(TMP_FontAsset).GetField("m_SourceFontFile",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                field?.SetValue(_cachedFont, sourceFont);
+            }
             _cachedFont.atlasPopulationMode = AtlasPopulationMode.Dynamic;
+        }
     }
 
     public static TextMeshProUGUI CreateText(Transform parent, string text, float fontSize,
