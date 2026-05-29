@@ -46,10 +46,10 @@ public class MainMenuManager : MonoBehaviour
 
         var viewport = new GameObject("Viewport");
         viewport.transform.SetParent(scrollGO.transform, false);
-        UIHelper.Stretch(viewport.AddComponent<RectTransform>());
-        viewport.AddComponent<Image>().color = new Color(0, 0, 0, 0);
-        viewport.AddComponent<Mask>().showMaskGraphic = false;
-        scroll.viewport = viewport.GetComponent<RectTransform>();
+        var viewportRT = viewport.AddComponent<RectTransform>();
+        UIHelper.Stretch(viewportRT);
+        viewport.AddComponent<RectMask2D>();
+        scroll.viewport = viewportRT;
 
         var content = new GameObject("Content");
         content.transform.SetParent(viewport.transform, false);
@@ -57,17 +57,15 @@ public class MainMenuManager : MonoBehaviour
         contentRT.anchorMin = new Vector2(0, 0);
         contentRT.anchorMax = new Vector2(0, 1);
         contentRT.pivot = new Vector2(0, 0.5f);
-        contentRT.sizeDelta = Vector2.zero;
-        contentRT.anchoredPosition = Vector2.zero;
+        contentRT.offsetMin = Vector2.zero;
+        contentRT.offsetMax = Vector2.zero;
         var hlg = content.AddComponent<HorizontalLayoutGroup>();
         hlg.spacing = 30;
         hlg.padding = new RectOffset(40, 40, 30, 30);
         hlg.childForceExpandWidth = false;
-        hlg.childForceExpandHeight = false;
+        hlg.childForceExpandHeight = true;
         hlg.childAlignment = TextAnchor.MiddleLeft;
-        var csf = content.AddComponent<ContentSizeFitter>();
-        csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        content.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
         scroll.content = contentRT;
         _listContent = content.transform;
 
@@ -109,9 +107,7 @@ public class MainMenuManager : MonoBehaviour
         cardImg.color = new Color(0.15f, 0.18f, 0.28f);
         var le = card.AddComponent<LayoutElement>();
         le.preferredWidth = 300;
-        le.preferredHeight = 560;
         le.minWidth = 300;
-        le.minHeight = 560;
         var btn = card.AddComponent<Button>();
         var colors = btn.colors;
         colors.highlightedColor = new Color(0.25f, 0.3f, 0.45f);
