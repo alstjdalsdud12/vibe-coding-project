@@ -90,10 +90,12 @@ public class MainMenuManager : MonoBehaviour
 
     private IEnumerator RefreshCardTexts()
     {
-        yield return null;
-        yield return null;
-        foreach (var tmp in _listContent.GetComponentsInChildren<TextMeshProUGUI>())
-            tmp.ForceMeshUpdate(false, true);
+        for (int i = 0; i < 60; i++)
+        {
+            yield return null;
+            foreach (var tmp in _listContent.GetComponentsInChildren<TextMeshProUGUI>())
+                tmp.ForceMeshUpdate(false, true);
+        }
     }
 
     private void AddCharacterCard(CharacterListItem item)
