@@ -218,6 +218,7 @@ public class GameManager : MonoBehaviour
         _attackBtn.onClick.AddListener(OnAttack);
         _skillBtn.onClick.AddListener(OnSkill);
         _fleeBtn.onClick.AddListener(OnFlee);
+        SetButtonsInteractable(true);
     }
 
     private void OnAttack()
