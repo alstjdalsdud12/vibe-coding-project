@@ -46,7 +46,7 @@ public static class UIHelper
         return go;
     }
 
-    private static TMP_FontAsset GetFont()
+    public static TMP_FontAsset GetFont()
     {
         if (!_fontReady) SetupFont();
         return _cachedFont ?? TMP_Settings.defaultFontAsset;

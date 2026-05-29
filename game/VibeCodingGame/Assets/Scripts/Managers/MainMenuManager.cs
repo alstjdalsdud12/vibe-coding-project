@@ -92,6 +92,8 @@ public class MainMenuManager : MonoBehaviour
         var textGO = new GameObject("Label");
         textGO.transform.SetParent(card.transform, false);
         var tmp = textGO.AddComponent<TextMeshProUGUI>();
+        var font = UIHelper.GetFont();
+        if (font != null) tmp.font = font;
         tmp.text = $"<b>{item.name}</b>  {item.weapon} · {item.concept}";
         tmp.fontSize = 32;
         tmp.color = Color.white;

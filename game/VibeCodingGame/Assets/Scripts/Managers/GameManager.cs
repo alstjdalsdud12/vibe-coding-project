@@ -119,6 +119,8 @@ public class GameManager : MonoBehaviour
             var textGO = new GameObject("Label");
             textGO.transform.SetParent(card.transform, false);
             var tmp = textGO.AddComponent<TextMeshProUGUI>();
+            var font = UIHelper.GetFont();
+            if (font != null) tmp.font = font;
             tmp.text = $"<b>{loc.name}</b>\n{loc.description}";
             tmp.fontSize = 28;
             tmp.color = Color.white;
