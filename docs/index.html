@@ -202,7 +202,42 @@
       </div>
     </section>
 
-    <!-- ③ WBS -->
+    <!-- ③ 사용자 시나리오 -->
+    <section>
+      <div class="inner-wrap">
+        <div class="slide-title">👤 사용자 시나리오</div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center">
+          <div style="display:flex;align-items:center;gap:0.5em;width:100%">
+            <div class="arch-node node-user" style="flex:1;padding:0.9em 0.4em">
+              <div class="n-icon" style="font-size:1.6em">📝</div>
+              <div class="n-label" style="font-size:0.7em;margin-top:0.3em">①&nbsp;입력</div>
+              <div class="n-sub" style="font-size:0.58em;margin-top:0.2em;line-height:1.5">이름 / 외형<br>무기 / 컨셉<br>세계관</div>
+            </div>
+            <div class="arch-arrow" style="font-size:1.5em">→</div>
+            <div class="arch-node node-ai" style="flex:1;padding:0.9em 0.4em">
+              <div class="n-icon" style="font-size:1.6em">🤖</div>
+              <div class="n-label" style="font-size:0.7em;margin-top:0.3em">②&nbsp;AI 생성</div>
+              <div class="n-sub" style="font-size:0.58em;margin-top:0.2em;line-height:1.5">Claude API<br>스탯 계산<br>스킬 부여</div>
+            </div>
+            <div class="arch-arrow" style="font-size:1.5em">→</div>
+            <div class="arch-node node-db" style="flex:1;padding:0.9em 0.4em">
+              <div class="n-icon" style="font-size:1.6em">💾</div>
+              <div class="n-label" style="font-size:0.7em;margin-top:0.3em">③&nbsp;저장</div>
+              <div class="n-sub" style="font-size:0.58em;margin-top:0.2em;line-height:1.5">Firebase<br>캐릭터 보존<br>재사용 가능</div>
+            </div>
+            <div class="arch-arrow" style="font-size:1.5em">→</div>
+            <div class="arch-node node-unity" style="flex:1;padding:0.9em 0.4em">
+              <div class="n-icon" style="font-size:1.6em">🎮</div>
+              <div class="n-label" style="font-size:0.7em;margin-top:0.3em">④&nbsp;플레이</div>
+              <div class="n-sub" style="font-size:0.58em;margin-top:0.2em;line-height:1.5">탑다운 탐험<br>턴제 전투<br>나만의 RPG</div>
+            </div>
+          </div>
+        </div>
+        <div class="quote">"내 캐릭터를 입력하면 — AI가 만들고 — 즉시 플레이"</div>
+      </div>
+    </section>
+
+    <!-- ④ WBS -->
     <section>
       <div class="inner-wrap">
         <div class="slide-title">📋 WBS (작업 분류 체계)</div>
@@ -238,7 +273,7 @@
       </div>
     </section>
 
-    <!-- ④ 아키텍처 -->
+    <!-- ⑤ 아키텍처 -->
     <section>
       <div class="inner-wrap">
         <div class="slide-title">⚙️ 시스템 아키텍처</div>
@@ -288,7 +323,55 @@
       </div>
     </section>
 
-    <!-- ⑤ 구현 결과 -->
+    <!-- ⑥ 게임 화면 1 — 캐릭터 흐름 -->
+    <section>
+      <div class="inner-wrap">
+        <div class="slide-title">📱 게임 화면 — 캐릭터 생성 흐름</div>
+        <div style="flex:1;display:flex;gap:0.8em;min-height:0">
+          <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">🎬 타이틀 화면</div>
+            <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+              <img src="screenshots/title.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #5b3fa0">
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">✏️ 캐릭터 생성</div>
+            <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+              <img src="screenshots/creation.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #5b3fa0">
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">🗃️ 캐릭터 선택</div>
+            <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+              <img src="screenshots/selection.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #5b3fa0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑦ 게임 화면 2 — 플레이 -->
+    <section>
+      <div class="inner-wrap">
+        <div class="slide-title">🎮 게임 화면 — 플레이</div>
+        <div style="flex:1;display:flex;gap:0.8em;min-height:0">
+          <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">🗺️ 게임 씬 (탑다운 탐험)</div>
+            <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+              <img src="screenshots/game.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #22c55e">
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">⚔️ 전투 씬 (턴제 전투)</div>
+            <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+              <img src="screenshots/battle.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #e74c3c">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑧ 구현 결과 -->
     <section>
       <div class="inner-wrap" style="font-size:0.82em">
         <div class="slide-title">🏆 구현 결과</div>
@@ -317,6 +400,47 @@
           <span class="hl">Vibe Coding</span>으로 아이디어부터 완성까지 —
           <span class="hl-purple">AI와 함께하면 혼자서도 게임을 만들 수 있다</span>
         </div>
+      </div>
+    </section>
+
+    <!-- ⑨ 남은 일정 -->
+    <section>
+      <div class="inner-wrap">
+        <div class="slide-title">📅 남은 일정</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:0.7em;justify-content:center">
+          <div class="card" style="border-color:#22c55e">
+            <div style="display:flex;align-items:center;gap:0.6em">
+              <span style="font-size:1.1em">✅</span>
+              <div>
+                <span style="color:#22c55e;font-weight:700;font-size:0.85em">Session 1~6 완료</span>
+                <span style="color:#86efac;font-size:0.75em;margin-left:0.6em">기획 · 설계 · 구현 · 문서화</span>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="border-color:#f59e0b">
+            <div style="display:flex;align-items:center;gap:0.6em">
+              <span style="font-size:1.1em">🔄</span>
+              <div>
+                <span style="color:#f5c842;font-weight:700;font-size:0.85em">Session 7 — 최종 발표</span>
+                <span style="color:#fde68a;font-size:0.75em;margin-left:0.6em">완성도 점검 · Q&amp;A 대비</span>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="border-color:#3b82f6;margin-top:0.3em">
+            <p style="color:#93c5fd;font-weight:700;margin:0 0 0.4em;font-size:0.82em">추가 개선 계획</p>
+            <div style="display:flex;gap:1em">
+              <ul style="margin:0;padding-left:1.1em;flex:1">
+                <li>배경 이미지 / BGM 추가</li>
+                <li>전투 이펙트 개선</li>
+              </ul>
+              <ul style="margin:0;padding-left:1.1em;flex:1">
+                <li>캐릭터 스프라이트 다양화</li>
+                <li>게임 오버 / 클리어 씬</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="quote"><span class="hl">Vibe Coding</span>으로 7주 만에 완성한 AI 기반 RPG</div>
       </div>
     </section>
 
