@@ -127,18 +127,18 @@
       min-height: 0;
     }
     .arch-flow {
-      display: flex; align-items: stretch;
-      gap: 0; width: 100%;
+      display: flex; align-items: center;
+      gap: 0.5em; width: 100%;
     }
     .arch-node {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      border-radius: 12px; padding: 1em 0.5em; text-align: center;
-      gap: 0.3em;
+      border-radius: 12px; padding: 0.8em 0.4em; text-align: center;
+      gap: 0.25em; min-height: 110px; max-height: 200px;
     }
-    .arch-node .n-icon  { font-size: 2em; }
-    .arch-node .n-label { font-size: 0.75em; font-weight: 700; color: #fff; }
-    .arch-node .n-sub   { font-size: 0.6em; color: rgba(255,255,255,0.65); }
+    .arch-node .n-icon  { font-size: 1.5em; }
+    .arch-node .n-label { font-size: 0.72em; font-weight: 700; color: #fff; white-space: nowrap; }
+    .arch-node .n-sub   { font-size: 0.58em; color: rgba(255,255,255,0.65); }
     .node-user   { background: #1e1e2e; border: 1px solid #555; }
     .node-unity  { background: #14532d; border: 1px solid #22c55e; }
     .node-server { background: #1e3a5f; border: 1px solid #3b82f6; }
@@ -304,7 +304,7 @@
         <div class="cols">
           <div class="col card">
             <p style="color:#f5c842;font-weight:700;margin:0 0 0.4em;font-size:0.88em">주요 기능</p>
-            <ul style="line-height:2">
+            <ul style="line-height:1.65">
               <li><span class="done">✅</span> AI 캐릭터 자동 생성</li>
               <li><span class="done">✅</span> 캐릭터 저장 / 선택</li>
               <li><span class="done">✅</span> 2D 탑다운 탐험</li>
@@ -314,7 +314,7 @@
           </div>
           <div class="col card">
             <p style="color:#f5c842;font-weight:700;margin:0 0 0.4em;font-size:0.88em">기술 스택</p>
-            <ul style="list-style:none;padding:0;line-height:2.2">
+            <ul style="list-style:none;padding:0;line-height:1.9">
               <li><span class="badge" style="background:#14532d">Game</span> Unity 2D · C#</li>
               <li><span class="badge" style="background:#1e3a5f">Server</span> Node.js · Express</li>
               <li><span class="badge" style="background:#78350f">DB</span> Firebase Firestore</li>
