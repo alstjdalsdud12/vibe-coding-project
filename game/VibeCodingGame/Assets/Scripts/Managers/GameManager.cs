@@ -17,6 +17,8 @@ public class GameManager : MonoBehaviour
 
     // HUD
     private TextMeshProUGUI _hudHpText, _hudMpText, _zoneNameText;
+    private RectTransform _hpBarFill, _mpBarFill;
+    private GameObject _zoneBox;
 
     // Battle panel
     private GameObject _battlePanel, _resultPanel;
@@ -166,21 +168,53 @@ public class GameManager : MonoBehaviour
         UIHelper.CreateCanvas(out _);
         var canvas = FindObjectOfType<Canvas>().transform;
 
-        // 상단 HUD
-        var hudBG = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0.6f), "HUD");
-        UIHelper.SetAnchors(hudBG.GetComponent<RectTransform>(), new Vector2(0, 0.91f), Vector2.one);
-        _hudHpText = UIHelper.CreateText(hudBG.transform, "", 24,
-            new Vector2(0.02f, 0.05f), new Vector2(0.52f, 0.95f), TextAlignmentOptions.MidlineLeft);
-        _hudMpText = UIHelper.CreateText(hudBG.transform, "", 24,
-            new Vector2(0.52f, 0.05f), new Vector2(0.78f, 0.95f), TextAlignmentOptions.MidlineLeft);
+        // 상단 HUD 배경
+        var hudBG = UIHelper.CreatePanel(canvas, new Color(0.05f, 0.04f, 0.12f, 0.88f), "HUD");
+        UIHelper.SetAnchors(hudBG.GetComponent<RectTransform>(), new Vector2(0f, 0.905f), Vector2.one);
 
+        // HUD 하단 라인
+        var hudLine = UIHelper.CreatePanel(canvas, new Color(0.5f, 0.30f, 0.9f, 0.6f), "HudLine");
+        UIHelper.SetAnchors(hudLine.GetComponent<RectTransform>(), new Vector2(0f, 0.903f), new Vector2(1f, 0.906f));
+
+        // 캐릭터 이름
+        var nameText = UIHelper.CreateText(hudBG.transform, _player.generated.name, 22,
+            new Vector2(0.02f, 0.55f), new Vector2(0.60f, 0.98f), TextAlignmentOptions.Left);
+        nameText.color = new Color(1f, 0.88f, 0.50f);
+
+        // HP 바
+        var hpBarBG = UIHelper.CreatePanel(hudBG.transform, new Color(0.20f, 0.04f, 0.04f), "HPBarBG");
+        UIHelper.SetAnchors(hpBarBG.GetComponent<RectTransform>(),
+            new Vector2(0.02f, 0.08f), new Vector2(0.60f, 0.50f));
+        var hpFill = UIHelper.CreatePanel(hpBarBG.transform, new Color(0.80f, 0.15f, 0.15f), "HPFill");
+        _hpBarFill = hpFill.GetComponent<RectTransform>();
+        UIHelper.SetAnchors(_hpBarFill, Vector2.zero, Vector2.one);
+        _hudHpText = UIHelper.CreateText(hpBarBG.transform, "", 20,
+            new Vector2(0.02f, 0f), new Vector2(0.98f, 1f), TextAlignmentOptions.Left);
+
+        // MP 바
+        var mpBarBG = UIHelper.CreatePanel(hudBG.transform, new Color(0.04f, 0.08f, 0.28f), "MPBarBG");
+        UIHelper.SetAnchors(mpBarBG.GetComponent<RectTransform>(),
+            new Vector2(0.62f, 0.08f), new Vector2(0.80f, 0.50f));
+        var mpFill = UIHelper.CreatePanel(mpBarBG.transform, new Color(0.15f, 0.35f, 0.85f), "MPFill");
+        _mpBarFill = mpFill.GetComponent<RectTransform>();
+        UIHelper.SetAnchors(_mpBarFill, Vector2.zero, Vector2.one);
+        _hudMpText = UIHelper.CreateText(mpBarBG.transform, "", 20,
+            new Vector2(0.02f, 0f), new Vector2(0.98f, 1f), TextAlignmentOptions.Left);
+
+        // 메뉴 버튼
         var menuBtn = UIHelper.CreateButton(canvas, "메뉴",
-            new Vector2(0.80f, 0.92f), new Vector2(0.98f, 0.99f), new Color(0.25f, 0.25f, 0.3f));
+            new Vector2(0.82f, 0.913f), new Vector2(0.98f, 0.993f),
+            new Color(0.22f, 0.18f, 0.35f));
         menuBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
 
-        // 구역 진입 알림
-        _zoneNameText = UIHelper.CreateText(canvas, "", 36,
-            new Vector2(0.05f, 0.55f), new Vector2(0.95f, 0.65f));
+        // 구역 진입 알림 (배경 박스 포함)
+        _zoneBox = UIHelper.CreatePanel(canvas, new Color(0.06f, 0.04f, 0.16f, 0.82f), "ZoneBox");
+        UIHelper.SetAnchors(_zoneBox.GetComponent<RectTransform>(),
+            new Vector2(0.08f, 0.54f), new Vector2(0.92f, 0.63f));
+        _zoneNameText = UIHelper.CreateText(_zoneBox.transform, "", 32,
+            new Vector2(0.02f, 0.05f), new Vector2(0.98f, 0.95f));
+        _zoneNameText.color = new Color(1f, 0.88f, 0.50f);
+        _zoneBox.SetActive(false);
 
         BuildMinimap(canvas);
         BuildBattlePanel(canvas);
@@ -192,6 +226,10 @@ public class GameManager : MonoBehaviour
 
     private void RefreshHUD()
     {
+        float hpRatio = (float)Mathf.Max(0, _playerHp) / _player.generated.stats.hp;
+        float mpRatio = (float)_playerMp / _player.generated.stats.mp;
+        if (_hpBarFill) _hpBarFill.anchorMax = new Vector2(hpRatio, 1f);
+        if (_mpBarFill) _mpBarFill.anchorMax = new Vector2(mpRatio, 1f);
         _hudHpText.text = $"HP {Mathf.Max(0, _playerHp)}/{_player.generated.stats.hp}";
         _hudMpText.text = $"MP {_playerMp}/{_player.generated.stats.mp}";
     }
@@ -200,13 +238,15 @@ public class GameManager : MonoBehaviour
     private void OnPlayerEnterZone(ZoneController zone)
     {
         _zoneNameText.text = zone.ZoneName;
-        StartCoroutine(ClearZoneText());
+        _zoneBox.SetActive(true);
+        StopCoroutine("ClearZoneBox");
+        StartCoroutine("ClearZoneBox");
     }
 
-    private IEnumerator ClearZoneText()
+    private IEnumerator ClearZoneBox()
     {
         yield return new WaitForSeconds(2.5f);
-        _zoneNameText.text = "";
+        _zoneBox.SetActive(false);
     }
 
     private void OnMonsterEncountered(MonsterController monster)
@@ -282,39 +322,68 @@ public class GameManager : MonoBehaviour
     // ─── 전투 패널 ────────────────────────────────────
     private void BuildBattlePanel(Transform canvas)
     {
-        _battlePanel = UIHelper.CreatePanel(canvas, new Color(0, 0, 0, 0.93f), "BattlePanel");
+        _battlePanel = UIHelper.CreatePanel(canvas, new Color(0.04f, 0.03f, 0.10f, 0.96f), "BattlePanel");
         UIHelper.Stretch(_battlePanel.GetComponent<RectTransform>());
         var bp = _battlePanel.transform;
 
-        _playerHpText = UIHelper.CreateText(bp, "", 28,
-            new Vector2(0.02f, 0.90f), new Vector2(0.50f, 0.97f), TextAlignmentOptions.MidlineLeft);
-        _playerMpText = UIHelper.CreateText(bp, "", 28,
-            new Vector2(0.02f, 0.83f), new Vector2(0.50f, 0.90f), TextAlignmentOptions.MidlineLeft);
-        _enemyNameText = UIHelper.CreateText(bp, "", 28,
-            new Vector2(0.50f, 0.90f), new Vector2(0.98f, 0.97f), TextAlignmentOptions.MidlineRight);
-        _enemyHpText = UIHelper.CreateText(bp, "", 28,
-            new Vector2(0.50f, 0.83f), new Vector2(0.98f, 0.90f), TextAlignmentOptions.MidlineRight);
+        // 상단 구분선
+        var topLine = UIHelper.CreatePanel(bp, new Color(0.5f, 0.30f, 0.9f, 0.6f), "TopLine");
+        UIHelper.SetAnchors(topLine.GetComponent<RectTransform>(),
+            new Vector2(0f, 0.820f), new Vector2(1f, 0.823f));
 
-        var logBG = UIHelper.CreatePanel(bp, new Color(0.06f, 0.06f, 0.10f), "LogBG");
+        // 플레이어 정보 (좌측)
+        var playerBG = UIHelper.CreatePanel(bp, new Color(0.08f, 0.06f, 0.18f), "PlayerBG");
+        UIHelper.SetAnchors(playerBG.GetComponent<RectTransform>(),
+            new Vector2(0.02f, 0.825f), new Vector2(0.48f, 0.975f));
+        _playerHpText = UIHelper.CreateText(playerBG.transform, "", 24,
+            new Vector2(0.04f, 0.52f), new Vector2(0.96f, 0.95f), TextAlignmentOptions.Left);
+        _playerHpText.color = new Color(1f, 0.45f, 0.45f);
+        _playerMpText = UIHelper.CreateText(playerBG.transform, "", 24,
+            new Vector2(0.04f, 0.05f), new Vector2(0.96f, 0.50f), TextAlignmentOptions.Left);
+        _playerMpText.color = new Color(0.45f, 0.65f, 1.0f);
+
+        // 적 정보 (우측)
+        var enemyBG = UIHelper.CreatePanel(bp, new Color(0.18f, 0.06f, 0.06f), "EnemyBG");
+        UIHelper.SetAnchors(enemyBG.GetComponent<RectTransform>(),
+            new Vector2(0.52f, 0.825f), new Vector2(0.98f, 0.975f));
+        _enemyNameText = UIHelper.CreateText(enemyBG.transform, "", 24,
+            new Vector2(0.04f, 0.52f), new Vector2(0.96f, 0.95f), TextAlignmentOptions.Right);
+        _enemyNameText.color = new Color(1f, 0.70f, 0.30f);
+        _enemyHpText = UIHelper.CreateText(enemyBG.transform, "", 24,
+            new Vector2(0.04f, 0.05f), new Vector2(0.96f, 0.50f), TextAlignmentOptions.Right);
+        _enemyHpText.color = new Color(1f, 0.45f, 0.45f);
+
+        // 전투 로그
+        var logBG = UIHelper.CreatePanel(bp, new Color(0.06f, 0.05f, 0.14f), "LogBG");
         UIHelper.SetAnchors(logBG.GetComponent<RectTransform>(),
-            new Vector2(0.02f, 0.27f), new Vector2(0.98f, 0.82f));
+            new Vector2(0.02f, 0.295f), new Vector2(0.98f, 0.818f));
+        var logBorder = UIHelper.CreatePanel(bp, new Color(0.5f, 0.30f, 0.9f, 0.35f), "LogBorder");
+        UIHelper.SetAnchors(logBorder.GetComponent<RectTransform>(),
+            new Vector2(0.02f, 0.293f), new Vector2(0.98f, 0.820f));
+
         var logGO = new GameObject("LogText");
         logGO.transform.SetParent(logBG.transform, false);
         _battleLog = logGO.AddComponent<TextMeshProUGUI>();
         var font = UIHelper.GetFont();
         if (font != null) _battleLog.font = font;
-        _battleLog.fontSize = 28;
-        _battleLog.color = Color.white;
+        _battleLog.fontSize = 26;
+        _battleLog.color = new Color(0.88f, 0.85f, 1.0f);
         _battleLog.alignment = TextAlignmentOptions.TopLeft;
-        _battleLog.margin = new Vector4(10, 10, 10, 10);
+        _battleLog.margin = new Vector4(14, 10, 14, 10);
         UIHelper.Stretch(logGO.GetComponent<RectTransform>());
 
+        // 하단 구분선
+        var botLine = UIHelper.CreatePanel(bp, new Color(0.5f, 0.30f, 0.9f, 0.6f), "BotLine");
+        UIHelper.SetAnchors(botLine.GetComponent<RectTransform>(),
+            new Vector2(0f, 0.291f), new Vector2(1f, 0.294f));
+
+        // 전투 버튼
         _attackBtn = UIHelper.CreateButton(bp, "공격",
-            new Vector2(0.02f, 0.14f), new Vector2(0.32f, 0.24f), new Color(0.7f, 0.2f, 0.2f));
+            new Vector2(0.02f, 0.160f), new Vector2(0.31f, 0.278f), new Color(0.65f, 0.12f, 0.12f));
         _skillBtn = UIHelper.CreateButton(bp, "스킬",
-            new Vector2(0.35f, 0.14f), new Vector2(0.65f, 0.24f), new Color(0.2f, 0.3f, 0.75f));
-        _fleeBtn = UIHelper.CreateButton(bp, "도망",
-            new Vector2(0.68f, 0.14f), new Vector2(0.98f, 0.24f), new Color(0.4f, 0.4f, 0.15f));
+            new Vector2(0.34f, 0.160f), new Vector2(0.66f, 0.278f), new Color(0.15f, 0.25f, 0.72f));
+        _fleeBtn  = UIHelper.CreateButton(bp, "도망",
+            new Vector2(0.69f, 0.160f), new Vector2(0.98f, 0.278f), new Color(0.28f, 0.28f, 0.18f));
 
         _attackBtn.onClick.AddListener(OnAttack);
         _skillBtn.onClick.AddListener(OnSkill);
