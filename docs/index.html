@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나만의 스토리 - AI RPG 프로젝트 발표</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <style>
+    :root {
+      --gold:   #f5c842;
+      --purple: #9b6dff;
+      --purple-dim: #5b3fa0;
+      --dark:   #09071a;
+      --card:   #12103a;
+      --text:   #e8e0ff;
+    }
+
+    body { background: var(--dark); }
+
+    .reveal {
+      font-family: 'Noto Sans KR', sans-serif;
+      color: var(--text);
+    }
+
+    .reveal .slides {
+      text-align: left;
+    }
+
+    /* 헤더 공통 */
+    .reveal h1, .reveal h2, .reveal h3 {
+      font-family: 'Noto Sans KR', sans-serif;
+      color: var(--gold);
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+
+    .reveal h1 { font-size: 2.6em; font-weight: 900; }
+    .reveal h2 { font-size: 1.6em; font-weight: 700; border-bottom: 2px solid var(--purple-dim); padding-bottom: 0.3em; margin-bottom: 0.6em; }
+
+    /* 슬라이드 배경 */
+    .reveal .slides section {
+      background: var(--dark);
+    }
+
+    /* 카드 */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--purple-dim);
+      border-radius: 12px;
+      padding: 1em 1.4em;
+    }
+
+    .card-red   { border-color: #c0392b; }
+    .card-green { border-color: #27ae60; }
+    .card-blue  { border-color: #2980b9; }
+
+    /* 두 컬럼 */
+    .cols { display: flex; gap: 1.2em; }
+    .col  { flex: 1; }
+
+    /* 하이라이트 */
+    .hl { color: var(--gold); font-weight: 700; }
+    .hl-purple { color: #c4b5fd; }
+
+    /* 태그 배지 */
+    .badge {
+      display: inline-block;
+      background: var(--purple-dim);
+      color: #fff;
+      border-radius: 6px;
+      padding: 0.15em 0.6em;
+      font-size: 0.72em;
+      margin: 0.2em 0.1em;
+      vertical-align: middle;
+    }
+
+    /* 체크 항목 */
+    .done { color: #2ecc71; }
+    .wip  { color: #f39c12; }
+
+    /* 타이틀 슬라이드 */
+    .title-slide {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .reveal .title-slide h1 {
+      font-size: 3.2em;
+      text-shadow: 0 4px 24px rgba(155,109,255,0.5);
+      margin-bottom: 0.1em;
+    }
+
+    .divider {
+      width: 60%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--purple), transparent);
+      margin: 1em auto;
+    }
+
+    /* mermaid 다이어그램 크기 */
+    .mermaid svg {
+      max-height: 380px;
+      width: 100% !important;
+    }
+
+    /* 큰 숫자 강조 */
+    .big-stat {
+      font-size: 2.2em;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    /* progress bar override */
+    .reveal .progress { color: var(--purple); }
+  </style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ══════════════════════════════════════════
+         슬라이드 1  타이틀
+    ══════════════════════════════════════════ -->
+    <section>
+      <div class="title-slide">
+        <p class="hl-purple" style="font-size:0.9em; margin-bottom:0.4em; letter-spacing:0.15em;">VIBE CODING PROJECT</p>
+        <h1>나만의 스토리</h1>
+        <p style="font-size:1.3em; color:#c4b5fd; margin-top:0.2em;">AI가 만드는 나만의 RPG</p>
+        <div class="divider"></div>
+        <div style="display:flex; gap:0.8em; flex-wrap:wrap; justify-content:center; margin-top:0.6em;">
+          <span class="badge">Unity 2D</span>
+          <span class="badge">Claude API</span>
+          <span class="badge">Node.js</span>
+          <span class="badge">Firebase</span>
+          <span class="badge">C#</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         슬라이드 2  문제 정의 & 비전
+    ══════════════════════════════════════════ -->
+    <section>
+      <h2>🎯 문제 정의 &amp; 비전</h2>
+      <div class="cols">
+        <div class="col card card-red" style="font-size:0.88em;">
+          <p style="color:#e74c3c; font-weight:700; margin:0 0 0.6em;">❌ 기존 RPG의 한계</p>
+          <ul style="line-height:1.9;">
+            <li>캐릭터는 <span class="hl">개발자가 미리 제작</span></li>
+            <li>플레이어는 <span class="hl">선택만</span> 가능</li>
+            <li>내가 상상한 캐릭터는<br><span class="hl">존재하지 않는다</span></li>
+          </ul>
+        </div>
+        <div class="col card card-green" style="font-size:0.88em;">
+          <p style="color:#2ecc71; font-weight:700; margin:0 0 0.6em;">✅ 우리의 해답</p>
+          <ul style="line-height:1.9;">
+            <li>사용자가 <span class="hl">직접 상상</span>하고</li>
+            <li>AI가 <span class="hl">즉시 생성</span>해주고</li>
+            <li>그 캐릭터로 <span class="hl">바로 플레이</span></li>
+          </ul>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:1em; font-size:1.05em; color:#c4b5fd;">
+        "내가 상상한 캐릭터가 게임 세계에서 살아 움직인다"
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         슬라이드 3  WBS
+    ══════════════════════════════════════════ -->
+    <section>
+      <h2>📋 WBS (작업 분류 체계)</h2>
+      <div class="mermaid" style="font-size:0.72em;">
+mindmap
+  root((나만의<br/>스토리))
+    기획
+      아이디어 구상
+      기술스택 선정
+      요구사항 정의
+    설계
+      시스템 아키텍처
+      UI/UX 설계
+      DB 스키마
+    구현
+      Node.js 백엔드
+      Claude API 연동
+      Unity 2D 게임
+      UI 시스템
+    완료
+      AI 캐릭터 생성
+      캐릭터 저장/조회
+      탑다운 맵 탐험
+      턴제 전투 시스템
+      씬 디자인 개선
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         슬라이드 4  아키텍처
+    ══════════════════════════════════════════ -->
+    <section>
+      <h2>⚙️ 시스템 아키텍처</h2>
+      <div class="mermaid" style="font-size:0.8em;">
+flowchart LR
+    U(["👤 사용자"])
+    C["🎮 Unity 클라이언트\nC#"]
+    S["⚙️ Node.js 서버\nExpress"]
+    A["🤖 Claude AI\nHaiku"]
+    F[("🔥 Firebase\nFirestore")]
+
+    U -->|캐릭터 정보 입력| C
+    C -->|"REST API"| S
+    S -->|프롬프트 전송| A
+    A -->|JSON 캐릭터 데이터| S
+    S -->|저장 / 조회| F
+    S -->|캐릭터 데이터 반환| C
+    C -->|게임 플레이| U
+
+    style A fill:#4a1d96,color:#fff
+    style F fill:#b45309,color:#fff
+    style S fill:#1e3a5f,color:#fff
+    style C fill:#1a3a1f,color:#fff
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════
+         슬라이드 5  구현 결과
+    ══════════════════════════════════════════ -->
+    <section>
+      <h2>🏆 구현 결과</h2>
+      <div class="cols">
+        <div class="col" style="font-size:0.85em;">
+          <p style="color:var(--gold); font-weight:700;">주요 기능</p>
+          <ul style="line-height:2;">
+            <li><span class="done">✅</span> AI 캐릭터 자동 생성</li>
+            <li><span class="done">✅</span> 캐릭터 저장 / 선택</li>
+            <li><span class="done">✅</span> 2D 탑다운 탐험</li>
+            <li><span class="done">✅</span> 턴제 전투 시스템</li>
+            <li><span class="done">✅</span> 한국어 입력 지원</li>
+          </ul>
+        </div>
+        <div class="col" style="font-size:0.85em;">
+          <p style="color:var(--gold); font-weight:700;">기술 스택</p>
+          <div style="line-height:2.2;">
+            <div><span class="badge" style="background:#1a3a1f;">Game</span> Unity 2D · C#</div>
+            <div><span class="badge" style="background:#1e3a5f;">Server</span> Node.js · Express</div>
+            <div><span class="badge" style="background:#b45309;">DB</span> Firebase Firestore</div>
+            <div><span class="badge" style="background:#4a1d96;">AI</span> Claude API (Haiku)</div>
+            <div><span class="badge" style="background:#1a2a3a;">UI</span> TMP · UIHelper</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0.8em; text-align:center; font-size:0.9em; border-color:var(--purple);">
+        <span class="hl">Vibe Coding</span>으로 아이디어부터 완성까지 —
+        <span class="hl-purple">AI와 함께하면 혼자서도 게임을 만들 수 있다</span>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#09071a',
+      primaryColor: '#9b6dff',
+      primaryTextColor: '#e8e0ff',
+      lineColor: '#9b6dff',
+      edgeLabelBackground: '#12103a',
+    }
+  });
+
+  Reveal.initialize({
+    hash: true,
+    transition: 'slide',
+    transitionSpeed: 'fast',
+    controls: true,
+    controlsLayout: 'bottom-right',
+    progress: true,
+    slideNumber: 'c/t',
+    center: false,
+    margin: 0.06,
+  });
+
+  // 슬라이드가 보일 때마다 mermaid 렌더링
+  Reveal.on('ready',        () => mermaid.run());
+  Reveal.on('slidechanged', () => mermaid.run());
+</script>
+</body>
+</html>
