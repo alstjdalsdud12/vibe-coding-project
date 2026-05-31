@@ -2,142 +2,179 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>나만의 스토리 - AI RPG 프로젝트 발표</title>
+  <title>나만의 스토리 - 발표</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
   <style>
-    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #09071a; }
-    :root {
-      --gold:   #f5c842;
-      --purple: #9b6dff;
-      --purple-dim: #5b3fa0;
-      --dark:   #09071a;
-      --card:   #12103a;
-      --text:   #e8e0ff;
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #09071a;
     }
+    .reveal-viewport { background: #09071a; }
+    .reveal { font-family: 'Noto Sans KR', sans-serif !important; }
 
-    body { background: var(--dark); }
-
-    .reveal {
-      font-family: 'Noto Sans KR', sans-serif;
-      color: var(--text);
-    }
-
-    .reveal .slides {
-      text-align: left;
-    }
-
-    /* 헤더 공통 */
-    .reveal h1, .reveal h2, .reveal h3 {
-      font-family: 'Noto Sans KR', sans-serif;
-      color: var(--gold);
-      text-transform: none;
-      letter-spacing: -0.02em;
-    }
-
-    .reveal h1 { font-size: 2.6em; font-weight: 900; }
-    .reveal h2 { font-size: 1.6em; font-weight: 700; border-bottom: 2px solid var(--purple-dim); padding-bottom: 0.3em; margin-bottom: 0.6em; }
-
-    /* 슬라이드 배경 */
+    /* 슬라이드 공통 — 내부 레이아웃은 inner-wrap이 담당 */
     .reveal .slides section {
-      background: var(--dark);
+      box-sizing: border-box;
+      padding: 0;
+      background: #09071a;
+      height: 100%;
+      overflow: hidden;
+    }
+    .inner-wrap {
+      box-sizing: border-box;
+      width: 100%; height: 100%;
+      padding: 36px 56px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 제목 */
+    .reveal h1, .reveal h2, .reveal h3 {
+      font-family: 'Noto Sans KR', sans-serif !important;
+      text-transform: none !important;
+      margin: 0;
+    }
+    .reveal h1 {
+      font-size: 2.8em; font-weight: 900; color: #f5c842;
+      text-shadow: 0 4px 24px rgba(155,109,255,.6);
+    }
+    .slide-title {
+      font-size: 1.45em; font-weight: 700; color: #f5c842;
+      border-bottom: 2px solid #5b3fa0;
+      padding-bottom: 0.2em; margin-bottom: 0.55em;
+      flex-shrink: 0;
+    }
+
+    /* 텍스트 */
+    .reveal p, .reveal li { color: #ddd6fe; }
+    .reveal ul { margin: 0; padding-left: 1.2em; }
+    .reveal li { margin-bottom: 0.3em; line-height: 1.65; font-size: 0.85em; }
+
+    /* 배지 */
+    .badge {
+      display: inline-block;
+      background: #4c1d95; color: #e9d5ff;
+      border-radius: 5px; padding: 0.15em 0.6em;
+      font-size: 0.72em; margin: 0.15em 0.1em;
+    }
+
+    /* 강조 */
+    .hl        { color: #f5c842; font-weight: 700; }
+    .hl-purple { color: #c4b5fd; }
+    .done      { color: #2ecc71; }
+
+    /* 구분선 */
+    .divider {
+      width: 55%; height: 2px; margin: 0.7em auto;
+      background: linear-gradient(90deg, transparent, #9b6dff, transparent);
     }
 
     /* 카드 */
     .card {
-      background: var(--card);
-      border: 1px solid var(--purple-dim);
-      border-radius: 12px;
-      padding: 1em 1.4em;
+      background: #12103a; border: 1px solid #5b3fa0;
+      border-radius: 10px; padding: 0.75em 1em;
     }
-
-    .card-red   { border-color: #c0392b; }
+    .card-red   { border-color: #e74c3c; }
     .card-green { border-color: #27ae60; }
-    .card-blue  { border-color: #2980b9; }
 
-    /* 두 컬럼 */
-    .cols { display: flex; gap: 1.2em; }
+    /* 컬럼 */
+    .cols { display: flex; gap: 1em; flex: 1; min-height: 0; }
     .col  { flex: 1; }
 
-    /* 하이라이트 */
-    .hl { color: var(--gold); font-weight: 700; }
-    .hl-purple { color: #c4b5fd; }
-
-    /* 태그 배지 */
-    .badge {
-      display: inline-block;
-      background: var(--purple-dim);
-      color: #fff;
-      border-radius: 6px;
-      padding: 0.15em 0.6em;
-      font-size: 0.72em;
-      margin: 0.2em 0.1em;
-      vertical-align: middle;
+    /* 하단 인용 */
+    .quote {
+      margin-top: 0.6em; flex-shrink: 0;
+      text-align: center; font-size: 0.78em; color: #c4b5fd;
+      border-top: 1px solid #5b3fa0; padding-top: 0.5em;
     }
 
-    /* 체크 항목 */
-    .done { color: #2ecc71; }
-    .wip  { color: #f39c12; }
+    /* slide number */
+    .reveal .slide-number { font-size: 0.7em; }
 
-    /* 타이틀 슬라이드 */
-    .title-slide {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
+    /* ── WBS ── */
+    .wbs-grid {
+      display: flex; gap: 0.8em; flex: 1; min-height: 0;
     }
-
-    .reveal .title-slide h1 {
-      font-size: 3.2em;
-      text-shadow: 0 4px 24px rgba(155,109,255,0.5);
-      margin-bottom: 0.1em;
+    .wbs-col {
+      flex: 1; display: flex; flex-direction: column; gap: 0.42em;
     }
-
-    .divider {
-      width: 60%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--purple), transparent);
-      margin: 1em auto;
+    .wbs-header {
+      font-size: 0.8em; font-weight: 700; color: #fff;
+      border-radius: 7px; padding: 0.45em 0.5em;
+      text-align: center; flex-shrink: 0;
     }
-
-    /* mermaid 다이어그램 크기 */
-    .mermaid svg {
-      max-height: 380px;
-      width: 100% !important;
+    .phase-plan   { background: #1a2f4a; border: 1px solid #3b82f6; }
+    .phase-design { background: #2a1a4a; border: 1px solid #9b6dff; }
+    .phase-impl   { background: #142b1a; border: 1px solid #22c55e; }
+    .phase-done   { background: #2e1f0e; border: 1px solid #f59e0b; }
+    .wbs-item {
+      font-size: 0.72em; color: #ddd6fe;
+      background: #12103a; border-radius: 5px;
+      padding: 0.38em 0.65em; border-left: 3px solid #5b3fa0;
     }
+    .wbs-item.done-item { color: #86efac; border-left-color: #22c55e; }
 
-    /* 큰 숫자 강조 */
-    .big-stat {
-      font-size: 2.2em;
-      font-weight: 900;
-      color: var(--gold);
-      line-height: 1;
+    /* ── 아키텍처 ── */
+    .arch-wrap {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      min-height: 0;
     }
-
-    /* progress bar override */
-    .reveal .progress { color: var(--purple); }
+    .arch-flow {
+      display: flex; align-items: stretch;
+      gap: 0; width: 100%;
+    }
+    .arch-node {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      border-radius: 12px; padding: 1em 0.5em; text-align: center;
+      gap: 0.3em;
+    }
+    .arch-node .n-icon  { font-size: 2em; }
+    .arch-node .n-label { font-size: 0.75em; font-weight: 700; color: #fff; }
+    .arch-node .n-sub   { font-size: 0.6em; color: rgba(255,255,255,0.65); }
+    .node-user   { background: #1e1e2e; border: 1px solid #555; }
+    .node-unity  { background: #14532d; border: 1px solid #22c55e; }
+    .node-server { background: #1e3a5f; border: 1px solid #3b82f6; }
+    .node-ai     { background: #4a1d96; border: 1px solid #9b6dff; }
+    .node-db     { background: #78350f; border: 1px solid #f59e0b; }
+    .arch-arrow {
+      display: flex; align-items: center; justify-content: center;
+      color: #9b6dff; font-size: 1.4em;
+      padding: 0 0.25em; flex-shrink: 0;
+    }
+    .arch-right {
+      flex: 1; display: flex; flex-direction: column; gap: 0.6em;
+    }
+    .arch-flow-labels {
+      display: flex; gap: 0; width: 100%;
+      margin-top: 0.9em;
+    }
+    .arch-flow-label {
+      flex: 1; font-size: 0.58em; color: #a78bfa;
+      text-align: center; padding: 0 0.3em;
+    }
+    .arch-flow-label-spacer { width: 2.5em; flex-shrink: 0; }
   </style>
 </head>
 <body>
 <div class="reveal">
   <div class="slides">
 
-    <!-- ══════════════════════════════════════════
-         슬라이드 1  타이틀
-    ══════════════════════════════════════════ -->
+    <!-- ① 타이틀 -->
     <section>
-      <div class="title-slide">
-        <p class="hl-purple" style="font-size:0.9em; margin-bottom:0.4em; letter-spacing:0.15em;">VIBE CODING PROJECT</p>
-        <h1>나만의 스토리</h1>
-        <p style="font-size:1.3em; color:#c4b5fd; margin-top:0.2em;">AI가 만드는 나만의 RPG</p>
+      <div class="inner-wrap" style="align-items:center;justify-content:center;text-align:center">
+        <p style="color:#a78bfa;font-size:0.65em;letter-spacing:.18em;margin:0">VIBE CODING PROJECT · 2026</p>
+        <h1 style="margin:0.15em 0 0.05em">나만의 스토리</h1>
+        <p style="color:#c4b5fd;font-size:1em;margin:0">AI가 만드는 나만의 RPG</p>
         <div class="divider"></div>
-        <div style="display:flex; gap:0.8em; flex-wrap:wrap; justify-content:center; margin-top:0.6em;">
+        <div>
           <span class="badge">Unity 2D</span>
           <span class="badge">Claude API</span>
           <span class="badge">Node.js</span>
@@ -147,122 +184,148 @@
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════
-         슬라이드 2  문제 정의 & 비전
-    ══════════════════════════════════════════ -->
+    <!-- ② 문제 정의 & 비전 -->
     <section>
-      <h2>🎯 문제 정의 &amp; 비전</h2>
-      <div class="cols">
-        <div class="col card card-red" style="font-size:0.88em;">
-          <p style="color:#e74c3c; font-weight:700; margin:0 0 0.6em;">❌ 기존 RPG의 한계</p>
-          <ul style="line-height:1.9;">
-            <li>캐릭터는 <span class="hl">개발자가 미리 제작</span></li>
-            <li>플레이어는 <span class="hl">선택만</span> 가능</li>
-            <li>내가 상상한 캐릭터는<br><span class="hl">존재하지 않는다</span></li>
-          </ul>
+      <div class="inner-wrap">
+        <div class="slide-title">🎯 문제 정의 &amp; 비전</div>
+        <div class="cols">
+          <div class="col card card-red">
+            <p style="color:#e74c3c;font-weight:700;margin:0 0 0.4em;font-size:0.88em">❌ 기존 RPG의 한계</p>
+            <ul>
+              <li>캐릭터는 <span class="hl">개발자가 미리 제작</span></li>
+              <li>플레이어는 <span class="hl">선택만</span> 가능</li>
+              <li>내가 상상한 캐릭터는<br><span class="hl">존재하지 않는다</span></li>
+            </ul>
+          </div>
+          <div class="col card card-green">
+            <p style="color:#2ecc71;font-weight:700;margin:0 0 0.4em;font-size:0.88em">✅ 우리의 해답</p>
+            <ul>
+              <li>사용자가 <span class="hl">직접 상상</span>하고</li>
+              <li>AI가 <span class="hl">즉시 생성</span>해주고</li>
+              <li>그 캐릭터로 <span class="hl">바로 플레이</span></li>
+            </ul>
+          </div>
         </div>
-        <div class="col card card-green" style="font-size:0.88em;">
-          <p style="color:#2ecc71; font-weight:700; margin:0 0 0.6em;">✅ 우리의 해답</p>
-          <ul style="line-height:1.9;">
-            <li>사용자가 <span class="hl">직접 상상</span>하고</li>
-            <li>AI가 <span class="hl">즉시 생성</span>해주고</li>
-            <li>그 캐릭터로 <span class="hl">바로 플레이</span></li>
-          </ul>
-        </div>
-      </div>
-      <div style="text-align:center; margin-top:1em; font-size:1.05em; color:#c4b5fd;">
-        "내가 상상한 캐릭터가 게임 세계에서 살아 움직인다"
+        <div class="quote">"내가 상상한 캐릭터가 게임 세계에서 살아 움직인다"</div>
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════
-         슬라이드 3  WBS
-    ══════════════════════════════════════════ -->
+    <!-- ③ WBS -->
     <section>
-      <h2>📋 WBS (작업 분류 체계)</h2>
-      <div class="mermaid" style="font-size:0.72em;">
-mindmap
-  root((나만의<br/>스토리))
-    기획
-      아이디어 구상
-      기술스택 선정
-      요구사항 정의
-    설계
-      시스템 아키텍처
-      UI/UX 설계
-      DB 스키마
-    구현
-      Node.js 백엔드
-      Claude API 연동
-      Unity 2D 게임
-      UI 시스템
-    완료
-      AI 캐릭터 생성
-      캐릭터 저장/조회
-      탑다운 맵 탐험
-      턴제 전투 시스템
-      씬 디자인 개선
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════
-         슬라이드 4  아키텍처
-    ══════════════════════════════════════════ -->
-    <section>
-      <h2>⚙️ 시스템 아키텍처</h2>
-      <div class="mermaid" style="font-size:0.8em;">
-flowchart LR
-    U(["👤 사용자"])
-    C["🎮 Unity 클라이언트\nC#"]
-    S["⚙️ Node.js 서버\nExpress"]
-    A["🤖 Claude AI\nHaiku"]
-    F[("🔥 Firebase\nFirestore")]
-
-    U -->|캐릭터 정보 입력| C
-    C -->|"REST API"| S
-    S -->|프롬프트 전송| A
-    A -->|JSON 캐릭터 데이터| S
-    S -->|저장 / 조회| F
-    S -->|캐릭터 데이터 반환| C
-    C -->|게임 플레이| U
-
-    style A fill:#4a1d96,color:#fff
-    style F fill:#b45309,color:#fff
-    style S fill:#1e3a5f,color:#fff
-    style C fill:#1a3a1f,color:#fff
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════
-         슬라이드 5  구현 결과
-    ══════════════════════════════════════════ -->
-    <section>
-      <h2>🏆 구현 결과</h2>
-      <div class="cols">
-        <div class="col" style="font-size:0.85em;">
-          <p style="color:var(--gold); font-weight:700;">주요 기능</p>
-          <ul style="line-height:2;">
-            <li><span class="done">✅</span> AI 캐릭터 자동 생성</li>
-            <li><span class="done">✅</span> 캐릭터 저장 / 선택</li>
-            <li><span class="done">✅</span> 2D 탑다운 탐험</li>
-            <li><span class="done">✅</span> 턴제 전투 시스템</li>
-            <li><span class="done">✅</span> 한국어 입력 지원</li>
-          </ul>
-        </div>
-        <div class="col" style="font-size:0.85em;">
-          <p style="color:var(--gold); font-weight:700;">기술 스택</p>
-          <div style="line-height:2.2;">
-            <div><span class="badge" style="background:#1a3a1f;">Game</span> Unity 2D · C#</div>
-            <div><span class="badge" style="background:#1e3a5f;">Server</span> Node.js · Express</div>
-            <div><span class="badge" style="background:#b45309;">DB</span> Firebase Firestore</div>
-            <div><span class="badge" style="background:#4a1d96;">AI</span> Claude API (Haiku)</div>
-            <div><span class="badge" style="background:#1a2a3a;">UI</span> TMP · UIHelper</div>
+      <div class="inner-wrap">
+        <div class="slide-title">📋 WBS (작업 분류 체계)</div>
+        <div class="wbs-grid">
+          <div class="wbs-col">
+            <div class="wbs-header phase-plan">📌 기획</div>
+            <div class="wbs-item">아이디어 구상</div>
+            <div class="wbs-item">기술스택 선정</div>
+            <div class="wbs-item">요구사항 정의</div>
+          </div>
+          <div class="wbs-col">
+            <div class="wbs-header phase-design">🎨 설계</div>
+            <div class="wbs-item">시스템 아키텍처</div>
+            <div class="wbs-item">UI/UX 설계</div>
+            <div class="wbs-item">DB 스키마</div>
+          </div>
+          <div class="wbs-col">
+            <div class="wbs-header phase-impl">⚙️ 구현</div>
+            <div class="wbs-item">Node.js 백엔드</div>
+            <div class="wbs-item">Claude API 연동</div>
+            <div class="wbs-item">Unity 2D 게임</div>
+            <div class="wbs-item">UI 시스템</div>
+          </div>
+          <div class="wbs-col">
+            <div class="wbs-header phase-done">✅ 완료</div>
+            <div class="wbs-item done-item">AI 캐릭터 생성</div>
+            <div class="wbs-item done-item">캐릭터 저장/조회</div>
+            <div class="wbs-item done-item">탑다운 맵 탐험</div>
+            <div class="wbs-item done-item">턴제 전투 시스템</div>
+            <div class="wbs-item done-item">씬 디자인 개선</div>
           </div>
         </div>
       </div>
-      <div class="card" style="margin-top:0.8em; text-align:center; font-size:0.9em; border-color:var(--purple);">
-        <span class="hl">Vibe Coding</span>으로 아이디어부터 완성까지 —
-        <span class="hl-purple">AI와 함께하면 혼자서도 게임을 만들 수 있다</span>
+    </section>
+
+    <!-- ④ 아키텍처 -->
+    <section>
+      <div class="inner-wrap">
+        <div class="slide-title">⚙️ 시스템 아키텍처</div>
+        <div class="arch-wrap">
+          <div style="width:100%">
+            <div class="arch-flow">
+              <div class="arch-node node-user">
+                <div class="n-icon">👤</div>
+                <div class="n-label">사용자</div>
+              </div>
+              <div class="arch-arrow">→</div>
+              <div class="arch-node node-unity">
+                <div class="n-icon">🎮</div>
+                <div class="n-label">Unity 클라이언트</div>
+                <div class="n-sub">C#</div>
+              </div>
+              <div class="arch-arrow">→</div>
+              <div class="arch-node node-server">
+                <div class="n-icon">⚙️</div>
+                <div class="n-label">Node.js 서버</div>
+                <div class="n-sub">Express</div>
+              </div>
+              <div class="arch-arrow">→</div>
+              <div class="arch-right">
+                <div class="arch-node node-ai">
+                  <div class="n-icon">🤖</div>
+                  <div class="n-label">Claude AI</div>
+                  <div class="n-sub">Haiku · 캐릭터 생성</div>
+                </div>
+                <div class="arch-node node-db">
+                  <div class="n-icon">🔥</div>
+                  <div class="n-label">Firebase Firestore</div>
+                  <div class="n-sub">캐릭터 저장/조회</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:0;margin-top:1em">
+              <div style="flex:1;font-size:0.6em;color:#a78bfa;text-align:center">캐릭터 정보 입력</div>
+              <div style="width:1.6em;flex-shrink:0"></div>
+              <div style="flex:1;font-size:0.6em;color:#a78bfa;text-align:center">REST API 요청</div>
+              <div style="width:1.6em;flex-shrink:0"></div>
+              <div style="flex:1;font-size:0.6em;color:#a78bfa;text-align:center">프롬프트 전송</div>
+              <div style="width:1.6em;flex-shrink:0"></div>
+              <div style="flex:1;font-size:0.6em;color:#a78bfa;text-align:center">JSON 응답 / 저장</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑤ 구현 결과 -->
+    <section>
+      <div class="inner-wrap">
+        <div class="slide-title">🏆 구현 결과</div>
+        <div class="cols">
+          <div class="col card">
+            <p style="color:#f5c842;font-weight:700;margin:0 0 0.4em;font-size:0.88em">주요 기능</p>
+            <ul style="line-height:2">
+              <li><span class="done">✅</span> AI 캐릭터 자동 생성</li>
+              <li><span class="done">✅</span> 캐릭터 저장 / 선택</li>
+              <li><span class="done">✅</span> 2D 탑다운 탐험</li>
+              <li><span class="done">✅</span> 턴제 전투 시스템</li>
+              <li><span class="done">✅</span> 한국어 입력 지원</li>
+            </ul>
+          </div>
+          <div class="col card">
+            <p style="color:#f5c842;font-weight:700;margin:0 0 0.4em;font-size:0.88em">기술 스택</p>
+            <ul style="list-style:none;padding:0;line-height:2.2">
+              <li><span class="badge" style="background:#14532d">Game</span> Unity 2D · C#</li>
+              <li><span class="badge" style="background:#1e3a5f">Server</span> Node.js · Express</li>
+              <li><span class="badge" style="background:#78350f">DB</span> Firebase Firestore</li>
+              <li><span class="badge" style="background:#4a1d96">AI</span> Claude API · Haiku</li>
+            </ul>
+          </div>
+        </div>
+        <div class="quote">
+          <span class="hl">Vibe Coding</span>으로 아이디어부터 완성까지 —
+          <span class="hl-purple">AI와 함께하면 혼자서도 게임을 만들 수 있다</span>
+        </div>
       </div>
     </section>
 
@@ -270,36 +333,21 @@ flowchart LR
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
 <script>
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: 'dark',
-    themeVariables: {
-      darkMode: true,
-      background: '#09071a',
-      primaryColor: '#9b6dff',
-      primaryTextColor: '#e8e0ff',
-      lineColor: '#9b6dff',
-      edgeLabelBackground: '#12103a',
-    }
-  });
-
   Reveal.initialize({
-    hash: true,
-    transition: 'slide',
+    width:    1280,
+    height:   720,
+    margin:   0.04,
+    minScale: 0.1,
+    maxScale: 3.0,
+    hash:        true,
+    transition:  'slide',
     transitionSpeed: 'fast',
-    controls: true,
-    controlsLayout: 'bottom-right',
-    progress: true,
+    controls:    true,
+    progress:    true,
     slideNumber: 'c/t',
-    center: false,
-    margin: 0.06,
+    center:      true,
   });
-
-  // 슬라이드가 보일 때마다 mermaid 렌더링
-  Reveal.on('ready',        () => mermaid.run());
-  Reveal.on('slidechanged', () => mermaid.run());
 </script>
 </body>
 </html>
