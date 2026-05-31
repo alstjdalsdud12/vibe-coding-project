@@ -243,7 +243,6 @@
       <div class="inner-wrap">
         <div class="slide-title">⚙️ 시스템 아키텍처</div>
         <div class="arch-wrap">
-          <!-- 상단: 메인 흐름 -->
           <div class="arch-row">
             <div class="arch-node node-user">
               <div class="n-icon">👤</div>
@@ -258,36 +257,32 @@
             <div class="arch-arrow">→</div>
             <div class="arch-node node-server">
               <div class="n-icon">⚙️</div>
-              <div class="n-label">Node.js 서버</div>
-              <div class="n-sub">Express · REST API</div>
+              <div class="n-label">Node.js</div>
+              <div class="n-sub">Express</div>
             </div>
             <div class="arch-arrow">→</div>
-            <div class="arch-node node-ai">
-              <div class="n-icon">🤖</div>
-              <div class="n-label">Claude AI</div>
-              <div class="n-sub">Haiku · 캐릭터 생성</div>
+            <!-- 오른쪽: AI + Firebase 세로 배치 -->
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:0.5em">
+              <div class="arch-node node-ai">
+                <div class="n-icon">🤖</div>
+                <div class="n-label">Claude AI</div>
+                <div class="n-sub">Haiku · 생성</div>
+              </div>
+              <div class="arch-node node-db">
+                <div class="n-icon">🔥</div>
+                <div class="n-label">Firebase</div>
+                <div class="n-sub">Firestore · 저장</div>
+              </div>
             </div>
           </div>
-          <!-- 라벨 -->
-          <div class="arch-label-row">
-            <div class="arch-label-cell">캐릭터 정보 입력</div>
+          <div class="arch-label-row" style="margin-top:0.6em">
+            <div class="arch-label-cell">캐릭터 입력</div>
             <div class="arch-label-arrow"></div>
             <div class="arch-label-cell">REST API 요청</div>
             <div class="arch-label-arrow"></div>
-            <div class="arch-label-cell">프롬프트 전송</div>
+            <div class="arch-label-cell">프롬프트 / 저장</div>
             <div class="arch-label-arrow"></div>
-            <div class="arch-label-cell">JSON 응답 생성</div>
-          </div>
-          <!-- 하단: 저장소 -->
-          <div class="arch-row" style="justify-content:flex-end">
-            <div style="flex:3;font-size:0.55em;color:#c4b5fd;text-align:right;padding-right:0.6em">
-              Node.js 서버가 결과를 저장 / 조회 →
-            </div>
-            <div class="arch-node node-db" style="flex:1">
-              <div class="n-icon">🔥</div>
-              <div class="n-label">Firebase</div>
-              <div class="n-sub">Firestore</div>
-            </div>
+            <div class="arch-label-cell">생성 / DB 저장</div>
           </div>
         </div>
       </div>
