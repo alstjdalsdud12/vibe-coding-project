@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     html, body {
       margin: 0; padding: 0;
@@ -153,6 +154,8 @@
       flex: 1; font-size: 0.52em; color: #a78bfa; text-align: center;
     }
     .arch-label-arrow { flex-shrink: 0; width: 1.5em; }
+    .slide-title i, .wbs-header i, .n-icon i { margin-right: 0.2em; }
+    .n-icon i { font-size: 1em; }
   </style>
 </head>
 <body>
@@ -179,10 +182,10 @@
     <!-- ② 문제 정의 & 비전 -->
     <section>
       <div class="inner-wrap">
-        <div class="slide-title">🎯 문제 정의 &amp; 비전</div>
+        <div class="slide-title"><i class="fa-solid fa-bullseye"></i> 문제 정의 &amp; 비전</div>
         <div class="cols">
           <div class="col card card-red">
-            <p style="color:#e74c3c;font-weight:700;margin:0 0 0.4em;font-size:0.88em">❌ 기존 RPG의 한계</p>
+            <p style="color:#e74c3c;font-weight:700;margin:0 0 0.4em;font-size:0.88em"><i class="fa-solid fa-circle-xmark"></i> 기존 RPG의 한계</p>
             <ul>
               <li>캐릭터는 <span class="hl">개발자가 미리 제작</span></li>
               <li>플레이어는 <span class="hl">선택만</span> 가능</li>
@@ -190,7 +193,7 @@
             </ul>
           </div>
           <div class="col card card-green">
-            <p style="color:#2ecc71;font-weight:700;margin:0 0 0.4em;font-size:0.88em">✅ 우리의 해답</p>
+            <p style="color:#2ecc71;font-weight:700;margin:0 0 0.4em;font-size:0.88em"><i class="fa-solid fa-circle-check"></i> 우리의 해답</p>
             <ul>
               <li>사용자가 <span class="hl">직접 상상</span>하고</li>
               <li>AI가 <span class="hl">즉시 생성</span>해주고</li>
@@ -205,29 +208,29 @@
     <!-- ③ 사용자 시나리오 -->
     <section>
       <div class="inner-wrap">
-        <div class="slide-title">👤 사용자 시나리오</div>
+        <div class="slide-title"><i class="fa-solid fa-user"></i> 사용자 시나리오</div>
         <div style="flex:1;display:flex;align-items:center;justify-content:center">
           <div style="display:flex;align-items:center;gap:0.5em;width:100%">
             <div class="arch-node node-user" style="flex:1;padding:0.9em 0.4em">
-              <div class="n-icon" style="font-size:1.6em">📝</div>
+              <div class="n-icon" style="font-size:1.6em"><i class="fa-solid fa-pen-to-square"></i></div>
               <div class="n-label" style="font-size:0.7em;margin-top:0.3em">①&nbsp;입력</div>
               <div class="n-sub" style="font-size:0.58em;margin-top:0.2em;line-height:1.5">이름 / 외형<br>무기 / 컨셉<br>세계관</div>
             </div>
             <div class="arch-arrow" style="font-size:1.5em">→</div>
             <div class="arch-node node-ai" style="flex:1;padding:0.9em 0.4em">
-              <div class="n-icon" style="font-size:1.6em">🤖</div>
+              <div class="n-icon" style="font-size:1.6em"><i class="fa-solid fa-robot"></i></div>
               <div class="n-label" style="font-size:0.7em;margin-top:0.3em">②&nbsp;AI 생성</div>
               <div class="n-sub" style="font-size:0.58em;margin-top:0.2em;line-height:1.5">Claude API<br>스탯 계산<br>스킬 부여</div>
             </div>
             <div class="arch-arrow" style="font-size:1.5em">→</div>
             <div class="arch-node node-db" style="flex:1;padding:0.9em 0.4em">
-              <div class="n-icon" style="font-size:1.6em">💾</div>
+              <div class="n-icon" style="font-size:1.6em"><i class="fa-solid fa-floppy-disk"></i></div>
               <div class="n-label" style="font-size:0.7em;margin-top:0.3em">③&nbsp;저장</div>
               <div class="n-sub" style="font-size:0.58em;margin-top:0.2em;line-height:1.5">Firebase<br>캐릭터 보존<br>재사용 가능</div>
             </div>
             <div class="arch-arrow" style="font-size:1.5em">→</div>
             <div class="arch-node node-unity" style="flex:1;padding:0.9em 0.4em">
-              <div class="n-icon" style="font-size:1.6em">🎮</div>
+              <div class="n-icon" style="font-size:1.6em"><i class="fa-solid fa-gamepad"></i></div>
               <div class="n-label" style="font-size:0.7em;margin-top:0.3em">④&nbsp;플레이</div>
               <div class="n-sub" style="font-size:0.58em;margin-top:0.2em;line-height:1.5">탑다운 탐험<br>턴제 전투<br>나만의 RPG</div>
             </div>
@@ -240,29 +243,29 @@
     <!-- ④ WBS -->
     <section>
       <div class="inner-wrap">
-        <div class="slide-title">📋 WBS (작업 분류 체계)</div>
+        <div class="slide-title"><i class="fa-solid fa-list-check"></i> WBS (작업 분류 체계)</div>
         <div class="wbs-grid">
           <div class="wbs-col">
-            <div class="wbs-header phase-plan">📌 기획</div>
+            <div class="wbs-header phase-plan"><i class="fa-solid fa-thumbtack"></i> 기획</div>
             <div class="wbs-item">아이디어 구상</div>
             <div class="wbs-item">기술스택 선정</div>
             <div class="wbs-item">요구사항 정의</div>
           </div>
           <div class="wbs-col">
-            <div class="wbs-header phase-design">🎨 설계</div>
+            <div class="wbs-header phase-design"><i class="fa-solid fa-pen-ruler"></i> 설계</div>
             <div class="wbs-item">시스템 아키텍처</div>
             <div class="wbs-item">UI/UX 설계</div>
             <div class="wbs-item">DB 스키마</div>
           </div>
           <div class="wbs-col">
-            <div class="wbs-header phase-impl">⚙️ 구현</div>
+            <div class="wbs-header phase-impl"><i class="fa-solid fa-code"></i> 구현</div>
             <div class="wbs-item">Node.js 백엔드</div>
             <div class="wbs-item">Claude API 연동</div>
             <div class="wbs-item">Unity 2D 게임</div>
             <div class="wbs-item">UI 시스템</div>
           </div>
           <div class="wbs-col">
-            <div class="wbs-header phase-done">✅ 완료</div>
+            <div class="wbs-header phase-done"><i class="fa-solid fa-check"></i> 완료</div>
             <div class="wbs-item done-item">캐릭터 저장/조회</div>
             <div class="wbs-item done-item">탑다운 맵 탐험</div>
             <div class="wbs-item done-item">턴제 전투 시스템</div>
@@ -275,22 +278,22 @@
     <!-- ⑤ 아키텍처 -->
     <section>
       <div class="inner-wrap">
-        <div class="slide-title">⚙️ 시스템 아키텍처</div>
+        <div class="slide-title"><i class="fa-solid fa-gear"></i> 시스템 아키텍처</div>
         <div class="arch-wrap">
           <div class="arch-row">
             <div class="arch-node node-user">
-              <div class="n-icon">👤</div>
+              <div class="n-icon"><i class="fa-solid fa-user"></i></div>
               <div class="n-label">사용자</div>
             </div>
             <div class="arch-arrow">→</div>
             <div class="arch-node node-unity">
-              <div class="n-icon">🎮</div>
+              <div class="n-icon"><i class="fa-solid fa-gamepad"></i></div>
               <div class="n-label">Unity 2D</div>
               <div class="n-sub">C# 클라이언트</div>
             </div>
             <div class="arch-arrow">→</div>
             <div class="arch-node node-server">
-              <div class="n-icon">⚙️</div>
+              <div class="n-icon"><i class="fa-solid fa-server"></i></div>
               <div class="n-label">Node.js</div>
               <div class="n-sub">Express</div>
             </div>
@@ -298,12 +301,12 @@
             <!-- 오른쪽: AI + Firebase 세로 배치 -->
             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:0.5em">
               <div class="arch-node node-ai">
-                <div class="n-icon">🤖</div>
+                <div class="n-icon"><i class="fa-solid fa-robot"></i></div>
                 <div class="n-label">Claude AI</div>
                 <div class="n-sub">Haiku · 생성</div>
               </div>
               <div class="arch-node node-db">
-                <div class="n-icon">🔥</div>
+                <div class="n-icon"><i class="fa-solid fa-database"></i></div>
                 <div class="n-label">Firebase</div>
                 <div class="n-sub">Firestore · 저장</div>
               </div>
@@ -325,22 +328,22 @@
     <!-- ⑥ 게임 화면 1 — 캐릭터 흐름 -->
     <section>
       <div class="inner-wrap">
-        <div class="slide-title">📱 게임 화면 — 캐릭터 생성 흐름</div>
+        <div class="slide-title"><i class="fa-solid fa-mobile-screen"></i> 게임 화면 — 캐릭터 생성 흐름</div>
         <div style="flex:1;display:flex;gap:0.8em;min-height:0">
           <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
-            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">🎬 타이틀 화면</div>
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0"><i class="fa-solid fa-film"></i> 타이틀 화면</div>
             <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
               <img src="screenshots/title.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #5b3fa0">
             </div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
-            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">✏️ 캐릭터 생성</div>
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0"><i class="fa-solid fa-pencil"></i> 캐릭터 생성</div>
             <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
               <img src="screenshots/creation.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #5b3fa0">
             </div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
-            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">🗃️ 캐릭터 선택</div>
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0"><i class="fa-solid fa-folder-open"></i> 캐릭터 선택</div>
             <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
               <img src="screenshots/selection.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #5b3fa0">
             </div>
@@ -352,16 +355,16 @@
     <!-- ⑦ 게임 화면 2 — 플레이 -->
     <section>
       <div class="inner-wrap">
-        <div class="slide-title">🎮 게임 화면 — 플레이</div>
+        <div class="slide-title"><i class="fa-solid fa-gamepad"></i> 게임 화면 — 플레이</div>
         <div style="flex:1;display:flex;gap:0.8em;min-height:0">
           <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
-            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">🗺️ 게임 씬 (탑다운 탐험)</div>
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0"><i class="fa-solid fa-map"></i> 게임 씬 (탑다운 탐험)</div>
             <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
               <img src="screenshots/game.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #22c55e">
             </div>
           </div>
           <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;min-width:0">
-            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0">⚔️ 전투 씬 (턴제 전투)</div>
+            <div style="font-size:0.68em;color:#a78bfa;text-align:center;flex-shrink:0"><i class="fa-solid fa-shield-halved"></i> 전투 씬 (턴제 전투)</div>
             <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
               <img src="screenshots/battle.png" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid #e74c3c">
             </div>
@@ -373,16 +376,16 @@
     <!-- ⑧ 구현 결과 -->
     <section>
       <div class="inner-wrap" style="font-size:0.82em">
-        <div class="slide-title">🏆 구현 결과</div>
+        <div class="slide-title"><i class="fa-solid fa-trophy"></i> 구현 결과</div>
         <div class="cols">
           <div class="col card" style="overflow:hidden">
             <p style="color:#f5c842;font-weight:700;margin:0 0 0.35em">주요 기능</p>
             <ul style="line-height:1.7;padding-left:1.1em">
-              <li><span class="done">✅</span> 캐릭터 정보 입력·저장·선택</li>
-              <li><span class="done">✅</span> 2D 탑다운 탐험</li>
-              <li><span class="done">✅</span> 턴제 전투 시스템</li>
-              <li><span class="done">✅</span> 한국어 입력 지원</li>
-              <li style="color:#f87171">❌ AI 캐릭터 자동 생성 (미구현)</li>
+              <li><i class="fa-solid fa-check" style="color:#2ecc71"></i> 캐릭터 정보 입력·저장·선택</li>
+              <li><i class="fa-solid fa-check" style="color:#2ecc71"></i> 2D 탑다운 탐험</li>
+              <li><i class="fa-solid fa-check" style="color:#2ecc71"></i> 턴제 전투 시스템</li>
+              <li><i class="fa-solid fa-check" style="color:#2ecc71"></i> 한국어 입력 지원</li>
+              <li style="color:#f87171"><i class="fa-solid fa-xmark" style="color:#f87171"></i> AI 캐릭터 자동 생성 (미구현)</li>
             </ul>
           </div>
           <div class="col card" style="overflow:hidden">
@@ -405,12 +408,12 @@
     <!-- ⑨ 남은 일정 -->
     <section>
       <div class="inner-wrap">
-        <div class="slide-title">📅 남은 일정</div>
+        <div class="slide-title"><i class="fa-solid fa-calendar-days"></i> 남은 일정</div>
         <div style="flex:1;display:flex;flex-direction:column;gap:0.4em;justify-content:center;font-size:0.78em">
           <!-- 상단: 완료 + 미구현 나란히 -->
           <div style="display:flex;gap:0.5em">
             <div class="card" style="border-color:#22c55e;padding:0.45em 0.8em;flex:1">
-              <p style="color:#22c55e;font-weight:700;margin:0 0 0.2em">✅ 현재까지</p>
+              <p style="color:#22c55e;font-weight:700;margin:0 0 0.2em"><i class="fa-solid fa-circle-check"></i> 현재까지</p>
               <ul style="margin:0;padding-left:1.1em">
                 <li>캐릭터 입력·저장·선택</li>
                 <li>탑다운 맵 탐험</li>
@@ -420,7 +423,7 @@
               </ul>
             </div>
             <div class="card" style="border-color:#e74c3c;padding:0.45em 0.8em;flex:1">
-              <p style="color:#f87171;font-weight:700;margin:0 0 0.2em">❌ 미구현</p>
+              <p style="color:#f87171;font-weight:700;margin:0 0 0.2em"><i class="fa-solid fa-circle-xmark"></i> 미구현</p>
               <ul style="margin:0;padding-left:1.1em">
                 <li>AI 캐릭터 자동 생성</li>
                 <li>배경 이미지 / BGM</li>
@@ -432,7 +435,7 @@
           </div>
           <!-- 하단: 추가 예정 -->
           <div class="card" style="border-color:#3b82f6;padding:0.45em 0.8em">
-            <p style="color:#93c5fd;font-weight:700;margin:0 0 0.2em">🚀 추가 예정 — 기능 확장 계획 다수</p>
+            <p style="color:#93c5fd;font-weight:700;margin:0 0 0.2em"><i class="fa-solid fa-rocket"></i> 추가 예정 — 기능 확장 계획 다수</p>
             <ul style="margin:0;padding-left:1.1em;columns:2;gap:1em">
               <li>AI 캐릭터 생성 연동</li>
               <li>스킬·아이템 시스템</li>
