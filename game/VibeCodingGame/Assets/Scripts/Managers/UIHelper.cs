@@ -205,7 +205,7 @@ public static class UIHelper
             if (_placeholder != null)
                 _placeholder.gameObject.SetActive(!hasText && !_field.isFocused);
 
-            string comp = Input.compositionString;
+            string comp = _field.isFocused ? Input.compositionString : "";
             string fullText = _field.text + comp;
 
             if (_field.isFocused)
