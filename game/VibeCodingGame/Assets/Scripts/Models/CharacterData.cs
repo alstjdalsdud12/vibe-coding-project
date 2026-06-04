@@ -25,9 +25,21 @@ public class StatsData
 }
 
 [Serializable]
+public class SpumPartsData
+{
+    public string hair;
+    public string helmet;
+    public string weapon;
+    public string weaponType;
+    public string shield;
+    public string back;
+}
+
+[Serializable]
 public class GeneratedData
 {
     public string name;
+    public SpumPartsData spumParts;
     public StatsData stats;
     public List<AbilityData> abilities;
     public string story;
@@ -58,6 +70,7 @@ public class CharacterListItem
     public string name;
     public string weapon;
     public string concept;
+    public SpumPartsData spumParts;
 }
 
 [Serializable]
