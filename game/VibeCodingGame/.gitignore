@@ -13,6 +13,10 @@ Builds/
 *.sln
 *.suo
 *.user
+.vs/
+
+# Unity 업그레이드 로그
+UpgradeLog.htm
 
 # OS
 .DS_Store

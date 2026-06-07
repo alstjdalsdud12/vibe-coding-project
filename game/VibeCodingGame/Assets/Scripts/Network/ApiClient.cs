@@ -57,6 +57,7 @@ public class ApiClient : MonoBehaviour
 
         if (req.result != UnityWebRequest.Result.Success) { onError?.Invoke(req.error); yield break; }
 
+        Debug.Log("[API] 캐릭터 응답: " + req.downloadHandler.text);
         var res = JsonUtility.FromJson<CharacterResponse>(req.downloadHandler.text);
         if (res.success) onSuccess?.Invoke(res.data);
         else onError?.Invoke("캐릭터 조회 실패");

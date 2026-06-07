@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
     private Button _attackBtn, _skillBtn, _fleeBtn;
 
     private Sprite _squareSprite;
+    [SerializeField] private SPUM_Prefabs _spumTemplate;
 
     // 구역 배치 (center position, size)
     private static readonly Vector2[] ZonePositions = {
@@ -148,12 +149,29 @@ public class GameManager : MonoBehaviour
 
     private void CreatePlayer(Vector3 startPos)
     {
-        var playerGO = new GameObject("Player");
-        playerGO.tag = "Player";
-        var sr = playerGO.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateCircleSprite();
-        sr.color = new Color(0.95f, 0.88f, 0.45f);
-        sr.sortingOrder = 10;
+        GameObject playerGO;
+
+        if (_spumTemplate != null && _player.generated.spumParts != null)
+        {
+            var p = _player.generated.spumParts;
+            Debug.Log($"[SPUM] 파츠 적용: hair={p.hair}, helmet={p.helmet}, weapon={p.weapon}, weaponType={p.weaponType}, shield={p.shield}, back={p.back}");
+            playerGO = Instantiate(_spumTemplate.gameObject, startPos, Quaternion.identity);
+            playerGO.name = "Player";
+            playerGO.tag = "Player";
+            var spum = playerGO.GetComponent<SPUM_Prefabs>();
+            SpumCharacterLoader.Apply(spum, _player.generated.spumParts);
+        }
+        else
+        {
+            Debug.Log($"[SPUM] 스킵 — template:{_spumTemplate != null}, spumParts:{_player.generated.spumParts != null}");
+            playerGO = new GameObject("Player");
+            playerGO.tag = "Player";
+            var sr = playerGO.AddComponent<SpriteRenderer>();
+            sr.sprite = CreateCircleSprite();
+            sr.color = new Color(0.95f, 0.88f, 0.45f);
+            sr.sortingOrder = 10;
+        }
+
         var rb = playerGO.AddComponent<Rigidbody2D>();
         rb.gravityScale = 0;
         rb.freezeRotation = true;

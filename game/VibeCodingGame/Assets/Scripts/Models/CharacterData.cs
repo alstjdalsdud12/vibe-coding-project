@@ -28,6 +28,7 @@ public class StatsData
 public class SpumPartsData
 {
     public string hair;
+    public string hairColor;
     public string helmet;
     public string weapon;
     public string weaponType;

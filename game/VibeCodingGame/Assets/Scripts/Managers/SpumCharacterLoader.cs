@@ -17,62 +17,100 @@ public static class SpumCharacterLoader
             { "Mace",   "8_Weapons/8_Mace/"   },
         };
 
-    // SPUM_Prefabs의 ImageElement에 파츠 적용
+    // 게임 월드 SPUM 캐릭터에 파츠 적용 (SpriteRenderer 방식)
     public static void Apply(SPUM_Prefabs spum, SpumPartsData parts)
     {
         if (spum == null || parts == null) return;
 
-        foreach (var el in spum.ImageElement)
+        SetAllByName(spum.transform, "P_Hair", BASE + "2_Hair/" + parts.hair);
+
+        if (!string.IsNullOrEmpty(parts.hairColor))
+            SetColor(spum.transform, "P_Hair", parts.hairColor);
+
+        if (!string.IsNullOrEmpty(parts.helmet) && parts.helmet != "none")
+            SetAllByName(spum.transform, "P_Helmet", BASE + "4_Helmet/" + parts.helmet);
+        else
+            ClearAllByName(spum.transform, "P_Helmet");
+
+        if (!string.IsNullOrEmpty(parts.weaponType) && WeaponFolders.TryGetValue(parts.weaponType, out var folder))
+            SetAllByName(spum.transform, "P_Weapon", BASE + folder + parts.weapon);
+
+        if (!string.IsNullOrEmpty(parts.shield) && parts.shield != "none")
+            SetAllByName(spum.transform, "P_Shield", BASE + "8_Weapons/7_Shield/" + parts.shield);
+        else
+            ClearAllByName(spum.transform, "P_Shield");
+
+        if (!string.IsNullOrEmpty(parts.back) && parts.back != "none")
+            SetAllByName(spum.transform, "P_Back", BASE + "10_Back/" + parts.back);
+        else
+            ClearAllByName(spum.transform, "P_Back");
+    }
+
+    private static void SetColor(Transform root, string partName, string hexColor)
+    {
+        if (!hexColor.StartsWith("#")) hexColor = "#" + hexColor;
+        if (!ColorUtility.TryParseHtmlString(hexColor, out Color color)) return;
+        ApplyColorToAll(root, partName, color);
+    }
+
+    private static void ApplyColorToAll(Transform t, string name, Color color)
+    {
+        if (t.name == name)
         {
-            switch (el.PartType)
-            {
-                case "Hair":
-                    SetSprite(el.image, BASE + "2_Hair/" + parts.hair);
-                    break;
-                case "Helmet":
-                    if (!string.IsNullOrEmpty(parts.helmet) && parts.helmet != "none")
-                        SetSprite(el.image, BASE + "4_Helmet/" + parts.helmet);
-                    else
-                        el.image.sprite = null;
-                    break;
-                case "Weapons":
-                    if (el.PartSubType == "Shield")
-                    {
-                        if (!string.IsNullOrEmpty(parts.shield) && parts.shield != "none")
-                            SetSprite(el.image, BASE + "8_Weapons/7_Shield/" + parts.shield);
-                        else
-                            el.image.sprite = null;
-                    }
-                    else
-                    {
-                        if (WeaponFolders.TryGetValue(parts.weaponType, out var folder))
-                            SetSprite(el.image, BASE + folder + parts.weapon);
-                    }
-                    break;
-                case "Back":
-                    if (!string.IsNullOrEmpty(parts.back) && parts.back != "none")
-                        SetSprite(el.image, BASE + "10_Back/" + parts.back);
-                    else
-                        el.image.sprite = null;
-                    break;
-            }
+            var sr = t.GetComponentInChildren<SpriteRenderer>(true);
+            if (sr != null) sr.color = color;
         }
+        foreach (Transform child in t)
+            ApplyColorToAll(child, name, color);
     }
 
     // 정적 초상화용 — 헤어 스프라이트를 UI Image에 로드
     public static void SetPortrait(Image target, SpumPartsData parts)
     {
         if (target == null || parts == null) return;
-        var sprites = Resources.LoadAll<Sprite>(BASE + "2_Hair/" + parts.hair);
-        if (sprites != null && sprites.Length > 0)
-            target.sprite = sprites[0];
+        var sprite = Resources.Load<Sprite>(BASE + "2_Hair/" + parts.hair);
+        if (sprite != null) target.sprite = sprite;
     }
 
-    private static void SetSprite(Image img, string path)
+    private static void ClearAllByName(Transform root, string partName)
     {
-        if (img == null) return;
-        var sprites = Resources.LoadAll<Sprite>(path);
-        if (sprites != null && sprites.Length > 0)
-            img.sprite = sprites[0];
+        ClearRecursive(root, partName);
+    }
+
+    private static void ClearRecursive(Transform t, string name)
+    {
+        if (t.name == name)
+        {
+            var sr = t.GetComponentInChildren<SpriteRenderer>(true);
+            if (sr != null) sr.sprite = null;
+        }
+        foreach (Transform child in t)
+            ClearRecursive(child, name);
+    }
+
+    private static void SetAllByName(Transform root, string partName, string path)
+    {
+        var sprite = Resources.Load<Sprite>(path);
+        if (sprite == null)
+        {
+            Debug.LogWarning("[SPUM] 스프라이트 로드 실패: " + path);
+            return;
+        }
+        ApplyToAll(root, partName, sprite);
+    }
+
+    private static void ApplyToAll(Transform t, string name, Sprite sprite)
+    {
+        if (t.name == name)
+        {
+            var sr = t.GetComponentInChildren<SpriteRenderer>(true);
+            if (sr != null)
+            {
+                sr.sprite = sprite;
+                Debug.Log($"[SPUM] {name} 스프라이트 적용: {sprite.name}");
+            }
+        }
+        foreach (Transform child in t)
+            ApplyToAll(child, name, sprite);
     }
 }
