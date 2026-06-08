@@ -7,13 +7,25 @@ public class MapPlayerController : MonoBehaviour
     private bool _movementEnabled = true;
     private const float Speed = 7f;
 
-    private SpriteRenderer[] _arrows; // 0=right, 1=up, 2=left, 3=down
+    private SpriteRenderer[] _arrows;
     private static readonly Color ArrowActive = new Color(1f, 0.9f, 0.3f, 0.92f);
     private static readonly Color ArrowDim   = new Color(1f, 1f, 1f, 0.12f);
+
+    private SPUM_Prefabs _spum;
+    private PlayerState _lastState = PlayerState.IDLE;
 
     private void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
+
+        _spum = GetComponentInChildren<SPUM_Prefabs>();
+        if (_spum != null)
+        {
+            if (!_spum.allListsHaveItemsExist())
+                _spum.PopulateAnimationLists();
+            _spum.OverrideControllerInit();
+        }
+
         SetupArrows();
     }
 
@@ -71,6 +83,22 @@ public class MapPlayerController : MonoBehaviour
         dir = dir.magnitude > 0 ? dir.normalized : Vector2.zero;
         _rb.velocity = dir * Speed;
         UpdateArrows(dir);
+        UpdateAnimation(dir);
+    }
+
+    private void UpdateAnimation(Vector2 dir)
+    {
+        if (_spum == null) return;
+
+        var state = dir.magnitude > 0.1f ? PlayerState.MOVE : PlayerState.IDLE;
+        if (state != _lastState)
+        {
+            _spum.PlayAnimation(state, 0);
+            _lastState = state;
+        }
+
+        if (dir.x > 0.1f)       _spum.transform.localScale = new Vector3(-1, 1, 1);
+        else if (dir.x < -0.1f) _spum.transform.localScale = new Vector3( 1, 1, 1);
     }
 
     private void UpdateArrows(Vector2 dir)
