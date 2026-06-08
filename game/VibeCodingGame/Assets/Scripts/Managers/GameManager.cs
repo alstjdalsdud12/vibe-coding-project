@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
     private Button _attackBtn, _skillBtn, _fleeBtn;
 
     private Sprite _squareSprite;
+    private Sprite[][] _zoneSprites;
     [SerializeField] private SPUM_Prefabs _spumTemplate;
 
     // 구역 배치 (center position, size)
@@ -73,12 +74,22 @@ public class GameManager : MonoBehaviour
     // ─── 맵 생성 ──────────────────────────────────────
     private void SetupMap()
     {
+        _zoneSprites = new Sprite[5][];
+        for (int i = 0; i < 5; i++)
+            _zoneSprites[i] = LoadNpcSprites(i);
+
         var locs = _player.generated.locations;
         for (int i = 0; i < Mathf.Min(5, locs.Count); i++)
             CreateZone(locs[i].name, locs[i].description, i,
                 ZonePositions[i], ZoneSizes[i], ZoneColors[i]);
 
         CreatePlayer(new Vector3(0, 3, 0));
+    }
+
+    private Sprite[] LoadNpcSprites(int zoneIndex)
+    {
+        string folder = zoneIndex <= 1 ? "Npcs/Forest" : "Npcs/Desert";
+        return Resources.LoadAll<Sprite>(folder);
     }
 
     private void CreateZone(string name, string desc, int index, Vector2 pos, Vector2 size, Color color)
@@ -112,6 +123,8 @@ public class GameManager : MonoBehaviour
         tmp.GetComponent<RectTransform>().sizeDelta = new Vector2(14, 5);
         tmp.ForceMeshUpdate();
 
+        PlaceDecorations(index, pos, size);
+
         // 구역당 몬스터 2마리 생성
         for (int m = 0; m < 2; m++)
         {
@@ -122,14 +135,45 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void PlaceDecorations(int zoneIndex, Vector2 pos, Vector2 size)
+    {
+        var sprites = _zoneSprites?[zoneIndex];
+        if (sprites == null || sprites.Length == 0) return;
+        var rng = new System.Random(zoneIndex * 31 + 7);
+        for (int i = 0; i < 8; i++)
+        {
+            float x = pos.x + (float)(rng.NextDouble() - 0.5) * size.x * 0.80f;
+            float y = pos.y + (float)(rng.NextDouble() - 0.5) * size.y * 0.75f;
+            var deco = new GameObject($"Tree_{zoneIndex}_{i}");
+            deco.transform.position = new Vector3(x, y, 0);
+            var sr = deco.AddComponent<SpriteRenderer>();
+            sr.sprite = sprites[rng.Next(sprites.Length)];
+            sr.sortingOrder = 3;
+            float scale = 1.5f + (float)rng.NextDouble() * 0.8f;
+            deco.transform.localScale = new Vector3(scale, scale, 1);
+        }
+    }
+
     private void CreateMonster(string zoneName, int zoneIndex, Vector2 patrolA, Vector2 patrolB)
     {
         var monGO = new GameObject("Monster_" + zoneName);
         monGO.transform.position = new Vector3(patrolA.x, patrolA.y, 0);
+        monGO.transform.localScale = Vector3.one * 2f;
+
         var sr = monGO.AddComponent<SpriteRenderer>();
-        sr.sprite = _squareSprite;
-        sr.color = Color.Lerp(new Color(0.85f, 0.25f, 0.1f), new Color(0.55f, 0.0f, 0.75f), zoneIndex / 4f);
         sr.sortingOrder = 8;
+        var sprites = _zoneSprites?[zoneIndex];
+        if (sprites != null && sprites.Length > 0)
+        {
+            var rng = new System.Random((int)(patrolA.x * 100 + patrolA.y * 13));
+            sr.sprite = sprites[rng.Next(sprites.Length)];
+            sr.color = Color.white;
+        }
+        else
+        {
+            sr.sprite = _squareSprite;
+            sr.color = Color.Lerp(new Color(0.85f, 0.25f, 0.1f), new Color(0.55f, 0.0f, 0.75f), zoneIndex / 4f);
+        }
 
         var rb = monGO.AddComponent<Rigidbody2D>();
         rb.gravityScale = 0;
@@ -138,7 +182,7 @@ public class GameManager : MonoBehaviour
 
         var col = monGO.AddComponent<BoxCollider2D>();
         col.isTrigger = true;
-        col.size = new Vector2(2.5f, 2.5f);
+        col.size = new Vector2(1.2f, 1.2f);
 
         var mon = monGO.AddComponent<MonsterController>();
         mon.ZoneName = zoneName;
