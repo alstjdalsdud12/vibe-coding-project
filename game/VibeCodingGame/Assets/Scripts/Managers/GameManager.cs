@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
     private Button _attackBtn, _skillBtn, _fleeBtn;
 
     private Sprite _squareSprite;
+    private Sprite[] _treeSprites;
     private Sprite[][] _zoneSprites;
     [SerializeField] private SPUM_Prefabs _spumTemplate;
 
@@ -74,6 +75,7 @@ public class GameManager : MonoBehaviour
     // ─── 맵 생성 ──────────────────────────────────────
     private void SetupMap()
     {
+        _treeSprites = Resources.LoadAll<Sprite>("Decor/Decor");
         _zoneSprites = new Sprite[5][];
         for (int i = 0; i < 5; i++)
             _zoneSprites[i] = LoadNpcSprites(i);
@@ -137,7 +139,7 @@ public class GameManager : MonoBehaviour
 
     private void PlaceDecorations(int zoneIndex, Vector2 pos, Vector2 size)
     {
-        var sprites = _zoneSprites?[zoneIndex];
+        var sprites = _treeSprites;
         if (sprites == null || sprites.Length == 0) return;
         var rng = new System.Random(zoneIndex * 31 + 7);
         int treeCount = rng.Next(3, 5);
