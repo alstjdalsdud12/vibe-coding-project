@@ -41,9 +41,14 @@ public class GameManager : MonoBehaviour
         new Vector2(20, 20), new Vector2(16, 16),
     };
     private static readonly Color[] ZoneColors = {
-        new Color(0.12f, 0.38f, 0.22f, 0.4f), new Color(0.36f, 0.40f, 0.12f, 0.4f),
-        new Color(0.32f, 0.22f, 0.08f, 0.4f), new Color(0.12f, 0.12f, 0.28f, 0.4f),
-        new Color(0.28f, 0.04f, 0.08f, 0.4f),
+        new Color(0.15f, 0.55f, 0.25f), new Color(0.55f, 0.60f, 0.15f),
+        new Color(0.50f, 0.30f, 0.08f), new Color(0.12f, 0.14f, 0.48f),
+        new Color(0.55f, 0.06f, 0.08f),
+    };
+    private static readonly Color[] ZoneBorderColors = {
+        new Color(0.05f, 0.28f, 0.10f), new Color(0.30f, 0.34f, 0.06f),
+        new Color(0.28f, 0.15f, 0.03f), new Color(0.06f, 0.06f, 0.26f),
+        new Color(0.30f, 0.02f, 0.03f),
     };
 
     private void Start()
@@ -69,7 +74,7 @@ public class GameManager : MonoBehaviour
         cam.orthographic = true;
         cam.orthographicSize = 10;
         cam.clearFlags = CameraClearFlags.SolidColor;
-        cam.backgroundColor = new Color(0.03f, 0.03f, 0.06f);
+        cam.backgroundColor = new Color(0.08f, 0.12f, 0.08f);
     }
 
     // ─── 맵 생성 ──────────────────────────────────────
@@ -77,7 +82,6 @@ public class GameManager : MonoBehaviour
     {
         _treeSprites = Resources.LoadAll<Sprite>("Decor/Decor");
         _zoneSprites = new Sprite[5][];
-        CreateMapBackground();
         for (int i = 0; i < 5; i++)
             _zoneSprites[i] = LoadNpcSprites(i);
 
@@ -87,45 +91,6 @@ public class GameManager : MonoBehaviour
                 ZonePositions[i], ZoneSizes[i], ZoneColors[i]);
 
         CreatePlayer(new Vector3(0, 3, 0));
-    }
-
-    private void CreateMapBackground()
-    {
-        var sprites = Resources.LoadAll<Sprite>("Tiles/GrassTiles");
-        if (sprites == null || sprites.Length == 0) return;
-
-        var bgGO = new GameObject("MapBackground");
-        bgGO.transform.position = new Vector3(0, 45, 0);
-        var sr = bgGO.AddComponent<SpriteRenderer>();
-        sr.sprite = sprites[sprites.Length / 2];
-        sr.drawMode = SpriteDrawMode.Tiled;
-        sr.tileMode = SpriteTileMode.Continuous;
-        sr.size = new Vector2(52, 112);
-        sr.sortingOrder = -2;
-    }
-
-    private void CreateZoneTileBackground(string zoneName, string zoneDesc, Vector2 pos, Vector2 size)
-    {
-        string text = (zoneName + " " + zoneDesc).ToLower();
-        string tilePath;
-        if (System.Text.RegularExpressions.Regex.IsMatch(text, "사막|황야|모래|건조|폐허|desert|sand|ruin"))
-            tilePath = "Tiles/DirtTiles";
-        else if (System.Text.RegularExpressions.Regex.IsMatch(text, "동굴|던전|지하|암흑|어둠|석굴|cave|dungeon|underground|dark"))
-            tilePath = "Tiles/DirtBackgroundTiles";
-        else
-            tilePath = "Tiles/GrassTiles";
-
-        var sprites = Resources.LoadAll<Sprite>(tilePath);
-        if (sprites == null || sprites.Length == 0) return;
-
-        var bgGO = new GameObject("ZoneBG_" + zoneName);
-        bgGO.transform.position = new Vector3(pos.x, pos.y, 0);
-        var sr = bgGO.AddComponent<SpriteRenderer>();
-        sr.sprite = sprites[sprites.Length / 2];
-        sr.drawMode = SpriteDrawMode.Tiled;
-        sr.tileMode = SpriteTileMode.Continuous;
-        sr.size = size;
-        sr.sortingOrder = -1;
     }
 
     private Sprite[] LoadNpcSprites(int zoneIndex)
@@ -165,7 +130,15 @@ public class GameManager : MonoBehaviour
         tmp.GetComponent<RectTransform>().sizeDelta = new Vector2(14, 5);
         tmp.ForceMeshUpdate();
 
-        CreateZoneTileBackground(name, desc, pos, size);
+        // 테두리 (구역보다 살짝 크게, 더 어두운 색)
+        var borderGO = new GameObject("Border_" + name);
+        borderGO.transform.position = new Vector3(pos.x, pos.y, 0);
+        borderGO.transform.localScale = new Vector3(size.x + 1.2f, size.y + 1.2f, 1);
+        var bsr = borderGO.AddComponent<SpriteRenderer>();
+        bsr.sprite = _squareSprite;
+        bsr.color = ZoneBorderColors[index];
+        bsr.sortingOrder = -1;
+
         PlaceDecorations(index, pos, size);
 
         // 구역당 몬스터 2마리 생성
