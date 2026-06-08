@@ -6,6 +6,8 @@ public class MapPlayerController : MonoBehaviour
     private Camera _cam;
     private bool _movementEnabled = true;
     private const float Speed = 7f;
+    private static readonly Vector2 MapMin = new Vector2(-22f, -5f);
+    private static readonly Vector2 MapMax = new Vector2(23f, 95f);
 
     private SpriteRenderer[] _arrows;
     private static readonly Color ArrowActive = new Color(1f, 0.9f, 0.3f, 0.92f);
@@ -82,6 +84,12 @@ public class MapPlayerController : MonoBehaviour
 
         dir = dir.magnitude > 0 ? dir.normalized : Vector2.zero;
         _rb.velocity = dir * Speed;
+
+        var pos = _rb.position;
+        pos.x = Mathf.Clamp(pos.x, MapMin.x, MapMax.x);
+        pos.y = Mathf.Clamp(pos.y, MapMin.y, MapMax.y);
+        _rb.position = pos;
+
         UpdateArrows(dir);
         UpdateAnimation(dir);
     }
