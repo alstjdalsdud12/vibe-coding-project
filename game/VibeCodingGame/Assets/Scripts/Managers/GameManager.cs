@@ -41,9 +41,9 @@ public class GameManager : MonoBehaviour
         new Vector2(20, 20), new Vector2(16, 16),
     };
     private static readonly Color[] ZoneColors = {
-        new Color(0.12f, 0.38f, 0.22f, 0.6f), new Color(0.36f, 0.40f, 0.12f, 0.6f),
-        new Color(0.32f, 0.22f, 0.08f, 0.6f), new Color(0.12f, 0.12f, 0.28f, 0.6f),
-        new Color(0.28f, 0.04f, 0.08f, 0.6f),
+        new Color(0.12f, 0.38f, 0.22f, 0.4f), new Color(0.36f, 0.40f, 0.12f, 0.4f),
+        new Color(0.32f, 0.22f, 0.08f, 0.4f), new Color(0.12f, 0.12f, 0.28f, 0.4f),
+        new Color(0.28f, 0.04f, 0.08f, 0.4f),
     };
 
     private void Start()
@@ -101,6 +101,30 @@ public class GameManager : MonoBehaviour
         sr.drawMode = SpriteDrawMode.Tiled;
         sr.tileMode = SpriteTileMode.Continuous;
         sr.size = new Vector2(52, 112);
+        sr.sortingOrder = -2;
+    }
+
+    private void CreateZoneTileBackground(string zoneName, string zoneDesc, Vector2 pos, Vector2 size)
+    {
+        string text = (zoneName + " " + zoneDesc).ToLower();
+        string tilePath;
+        if (System.Text.RegularExpressions.Regex.IsMatch(text, "사막|황야|모래|건조|폐허|desert|sand|ruin"))
+            tilePath = "Tiles/DirtTiles";
+        else if (System.Text.RegularExpressions.Regex.IsMatch(text, "동굴|던전|지하|암흑|어둠|석굴|cave|dungeon|underground|dark"))
+            tilePath = "Tiles/DirtBackgroundTiles";
+        else
+            tilePath = "Tiles/GrassTiles";
+
+        var sprites = Resources.LoadAll<Sprite>(tilePath);
+        if (sprites == null || sprites.Length == 0) return;
+
+        var bgGO = new GameObject("ZoneBG_" + zoneName);
+        bgGO.transform.position = new Vector3(pos.x, pos.y, 0);
+        var sr = bgGO.AddComponent<SpriteRenderer>();
+        sr.sprite = sprites[sprites.Length / 2];
+        sr.drawMode = SpriteDrawMode.Tiled;
+        sr.tileMode = SpriteTileMode.Continuous;
+        sr.size = size;
         sr.sortingOrder = -1;
     }
 
@@ -141,6 +165,7 @@ public class GameManager : MonoBehaviour
         tmp.GetComponent<RectTransform>().sizeDelta = new Vector2(14, 5);
         tmp.ForceMeshUpdate();
 
+        CreateZoneTileBackground(name, desc, pos, size);
         PlaceDecorations(index, pos, size);
 
         // 구역당 몬스터 2마리 생성
