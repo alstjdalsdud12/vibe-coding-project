@@ -41,9 +41,9 @@ public class GameManager : MonoBehaviour
         new Vector2(20, 20), new Vector2(16, 16),
     };
     private static readonly Color[] ZoneColors = {
-        new Color(0.12f, 0.38f, 0.22f), new Color(0.36f, 0.40f, 0.12f),
-        new Color(0.32f, 0.22f, 0.08f), new Color(0.12f, 0.12f, 0.28f),
-        new Color(0.28f, 0.04f, 0.08f),
+        new Color(0.12f, 0.38f, 0.22f, 0.6f), new Color(0.36f, 0.40f, 0.12f, 0.6f),
+        new Color(0.32f, 0.22f, 0.08f, 0.6f), new Color(0.12f, 0.12f, 0.28f, 0.6f),
+        new Color(0.28f, 0.04f, 0.08f, 0.6f),
     };
 
     private void Start()
@@ -77,6 +77,7 @@ public class GameManager : MonoBehaviour
     {
         _treeSprites = Resources.LoadAll<Sprite>("Decor/Decor");
         _zoneSprites = new Sprite[5][];
+        CreateMapBackground();
         for (int i = 0; i < 5; i++)
             _zoneSprites[i] = LoadNpcSprites(i);
 
@@ -86,6 +87,21 @@ public class GameManager : MonoBehaviour
                 ZonePositions[i], ZoneSizes[i], ZoneColors[i]);
 
         CreatePlayer(new Vector3(0, 3, 0));
+    }
+
+    private void CreateMapBackground()
+    {
+        var sprites = Resources.LoadAll<Sprite>("Tiles/GrassTiles");
+        if (sprites == null || sprites.Length == 0) return;
+
+        var bgGO = new GameObject("MapBackground");
+        bgGO.transform.position = new Vector3(0, 45, 0);
+        var sr = bgGO.AddComponent<SpriteRenderer>();
+        sr.sprite = sprites[sprites.Length / 2];
+        sr.drawMode = SpriteDrawMode.Tiled;
+        sr.tileMode = SpriteTileMode.Continuous;
+        sr.size = new Vector2(52, 112);
+        sr.sortingOrder = -1;
     }
 
     private Sprite[] LoadNpcSprites(int zoneIndex)
