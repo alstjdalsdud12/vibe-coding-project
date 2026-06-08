@@ -140,7 +140,8 @@ public class GameManager : MonoBehaviour
         var sprites = _zoneSprites?[zoneIndex];
         if (sprites == null || sprites.Length == 0) return;
         var rng = new System.Random(zoneIndex * 31 + 7);
-        for (int i = 0; i < 8; i++)
+        int treeCount = rng.Next(3, 5);
+        for (int i = 0; i < treeCount; i++)
         {
             float x = pos.x + (float)(rng.NextDouble() - 0.5) * size.x * 0.80f;
             float y = pos.y + (float)(rng.NextDouble() - 0.5) * size.y * 0.75f;
