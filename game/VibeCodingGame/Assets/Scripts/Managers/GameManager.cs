@@ -152,7 +152,7 @@ public class GameManager : MonoBehaviour
             var sr = deco.AddComponent<SpriteRenderer>();
             sr.sprite = sprites[rng.Next(sprites.Length)];
             sr.sortingOrder = 3;
-            float scale = 1.5f + (float)rng.NextDouble() * 0.8f;
+            float scale = 0.4f + (float)rng.NextDouble() * 0.2f;
             deco.transform.localScale = new Vector3(scale, scale, 1);
         }
     }
