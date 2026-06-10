@@ -6,8 +6,8 @@ public class MapPlayerController : MonoBehaviour
     private Camera _cam;
     private bool _movementEnabled = true;
     private const float Speed = 7f;
-    private static readonly Vector2 MapMin = new Vector2(-22f, -5f);
-    private static readonly Vector2 MapMax = new Vector2(23f, 95f);
+    private static readonly Vector2 MapMin = new Vector2(-20f, 0f);
+    private static readonly Vector2 MapMax = new Vector2(21f, 90f);
 
     private SpriteRenderer[] _arrows;
     private static readonly Color ArrowActive = new Color(1f, 0.9f, 0.3f, 0.92f);
