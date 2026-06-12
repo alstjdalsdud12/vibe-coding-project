@@ -22,7 +22,8 @@ public class MainMenuManager : MonoBehaviour
     private TextMeshProUGUI _statusText;
     private int         _cardIndex;
 
-    private readonly Dictionary<int, RenderTexture> _previewCache = new Dictionary<int, RenderTexture>();
+    // Texture2D로 캐시 — ReadPixels로 RT 내용을 복사해 안정적으로 표시
+    private readonly Dictionary<int, Texture2D> _previewCache = new Dictionary<int, Texture2D>();
     private int _previewSlot;
 
     private void Start()
@@ -36,34 +37,29 @@ public class MainMenuManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        foreach (var rt in _previewCache.Values)
-            if (rt != null) rt.Release();
+        foreach (var tex in _previewCache.Values)
+            if (tex != null) Destroy(tex);
         _previewCache.Clear();
     }
 
     // ── UI 구성 ──────────────────────────────────────────────
     private void BuildUI()
     {
-        // 배경
         var bg = UIHelper.CreatePanel(_canvas, new Color(0.06f, 0.05f, 0.12f), "BG");
         UIHelper.Stretch(bg.GetComponent<RectTransform>());
 
-        // 상단 헤더 영역 (더 넓게)
         var header = UIHelper.CreatePanel(_canvas, new Color(0.10f, 0.07f, 0.22f), "Header");
         UIHelper.SetAnchors(header.GetComponent<RectTransform>(),
             new Vector2(0f, 0.80f), new Vector2(1f, 1f));
 
-        // 헤더 하단 보라색 라인
         var headerLine = UIHelper.CreatePanel(_canvas, new Color(0.6f, 0.35f, 1.0f, 0.7f), "HeaderLine");
         UIHelper.SetAnchors(headerLine.GetComponent<RectTransform>(),
             new Vector2(0f, 0.798f), new Vector2(1f, 0.803f));
 
-        // 제목 그림자
         var shadow = UIHelper.CreateText(_canvas, "캐릭터  선택", 68,
             new Vector2(0.102f, 0.855f), new Vector2(0.902f, 0.978f));
         shadow.color = new Color(0.08f, 0f, 0.2f, 0.8f);
 
-        // 제목
         var title = UIHelper.CreateText(_canvas, "캐릭터  선택", 68,
             new Vector2(0.10f, 0.858f), new Vector2(0.90f, 0.980f));
         title.color = new Color(1f, 0.88f, 0.50f);
@@ -71,12 +67,10 @@ public class MainMenuManager : MonoBehaviour
         ol.effectColor    = new Color(0.7f, 0.2f, 0.05f, 1f);
         ol.effectDistance = new Vector2(3, -3);
 
-        // 서브타이틀 (구분선 위로 올려서 겹침 방지)
         var sub = UIHelper.CreateText(_canvas, "어떤 모험가와 함께하시겠습니까?", 26,
             new Vector2(0.08f, 0.808f), new Vector2(0.92f, 0.856f));
         sub.color = new Color(0.75f, 0.65f, 1.0f, 0.9f);
 
-        // 상태 텍스트 (로딩/에러)
         _statusText = UIHelper.CreateText(_canvas, "불러오는 중...", 26,
             new Vector2(0.05f, 0.758f), new Vector2(0.95f, 0.796f));
         _statusText.color = new Color(0.7f, 0.6f, 0.9f);
@@ -120,12 +114,10 @@ public class MainMenuManager : MonoBehaviour
         scroll.content = cRT;
         _listContent   = content.transform;
 
-        // 하단 라인
         var footerLine = UIHelper.CreatePanel(_canvas, new Color(0.6f, 0.35f, 1.0f, 0.7f), "FooterLine");
         UIHelper.SetAnchors(footerLine.GetComponent<RectTransform>(),
             new Vector2(0f, 0.218f), new Vector2(1f, 0.222f));
 
-        // ── 하단 버튼 ─────────────────────────────────────────
         var newBtn = UIHelper.CreateButton(_canvas, "+ 새 캐릭터 만들기",
             new Vector2(0.08f, 0.115f), new Vector2(0.92f, 0.205f),
             new Color(0.15f, 0.48f, 0.28f));
@@ -164,11 +156,9 @@ public class MainMenuManager : MonoBehaviour
             Mathf.Min(accent.b + 0.35f, 1f));
         _cardIndex++;
 
-        // 카드 루트
         var card = new GameObject("Card_" + item.name);
         card.transform.SetParent(_listContent, false);
-        var cardImg = card.AddComponent<Image>();
-        cardImg.color = new Color(0.09f, 0.08f, 0.18f);
+        card.AddComponent<Image>().color = new Color(0.09f, 0.08f, 0.18f);
         var le = card.AddComponent<LayoutElement>();
         le.preferredWidth = le.minWidth = 370;
 
@@ -187,23 +177,23 @@ public class MainMenuManager : MonoBehaviour
         UIHelper.SetAnchors(portrait.GetComponent<RectTransform>(),
             new Vector2(0f, 0.46f), new Vector2(1f, 1f));
 
-        // 캐릭터 RenderTexture 프리뷰
+        // 캐릭터 프리뷰 RawImage
         var previewGO = new GameObject("CharacterPreview");
         previewGO.transform.SetParent(portrait.transform, false);
         var rawImg = previewGO.AddComponent<RawImage>();
         UIHelper.SetAnchors(previewGO.GetComponent<RectTransform>(),
-            new Vector2(0f, 0.05f), new Vector2(1f, 1f));
+            new Vector2(0.02f, 0.06f), new Vector2(0.98f, 0.98f));
         int charIdx = item.characterIndex > 0 ? item.characterIndex : 1;
         StartCoroutine(CapturePreviewAsync(charIdx, rawImg));
 
-        // 초상화 영역 하단 그라데이션 느낌 (얇은 accent 라인)
+        // 초상화 하단 accent 라인
         var portraitBottom = new GameObject("PortraitBottom");
         portraitBottom.transform.SetParent(portrait.transform, false);
         portraitBottom.AddComponent<Image>().color = accent;
         UIHelper.SetAnchors(portraitBottom.GetComponent<RectTransform>(),
             new Vector2(0f, 0f), new Vector2(1f, 0.05f));
 
-        // 슬롯 번호 배지 (우상단)
+        // 슬롯 배지 (우상단)
         var badge = new GameObject("Badge");
         badge.transform.SetParent(portrait.transform, false);
         badge.AddComponent<Image>().color = accent;
@@ -213,7 +203,6 @@ public class MainMenuManager : MonoBehaviour
             Vector2.zero, Vector2.one);
 
         // ── 하단 정보 영역 ───────────────────────
-        // 이름
         var nameTmp = UIHelper.CreateText(card.transform, item.name, 36,
             new Vector2(0.07f, 0.32f), new Vector2(0.93f, 0.46f));
         nameTmp.fontStyle = FontStyles.Bold;
@@ -221,14 +210,12 @@ public class MainMenuManager : MonoBehaviour
         nameTmp.alignment = TextAlignmentOptions.Left;
         nameTmp.enableWordWrapping = false;
 
-        // 구분선
         var line = new GameObject("Divider");
         line.transform.SetParent(card.transform, false);
         line.AddComponent<Image>().color = new Color(accent.r, accent.g, accent.b, 0.4f);
         UIHelper.SetAnchors(line.GetComponent<RectTransform>(),
             new Vector2(0.05f, 0.315f), new Vector2(0.95f, 0.32f));
 
-        // 무기
         var weaponTmp = UIHelper.CreateText(card.transform,
             "무기  " + item.weapon, 30,
             new Vector2(0.07f, 0.19f), new Vector2(0.93f, 0.31f));
@@ -236,7 +223,6 @@ public class MainMenuManager : MonoBehaviour
         weaponTmp.alignment = TextAlignmentOptions.Left;
         weaponTmp.enableWordWrapping = true;
 
-        // 컨셉
         var conceptTmp = UIHelper.CreateText(card.transform, item.concept, 28,
             new Vector2(0.07f, 0.04f), new Vector2(0.93f, 0.19f));
         conceptTmp.color     = new Color(0.72f, 0.72f, 0.90f);
@@ -244,9 +230,9 @@ public class MainMenuManager : MonoBehaviour
         conceptTmp.enableWordWrapping = true;
     }
 
-    // ── 캐릭터 프리뷰 렌더 ───────────────────────────────────
-    // 캐릭터를 화면 밖(900,900)에 생성하고 전용 카메라로 256x256 RT에 캡처
-    // WaitForEndOfFrame으로 Unity 정상 렌더 루프가 카메라를 처리한 뒤 RT를 가져옴
+    // ── 캐릭터 프리뷰 캡처 ───────────────────────────────────
+    // 캐릭터를 화면 밖에 생성 → 전용 카메라로 RT 렌더 → ReadPixels로 Texture2D 복사
+    // Texture2D로 표시하면 RT 타이밍 의존 없이 안정적
     private IEnumerator CapturePreviewAsync(int charIdx, RawImage target)
     {
         if (_previewCache.TryGetValue(charIdx, out var cached))
@@ -258,16 +244,16 @@ public class MainMenuManager : MonoBehaviour
         float slotX = 900f + _previewSlot * 10f;
         _previewSlot++;
 
-        // 캐릭터 생성 (화면 밖)
-        var root = new GameObject($"Preview_{charIdx}");
+        // 캐릭터 (화면 밖 위치)
+        var root = new GameObject($"Prev_{charIdx}");
         root.transform.position = new Vector3(slotX, 900f, 0f);
-        var visual = new GameObject("Visual");
+        var visual = new GameObject("V");
         visual.transform.SetParent(root.transform, false);
         visual.transform.localScale = Vector3.one * 1.2f;
         LayerLabCharacter.AttachPlayer(visual, charIdx);
 
-        // 캡처 카메라 — 캐릭터 몸 중심(y+0.7)을 정면으로, 1:1 비율
-        var camGO = new GameObject($"PreviewCam_{charIdx}");
+        // 전용 캡처 카메라
+        var camGO = new GameObject($"PrevCam_{charIdx}");
         camGO.transform.position = new Vector3(slotX, 900.7f, -10f);
         var cam = camGO.AddComponent<Camera>();
         cam.orthographic     = true;
@@ -281,14 +267,25 @@ public class MainMenuManager : MonoBehaviour
         var rt = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
         cam.targetTexture = rt;
 
-        // Unity 렌더 루프가 이 카메라를 처리할 때까지 대기
-        yield return new WaitForEndOfFrame();
+        // SpriteRenderer가 렌더 배치에 포함될 때까지 3 프레임 대기
+        yield return null;
+        yield return null;
+        yield return null;
 
-        _previewCache[charIdx] = rt;
-        target.texture = rt;
+        cam.Render();
 
-        // 캐릭터·카메라 GO 제거 (RT는 _previewCache가 관리)
-        cam.enabled = false;
+        // RT 내용을 Texture2D로 복사 (타이밍 의존 없이 안정적으로 표시 가능)
+        RenderTexture.active = rt;
+        var tex = new Texture2D(256, 256, TextureFormat.RGBA32, false);
+        tex.ReadPixels(new Rect(0, 0, 256, 256), 0, 0);
+        tex.Apply();
+        RenderTexture.active = null;
+
+        _previewCache[charIdx] = tex;
+        target.texture = tex;
+
+        rt.Release();
+        Destroy(rt);
         Destroy(root);
         Destroy(camGO);
     }
