@@ -40,6 +40,7 @@ public class SpumPartsData
 public class GeneratedData
 {
     public string name;
+    public int characterIndex;
     public SpumPartsData spumParts;
     public StatsData stats;
     public List<AbilityData> abilities;

@@ -13,21 +13,12 @@ public class MapPlayerController : MonoBehaviour
     private static readonly Color ArrowActive = new Color(1f, 0.9f, 0.3f, 0.92f);
     private static readonly Color ArrowDim   = new Color(1f, 1f, 1f, 0.12f);
 
-    private SPUM_Prefabs _spum;
-    private PlayerState _lastState = PlayerState.IDLE;
+    private LayerLabCharacter _layerChar;
 
     private void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
-
-        _spum = GetComponentInChildren<SPUM_Prefabs>();
-        if (_spum != null)
-        {
-            if (!_spum.allListsHaveItemsExist())
-                _spum.PopulateAnimationLists();
-            _spum.OverrideControllerInit();
-        }
-
+        _layerChar = GetComponentInChildren<LayerLabCharacter>();
         SetupArrows();
     }
 
@@ -96,17 +87,9 @@ public class MapPlayerController : MonoBehaviour
 
     private void UpdateAnimation(Vector2 dir)
     {
-        if (_spum == null) return;
-
-        var state = dir.magnitude > 0.1f ? PlayerState.MOVE : PlayerState.IDLE;
-        if (state != _lastState)
-        {
-            _spum.PlayAnimation(state, 0);
-            _lastState = state;
-        }
-
-        if (dir.x > 0.1f)       _spum.transform.localScale = new Vector3(-1, 1, 1);
-        else if (dir.x < -0.1f) _spum.transform.localScale = new Vector3( 1, 1, 1);
+        if (_layerChar == null) return;
+        _layerChar.SetWalking(dir.magnitude > 0.1f);
+        _layerChar.SetFacing(dir.x);
     }
 
     private void UpdateArrows(Vector2 dir)
@@ -122,7 +105,11 @@ public class MapPlayerController : MonoBehaviour
     {
         _movementEnabled = enabled;
         if (!enabled && _rb != null) _rb.velocity = Vector2.zero;
-        if (!enabled) UpdateArrows(Vector2.zero);
+        if (!enabled)
+        {
+            UpdateArrows(Vector2.zero);
+            _layerChar?.SetWalking(false);
+        }
     }
 
     // 오른쪽을 가리키는 삼각형 스프라이트 생성 (회전으로 4방향 사용)

@@ -28,8 +28,6 @@ public class GameManager : MonoBehaviour
 
     private Sprite _squareSprite;
     private Sprite[] _treeSprites;
-    private Sprite[][] _zoneSprites;
-    [SerializeField] private SPUM_Prefabs _spumTemplate;
 
     // 구역 배치 (center position, size)
     private static readonly Vector2[] ZonePositions = {
@@ -81,9 +79,6 @@ public class GameManager : MonoBehaviour
     private void SetupMap()
     {
         _treeSprites = Resources.LoadAll<Sprite>("Decor/Decor");
-        _zoneSprites = new Sprite[5][];
-        for (int i = 0; i < 5; i++)
-            _zoneSprites[i] = LoadNpcSprites(i);
 
         var locs = _player.generated.locations;
         for (int i = 0; i < Mathf.Min(5, locs.Count); i++)
@@ -91,12 +86,6 @@ public class GameManager : MonoBehaviour
                 ZonePositions[i], ZoneSizes[i], ZoneColors[i]);
 
         CreatePlayer(new Vector3(0, 3, 0));
-    }
-
-    private Sprite[] LoadNpcSprites(int zoneIndex)
-    {
-        string folder = zoneIndex <= 1 ? "Npcs/Forest" : "Npcs/Desert";
-        return Resources.LoadAll<Sprite>(folder);
     }
 
     private void CreateZone(string name, string desc, int index, Vector2 pos, Vector2 size, Color color)
@@ -175,22 +164,16 @@ public class GameManager : MonoBehaviour
     {
         var monGO = new GameObject("Monster_" + zoneName);
         monGO.transform.position = new Vector3(patrolA.x, patrolA.y, 0);
-        monGO.transform.localScale = Vector3.one * 2f;
 
-        var sr = monGO.AddComponent<SpriteRenderer>();
-        sr.sortingOrder = 8;
-        var sprites = _zoneSprites?[zoneIndex];
-        if (sprites != null && sprites.Length > 0)
-        {
-            var rng = new System.Random((int)(patrolA.x * 100 + patrolA.y * 13));
-            sr.sprite = sprites[rng.Next(sprites.Length)];
-            sr.color = Color.white;
-        }
-        else
-        {
-            sr.sprite = _squareSprite;
-            sr.color = Color.Lerp(new Color(0.85f, 0.25f, 0.1f), new Color(0.55f, 0.0f, 0.75f), zoneIndex / 4f);
-        }
+        var kind = zoneIndex <= 1
+            ? LayerLabCharacter.MonsterKind.Goblin
+            : zoneIndex <= 3
+                ? LayerLabCharacter.MonsterKind.Skull
+                : LayerLabCharacter.MonsterKind.Slime;
+        var visual = new GameObject("Visual");
+        visual.transform.SetParent(monGO.transform, false);
+        visual.transform.localScale = Vector3.one * 2f;
+        LayerLabCharacter.AttachMonster(visual, kind);
 
         var rb = monGO.AddComponent<Rigidbody2D>();
         rb.gravityScale = 0;
@@ -210,34 +193,21 @@ public class GameManager : MonoBehaviour
 
     private void CreatePlayer(Vector3 startPos)
     {
-        GameObject playerGO;
+        var playerGO = new GameObject("Player");
+        playerGO.tag = "Player";
+        playerGO.transform.position = startPos;
 
-        if (_spumTemplate != null && _player.generated.spumParts != null)
-        {
-            var p = _player.generated.spumParts;
-            Debug.Log($"[SPUM] 파츠 적용: hair={p.hair}, helmet={p.helmet}, weapon={p.weapon}, weaponType={p.weaponType}, shield={p.shield}, back={p.back}");
-            playerGO = Instantiate(_spumTemplate.gameObject, startPos, Quaternion.identity);
-            playerGO.name = "Player";
-            playerGO.tag = "Player";
-            var spum = playerGO.GetComponent<SPUM_Prefabs>();
-            SpumCharacterLoader.Apply(spum, _player.generated.spumParts);
-        }
-        else
-        {
-            Debug.Log($"[SPUM] 스킵 — template:{_spumTemplate != null}, spumParts:{_player.generated.spumParts != null}");
-            playerGO = new GameObject("Player");
-            playerGO.tag = "Player";
-            var sr = playerGO.AddComponent<SpriteRenderer>();
-            sr.sprite = CreateCircleSprite();
-            sr.color = new Color(0.95f, 0.88f, 0.45f);
-            sr.sortingOrder = 10;
-        }
+        int charIdx = _player.generated.characterIndex;
+        if (charIdx < 1 || charIdx > 8) charIdx = 1;
+        var visual = new GameObject("Visual");
+        visual.transform.SetParent(playerGO.transform, false);
+        visual.transform.localScale = Vector3.one * 2f;
+        LayerLabCharacter.AttachPlayer(visual, charIdx);
 
         var rb = playerGO.AddComponent<Rigidbody2D>();
         rb.gravityScale = 0;
         rb.freezeRotation = true;
         playerGO.AddComponent<CircleCollider2D>().radius = 0.5f;
-        playerGO.transform.position = startPos;
         _playerController = playerGO.AddComponent<MapPlayerController>();
     }
 

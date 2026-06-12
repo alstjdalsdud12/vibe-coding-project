@@ -22,15 +22,29 @@ const SPUM_PARTS = `
 [백 악세서리 (New_Back_01, New_Back_02 또는 "none"): 2종 + 없음]
 `;
 
+const CHARACTER_INDEX_DESC = `
+[캐릭터 인덱스 선택 (characterIndex: 1~8)]
+  1: 남자 원시인 (석기시대, 동굴인, 원시 남성)
+  2: 여자 원시인 (석기시대, 동굴인, 원시 여성)
+  3: 남자 전사 (기사, 검사, 갑옷, 근접 전투 남성)
+  4: 여자 궁수 (여성 활잡이, 레인저, 원거리 여성)
+  5: 스파르타 (방패+창, 로마·그리스 전사, 글래디에이터)
+  6: 아처 (남성 활잡이, 레인저, 원거리 남성)
+  7: 특수 군인 (베레모, 나이프, 현대 특수부대)
+  8: 일반 군인 (일반 보병, 소총수, 현대 군인)
+`;
+
 const SYSTEM_PROMPT = `당신은 RPG 게임의 캐릭터 크리에이터입니다.
 유저가 제공한 외형, 무기, 컨셉, 세계관 정보를 바탕으로 캐릭터와 게임 장소를 생성하고
-아래 SPUM 파츠 목록에서 캐릭터에 어울리는 외형을 조합합니다.
+아래 캐릭터 인덱스와 SPUM 파츠 목록을 참고해 외형을 결정합니다.
 
+${CHARACTER_INDEX_DESC}
 ${SPUM_PARTS}
 
 반드시 아래 JSON 형식만 반환하고 다른 텍스트는 포함하지 마세요:
 {
   "name": "캐릭터 이름",
+  "characterIndex": 유저 입력에 가장 어울리는 1~8 정수,
   "spumParts": {
     "hair": "New_Hair_XX",
     "hairColor": "#RRGGBB 형식의 16진수 색상 코드",
@@ -52,6 +66,7 @@ ${SPUM_PARTS}
 
 규칙:
 - 이름은 컨셉에 어울리는 고유한 이름으로 짓는다
+- characterIndex는 유저의 외형·무기·컨셉·성별에 가장 어울리는 번호를 위 목록에서 선택한다
 - spumParts는 유저의 외형·무기·컨셉을 종합해 가장 어울리는 파츠를 선택한다
 - hair는 캐릭터 성별과 스타일에 맞는 헤어를 위 목록에서 반드시 선택한다 (여성→여성형, 남성→남성형, 불명→중성/공용)
 - hairColor는 유저의 외형 설명에서 머리 색상을 추출해 #RRGGBB 형식으로 반환한다 (예: 보라색→#8B00FF, 금발→#FFD700, 검은색→#1A1A1A, 흰색→#F5F5F5, 빨간색→#CC0000)
@@ -110,8 +125,22 @@ const pickMockParts = (weapon, concept, appearance = '') => {
   };
 };
 
+const pickCharacterIndex = (appearance, weapon, concept) => {
+  const t = `${appearance} ${weapon} ${concept}`.toLowerCase();
+  if (/원시|구석기|석기/.test(t) && /여자|여성|woman|female/.test(t)) return 2;
+  if (/원시|구석기|석기/.test(t)) return 1;
+  if (/궁수|활|archer|bow|ranger/.test(t) && /여자|여성|woman|female/.test(t)) return 4;
+  if (/궁수|활|archer|bow|ranger/.test(t)) return 6;
+  if (/스파르타|sparta|글래디에이터|방패.*창|창.*방패|gladiator/.test(t)) return 5;
+  if (/베레모|특수부대|special forces|나이프/.test(t)) return 7;
+  if (/군인|soldier|infantry|보병/.test(t)) return 8;
+  if (/여자|여성|woman|female/.test(t)) return 4;
+  return 3;
+};
+
 const mockResponse = (appearance, weapon, concept, worldview) => ({
   name: '실바나 아쉬크로프트',
+  characterIndex: pickCharacterIndex(appearance, weapon, concept),
   spumParts: pickMockParts(weapon, concept, appearance),
   stats: { hp: 85, atk: 35, def: 25, mp: 120 },
   abilities: [
