@@ -177,12 +177,14 @@ public class MainMenuManager : MonoBehaviour
         UIHelper.SetAnchors(portrait.GetComponent<RectTransform>(),
             new Vector2(0f, 0.46f), new Vector2(1f, 1f));
 
-        // 캐릭터 프리뷰 RawImage
+        // 캐릭터 프리뷰 RawImage — AspectRatioFitter로 1:1 비율 유지
         var previewGO = new GameObject("CharacterPreview");
         previewGO.transform.SetParent(portrait.transform, false);
         var rawImg = previewGO.AddComponent<RawImage>();
-        UIHelper.SetAnchors(previewGO.GetComponent<RectTransform>(),
-            new Vector2(0.02f, 0.06f), new Vector2(0.98f, 0.98f));
+        UIHelper.Stretch(previewGO.GetComponent<RectTransform>());
+        var arf = previewGO.AddComponent<AspectRatioFitter>();
+        arf.aspectMode  = AspectRatioFitter.AspectMode.FitInParent;
+        arf.aspectRatio = 1f;
         int charIdx = item.characterIndex > 0 ? item.characterIndex : 1;
         StartCoroutine(CapturePreviewAsync(charIdx, rawImg));
 
