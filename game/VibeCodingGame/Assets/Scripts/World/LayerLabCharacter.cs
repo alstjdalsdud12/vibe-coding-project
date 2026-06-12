@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Layer Lab 2D Minimal Characters + Casual Monsters 파츠 조립 + 걷기 애니메이션
-// 모든 localPosition은 Visual GO(scale=2) 기준 로컬 좌표
+// 모든 localPosition 값은 Man_0X.prefab에서 직접 추출한 Layer Lab 원본 좌표
 public class LayerLabCharacter : MonoBehaviour
 {
     public enum MonsterKind { Skull, Goblin, Slime }
@@ -28,32 +28,106 @@ public class LayerLabCharacter : MonoBehaviour
         return c;
     }
 
-    // ── 플레이어 파츠 조립 ────────────────────────────────────────
-    // 스프라이트 픽셀 기준 (100PPU, Visual scale=2):
-    //   Head 94x76px → world 약 0.54 위
-    //   Body 63x49px → 기준점(0,0)
-    //   Leg  21x20px → world 약 0.34 아래
-    //   Weapon 64x93px → 오른쪽 상단
     private void BuildPlayer(int idx)
     {
         string p = $"LayerLab/minimal/{idx}";
-        AddLayer(p, "Back",    9, 0,      0);
-        AddLayer(p, "Cape",   10, 0,     -0.05f);
-        _legA = AddLayer(p, "Leg",  11,  0,     -0.17f);
-        _legB = AddLayer(p, "Leg2", 11,  0,     -0.17f);
-        if (_legB != null) _legB.gameObject.SetActive(false);
-        AddLayer(p, "Body",   12, 0,      0);
-        AddLayer(p, "Neck",   13, 0,      0.18f);
-        AddLayer(p, "Head",   14, 0,      0.27f);
-        AddLayer(p, "Mouth",  15, 0,      0.22f);
-        AddLayer(p, "Weapon", 16, 0.15f,  0.15f);
-        AddLayer(p, "Shield", 16, -0.15f, 0);
+
+        switch (idx)
+        {
+            case 1: // 남자 원시인 — Man_01.prefab
+                AddLayer(p, "Cape",   10,  0.040f, 0.445f);
+                _legA = AddLayer(p, "Leg",  11,  0.260f, 0.220f);
+                _legB = AddLayer(p, "Leg2", 11, -0.095f, 0.220f);
+                if (_legB != null) _legB.gameObject.SetActive(false);
+                AddLayer(p, "Body",   12,  0.070f, 0.445f);
+                AddLayer(p, "Head",   14,  0.085f, 0.930f);
+                AddLayer(p, "Mouth",  15,  0.120f, 0.705f);
+                AddLayer(p, "Weapon", 16, -0.265f, 0.785f);
+                break;
+
+            case 2: // 여자 원시인 — Man_02.prefab
+                AddLayer(p, "Cape",   10, -0.010f, 0.445f);
+                _legA = AddLayer(p, "Leg",  11,  0.195f, 0.220f);
+                _legB = AddLayer(p, "Leg2", 11, -0.160f, 0.220f);
+                if (_legB != null) _legB.gameObject.SetActive(false);
+                AddLayer(p, "Body",   12,  0.015f, 0.445f);
+                AddLayer(p, "Head",   14,  0.000f, 0.985f);
+                AddLayer(p, "Mouth",  15,  0.065f, 0.720f);
+                AddLayer(p, "Weapon", 16, -0.115f, 0.485f);
+                break;
+
+            case 3: // 남자 전사 — Man_03.prefab
+                AddLayer(p, "Cape",   10,  0.070f, 0.390f);
+                _legA = AddLayer(p, "Leg",  11,  0.265f, 0.220f);
+                _legB = AddLayer(p, "Leg2", 11, -0.090f, 0.220f);
+                if (_legB != null) _legB.gameObject.SetActive(false);
+                AddLayer(p, "Body",   12,  0.075f, 0.435f);
+                AddLayer(p, "Head",   14,  0.080f, 0.910f);
+                AddLayer(p, "Mouth",  15,  0.125f, 0.690f);
+                AddLayer(p, "Weapon", 16, -0.235f, 0.670f);
+                break;
+
+            case 4: // 여자 궁수 — Man_04.prefab
+                AddLayer(p, "Cape",   10, -0.195f, 0.385f);
+                _legA = AddLayer(p, "Leg",  11,  0.055f, 0.220f);
+                _legB = AddLayer(p, "Leg2", 11, -0.300f, 0.220f);
+                if (_legB != null) _legB.gameObject.SetActive(false);
+                AddLayer(p, "Body",   12, -0.120f, 0.415f);
+                AddLayer(p, "Head",   14, -0.165f, 0.875f);
+                AddLayer(p, "Mouth",  15, -0.030f, 0.720f);
+                AddLayer(p, "Weapon",  16,  0.090f, 0.480f);
+                AddLayer(p, "Weapon_", 16,  0.255f, 0.520f);
+                break;
+
+            case 5: // 스파르타 — Man_05.prefab
+                AddLayer(p, "Cape",   10, -0.135f, 0.400f);
+                _legA = AddLayer(p, "Leg",  11,  0.060f, 0.220f);
+                _legB = AddLayer(p, "Leg2", 11, -0.295f, 0.220f);
+                if (_legB != null) _legB.gameObject.SetActive(false);
+                AddLayer(p, "Body",   12, -0.130f, 0.445f);
+                AddLayer(p, "Head",   14, -0.130f, 0.865f);
+                AddLayer(p, "Mouth",  15, -0.080f, 0.690f);
+                AddLayer(p, "Weapon", 11,  0.000f, 0.445f);
+                AddLayer(p, "Shield", 16,  0.240f, 0.410f);
+                break;
+
+            case 6: // 아처 — Man_06.prefab
+                AddLayer(p, "Back",    9, -0.105f, 0.495f);
+                AddLayer(p, "Cape",   10, -0.015f, 0.400f);
+                _legA = AddLayer(p, "Leg",  11,  0.180f, 0.220f);
+                _legB = AddLayer(p, "Leg2", 11, -0.175f, 0.220f);
+                if (_legB != null) _legB.gameObject.SetActive(false);
+                AddLayer(p, "Body",   12,  0.000f, 0.445f);
+                AddLayer(p, "Head",   14,  0.005f, 0.965f);
+                AddLayer(p, "Mouth",  15,  0.065f, 0.715f);
+                AddLayer(p, "Weapon", 16,  0.000f, 0.415f);
+                break;
+
+            case 7: // 군인 베레모 — Man_07.prefab
+                AddLayer(p, "Cape",   10,  0.040f, 0.435f);
+                _legA = AddLayer(p, "Leg",  11,  0.235f, 0.220f);
+                _legB = AddLayer(p, "Leg2", 11, -0.120f, 0.220f);
+                if (_legB != null) _legB.gameObject.SetActive(false);
+                AddLayer(p, "Body",   12,  0.045f, 0.445f);
+                AddLayer(p, "Head",   14,  0.010f, 0.925f);
+                AddLayer(p, "Mouth",  15,  0.105f, 0.700f);
+                AddLayer(p, "Weapon", 16, -0.255f, 0.665f);
+                break;
+
+            case 8: // 일반 군인 — Man_08.prefab
+                AddLayer(p, "Cape",   10, -0.155f, 0.385f);
+                _legA = AddLayer(p, "Leg",  11,  0.095f, 0.220f);
+                _legB = AddLayer(p, "Leg2", 11, -0.260f, 0.220f);
+                if (_legB != null) _legB.gameObject.SetActive(false);
+                AddLayer(p, "Body",   12, -0.085f, 0.445f);
+                AddLayer(p, "Neck",   13, -0.125f, 0.570f);
+                AddLayer(p, "Head",   14, -0.095f, 0.895f);
+                AddLayer(p, "Mouth",  15, -0.030f, 0.690f);
+                AddLayer(p, "Weapon", 16,  0.110f, 0.400f);
+                break;
+        }
     }
 
-    // ── 몬스터 파츠 조립 ──────────────────────────────────────────
-    // Skull body 62x63, head 62x52, leg 25x33, arm 27x28
-    // Goblin body 68x78(head 포함), arm 49x41, leg 24x25
-    // Slime  body 74x70, weapon 41x57
     private void BuildMonster(MonsterKind kind)
     {
         switch (kind)
@@ -61,31 +135,30 @@ public class LayerLabCharacter : MonoBehaviour
             case MonsterKind.Goblin:
             {
                 string p = "LayerLab/monsters/goblin";
-                _legA = AddLayer(p, "leg",  5,  0,      -0.22f);
-                _legB = AddLayer(p, "leg2", 5,  0,      -0.22f);
+                _legA = AddLayer(p, "leg",  5,  0.130f, 0.255f);
+                _legB = AddLayer(p, "leg2", 5, -0.140f, 0.255f);
                 if (_legB != null) _legB.gameObject.SetActive(false);
-                AddLayer(p, "body", 6, 0,       0.08f);
-                AddLayer(p, "arm",  7, 0.22f,   0.10f);
-                AddLayer(p, "arm2", 7, -0.10f,  0.05f);
+                AddLayer(p, "body", 6,  0.000f, 0.580f);
+                AddLayer(p, "arm",  7, -0.025f, 0.465f);
+                AddLayer(p, "arm2", 7,  0.300f, 0.415f);
                 break;
             }
             case MonsterKind.Skull:
             {
                 string p = "LayerLab/monsters/skull";
-                _legA = AddLayer(p, "leg",  5,  0,      -0.24f);
-                _legB = AddLayer(p, "leg2", 5,  0,      -0.24f);
+                _legA = AddLayer(p, "leg",  5, -0.090f, 0.295f);
+                _legB = AddLayer(p, "leg2", 5,  0.200f, 0.285f);
                 if (_legB != null) _legB.gameObject.SetActive(false);
-                AddLayer(p, "body", 6, 0,       0);
-                AddLayer(p, "arm",  7, 0.22f,   0.05f);
-                AddLayer(p, "arm2", 7, -0.12f,  0.05f);
-                AddLayer(p, "head", 8, 0,       0.29f);
+                AddLayer(p, "body", 6,  0.055f, 0.575f);
+                AddLayer(p, "arm",  7, -0.130f, 0.775f);
+                AddLayer(p, "head", 8,  0.105f, 0.870f);
                 break;
             }
             case MonsterKind.Slime:
             {
                 string p = "LayerLab/monsters/slime";
-                AddLayer(p, "body",   6,  0,      0);
-                AddLayer(p, "weapon", 7,  0.20f,  0.28f);
+                AddLayer(p, "body",   6,  0.025f, 0.430f);
+                AddLayer(p, "weapon", 7, -0.190f, 0.465f);
                 break;
             }
         }
@@ -105,7 +178,6 @@ public class LayerLabCharacter : MonoBehaviour
         return sr;
     }
 
-    // ── 애니메이션 API ────────────────────────────────────────────
     public void SetWalking(bool walk)
     {
         if (walk == _walking) return;
@@ -128,8 +200,8 @@ public class LayerLabCharacter : MonoBehaviour
         bool right = dx > 0;
         if (right == _facingRight) return;
         _facingRight = right;
-        foreach (var sr in _allLayers)
-            if (sr != null) sr.flipX = right;
+        var s = transform.localScale;
+        transform.localScale = new Vector3(right ? Mathf.Abs(s.x) : -Mathf.Abs(s.x), s.y, s.z);
     }
 
     private void OnEnable()
