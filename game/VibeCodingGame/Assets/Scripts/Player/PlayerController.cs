@@ -43,7 +43,7 @@ public class MapPlayerController : MonoBehaviour
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite       = sprite;
             sr.color        = ArrowDim;
-            sr.sortingOrder = 12;
+            sr.sortingOrder = 20;
             _arrows[i] = sr;
         }
     }
