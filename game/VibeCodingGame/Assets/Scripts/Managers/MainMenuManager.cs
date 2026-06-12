@@ -299,7 +299,7 @@ public class MainMenuManager : MonoBehaviour
             ch =>
             {
                 GameState.CurrentCharacter = ch;
-                SceneManager.LoadScene("GameScene");
+                SceneManager.LoadScene("VillageScene");
             },
             err => _statusText.text = "오류: " + err));
     }
