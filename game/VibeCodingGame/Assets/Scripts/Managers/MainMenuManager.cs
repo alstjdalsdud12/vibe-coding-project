@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -20,6 +22,9 @@ public class MainMenuManager : MonoBehaviour
     private TextMeshProUGUI _statusText;
     private int         _cardIndex;
 
+    private readonly Dictionary<int, RenderTexture> _previewCache = new Dictionary<int, RenderTexture>();
+    private int _previewSlot;
+
     private void Start()
     {
         _api = gameObject.AddComponent<ApiClient>();
@@ -27,6 +32,13 @@ public class MainMenuManager : MonoBehaviour
         _canvas = FindObjectOfType<Canvas>().transform;
         BuildUI();
         LoadCharacterList();
+    }
+
+    private void OnDestroy()
+    {
+        foreach (var rt in _previewCache.Values)
+            if (rt != null) rt.Release();
+        _previewCache.Clear();
     }
 
     // ── UI 구성 ──────────────────────────────────────────────
@@ -175,32 +187,21 @@ public class MainMenuManager : MonoBehaviour
         UIHelper.SetAnchors(portrait.GetComponent<RectTransform>(),
             new Vector2(0f, 0.46f), new Vector2(1f, 1f));
 
+        // 캐릭터 RenderTexture 프리뷰
+        var previewGO = new GameObject("CharacterPreview");
+        previewGO.transform.SetParent(portrait.transform, false);
+        var rawImg = previewGO.AddComponent<RawImage>();
+        UIHelper.SetAnchors(previewGO.GetComponent<RectTransform>(),
+            new Vector2(0f, 0.05f), new Vector2(1f, 1f));
+        int charIdx = item.characterIndex > 0 ? item.characterIndex : 1;
+        StartCoroutine(CapturePreviewAsync(charIdx, rawImg));
+
         // 초상화 영역 하단 그라데이션 느낌 (얇은 accent 라인)
         var portraitBottom = new GameObject("PortraitBottom");
         portraitBottom.transform.SetParent(portrait.transform, false);
         portraitBottom.AddComponent<Image>().color = accent;
         UIHelper.SetAnchors(portraitBottom.GetComponent<RectTransform>(),
             new Vector2(0f, 0f), new Vector2(1f, 0.05f));
-
-        // 캐릭터 초상화 스프라이트 (spumParts 있으면 헤어, 없으면 이름 첫 글자)
-        if (item.spumParts != null && !string.IsNullOrEmpty(item.spumParts.hair))
-        {
-            var portraitImg = new GameObject("PortraitSprite");
-            portraitImg.transform.SetParent(portrait.transform, false);
-            var img = portraitImg.AddComponent<Image>();
-            UIHelper.SetAnchors(portraitImg.GetComponent<RectTransform>(),
-                new Vector2(0.1f, 0.1f), new Vector2(0.9f, 0.9f));
-            img.preserveAspect = true;
-            SpumCharacterLoader.SetPortrait(img, item.spumParts);
-        }
-        else
-        {
-            string initial = item.name.Length > 0 ? item.name[0].ToString() : "?";
-            var initTmp = UIHelper.CreateText(portrait.transform, initial, 160,
-                new Vector2(0.05f, 0.08f), new Vector2(0.95f, 0.92f));
-            initTmp.color = new Color(1f, 1f, 1f, 0.12f);
-            initTmp.fontStyle = FontStyles.Bold;
-        }
 
         // 슬롯 번호 배지 (우상단)
         var badge = new GameObject("Badge");
@@ -241,6 +242,52 @@ public class MainMenuManager : MonoBehaviour
         conceptTmp.color     = new Color(0.72f, 0.72f, 0.90f);
         conceptTmp.alignment = TextAlignmentOptions.Left;
         conceptTmp.enableWordWrapping = true;
+    }
+
+    // ── 캐릭터 프리뷰 렌더 ───────────────────────────────────
+    // 캐릭터를 화면 밖(900,900)에 생성하고 전용 카메라로 256x256 RT에 캡처
+    // 같은 인덱스는 RT를 캐시해서 재사용
+    private IEnumerator CapturePreviewAsync(int charIdx, RawImage target)
+    {
+        if (_previewCache.TryGetValue(charIdx, out var cached))
+        {
+            target.texture = cached;
+            yield break;
+        }
+
+        float slotX = 900f + _previewSlot * 10f;
+        _previewSlot++;
+
+        // 캐릭터 생성 (화면 밖)
+        var root = new GameObject($"Preview_{charIdx}");
+        root.transform.position = new Vector3(slotX, 900f, 0f);
+        var visual = new GameObject("Visual");
+        visual.transform.SetParent(root.transform, false);
+        visual.transform.localScale = Vector3.one * 1.2f;
+        LayerLabCharacter.AttachPlayer(visual, charIdx);
+
+        // 캡처 카메라 — 캐릭터 몸 중심(y+0.7) 을 정면으로
+        var camGO = new GameObject($"PreviewCam_{charIdx}");
+        camGO.transform.position = new Vector3(slotX, 900.7f, -10f);
+        var cam = camGO.AddComponent<Camera>();
+        cam.orthographic     = true;
+        cam.orthographicSize = 0.85f;
+        cam.clearFlags       = CameraClearFlags.SolidColor;
+        cam.backgroundColor  = new Color(0.09f, 0.08f, 0.18f, 1f);
+        cam.cullingMask      = -1;
+
+        var rt = new RenderTexture(256, 256, 0);
+        cam.targetTexture = rt;
+
+        // SpriteRenderer가 초기화될 때까지 한 프레임 대기
+        yield return null;
+        cam.Render();
+
+        _previewCache[charIdx] = rt;
+        target.texture = rt;
+
+        Destroy(root);
+        Destroy(camGO);
     }
 
     // ── 캐릭터 선택 ──────────────────────────────────────────

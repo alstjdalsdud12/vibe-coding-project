@@ -35,6 +35,7 @@ const getAllCharacters = async () => {
       weapon: d.userInput.weapon,
       concept: d.userInput.concept,
       spumParts: d.generated.spumParts || null,
+      characterIndex: d.generated.characterIndex || 1,
       createdAt: d.createdAt,
     };
   });

@@ -73,6 +73,7 @@ public class CharacterListItem
     public string weapon;
     public string concept;
     public SpumPartsData spumParts;
+    public int characterIndex;
 }
 
 [Serializable]
