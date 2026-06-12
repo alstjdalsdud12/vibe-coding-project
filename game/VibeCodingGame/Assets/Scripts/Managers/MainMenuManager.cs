@@ -246,7 +246,7 @@ public class MainMenuManager : MonoBehaviour
 
     // ── 캐릭터 프리뷰 렌더 ───────────────────────────────────
     // 캐릭터를 화면 밖(900,900)에 생성하고 전용 카메라로 256x256 RT에 캡처
-    // 같은 인덱스는 RT를 캐시해서 재사용
+    // WaitForEndOfFrame으로 Unity 정상 렌더 루프가 카메라를 처리한 뒤 RT를 가져옴
     private IEnumerator CapturePreviewAsync(int charIdx, RawImage target)
     {
         if (_previewCache.TryGetValue(charIdx, out var cached))
@@ -266,26 +266,29 @@ public class MainMenuManager : MonoBehaviour
         visual.transform.localScale = Vector3.one * 1.2f;
         LayerLabCharacter.AttachPlayer(visual, charIdx);
 
-        // 캡처 카메라 — 캐릭터 몸 중심(y+0.7) 을 정면으로
+        // 캡처 카메라 — 캐릭터 몸 중심(y+0.7)을 정면으로, 1:1 비율
         var camGO = new GameObject($"PreviewCam_{charIdx}");
         camGO.transform.position = new Vector3(slotX, 900.7f, -10f);
         var cam = camGO.AddComponent<Camera>();
         cam.orthographic     = true;
         cam.orthographicSize = 0.85f;
+        cam.aspect           = 1f;
         cam.clearFlags       = CameraClearFlags.SolidColor;
         cam.backgroundColor  = new Color(0.09f, 0.08f, 0.18f, 1f);
         cam.cullingMask      = -1;
+        cam.depth            = 10;
 
-        var rt = new RenderTexture(256, 256, 0);
+        var rt = new RenderTexture(256, 256, 16, RenderTextureFormat.ARGB32);
         cam.targetTexture = rt;
 
-        // SpriteRenderer가 초기화될 때까지 한 프레임 대기
-        yield return null;
-        cam.Render();
+        // Unity 렌더 루프가 이 카메라를 처리할 때까지 대기
+        yield return new WaitForEndOfFrame();
 
         _previewCache[charIdx] = rt;
         target.texture = rt;
 
+        // 캐릭터·카메라 GO 제거 (RT는 _previewCache가 관리)
+        cam.enabled = false;
         Destroy(root);
         Destroy(camGO);
     }
