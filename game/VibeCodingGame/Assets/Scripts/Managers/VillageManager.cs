@@ -824,19 +824,23 @@ public class VillageManager : MonoBehaviour
             foreach (var r in mailRowGOs) if (r != null) r.SetActive(true);
         });
 
-        // ── 행 클릭 → 상세보기 (투명 히트 영역 — 최우선 레이캐스트) ─
+        // ── 행 클릭 → 상세보기
+        // 히트 버튼을 tf 직계 자식(row의 형제)으로 배치해야
+        // row 내부 TMP 텍스트의 raycast 간섭을 피할 수 있음
         for (int i = 0; i < mails.Length; i++)
         {
+            float y2 = 0.84f - i * 0.185f;
+            float y1 = y2 - 0.155f;
             int capturedIdx = i;
 
-            // Image 추가 → RectTransform 자동 생성, 투명하게 설정
-            var hitGO  = new GameObject("MailHit");
-            hitGO.transform.SetParent(mailRowGOs[capturedIdx].transform, false);
+            var hitGO  = new GameObject($"MailBtn{i}");
+            hitGO.transform.SetParent(tf, false);
             var hitImg = hitGO.AddComponent<Image>();
             hitImg.color = Color.clear;
-            UIHelper.Stretch(hitGO.GetComponent<RectTransform>());
+            UIHelper.SetAnchors(hitGO.GetComponent<RectTransform>(),
+                new Vector2(0.03f, y1), new Vector2(0.97f, y2));
             var rowBtn = hitGO.AddComponent<Button>();
-            rowBtn.transition  = Selectable.Transition.None;
+            rowBtn.transition    = Selectable.Transition.None;
             rowBtn.targetGraphic = hitImg;
 
             rowBtn.onClick.AddListener(() =>
@@ -864,6 +868,10 @@ public class VillageManager : MonoBehaviour
                 detailPanel.SetActive(true);
             });
         }
+
+        // detailPanel을 맨 마지막 자식으로 이동 → 히트 버튼보다 위에 렌더링
+        // (detailPanel 활성화 시 히트 버튼 클릭이 뚫리지 않도록)
+        detailPanel.transform.SetAsLastSibling();
 
         return overlay;
     }
