@@ -90,8 +90,10 @@ public static class UIHelper
     {
         var go = new GameObject("Btn_" + label);
         go.transform.SetParent(parent, false);
-        go.AddComponent<Image>().color = color ?? new Color(0.2f, 0.45f, 0.85f);
+        var img = go.AddComponent<Image>();
+        img.color = color ?? new Color(0.2f, 0.45f, 0.85f);
         var btn = go.AddComponent<Button>();
+        btn.targetGraphic = img; // Awake()가 inactive 상태에서 안 불릴 때를 대비해 명시적으로 설정
         SetAnchors(go.GetComponent<RectTransform>(), anchorMin, anchorMax);
 
         var textGO = new GameObject("Label");
