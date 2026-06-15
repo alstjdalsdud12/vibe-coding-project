@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { generateCharacter } = require('../services/claudeService');
+const { generateCharacter, generateNovel } = require('../services/claudeService');
 const { saveCharacter, getAllCharacters, getCharacterById, deleteCharacter, updateCharacterState } = require('../services/firebaseService');
 
 // 캐릭터 생성
@@ -17,7 +17,12 @@ router.post('/', async (req, res, next) => {
     }
 
     const generated = await generateCharacter(appearance, weapon, concept, worldview);
+    const aiName = generated.name;
     generated.name = name;
+    // AI가 스토리 안에 박은 자체 이름을 유저 이름으로 교체
+    if (generated.story && aiName && aiName !== name) {
+      generated.story = generated.story.split(aiName).join(name);
+    }
     const character = await saveCharacter({ appearance, weapon, concept, worldview }, generated);
 
     res.status(201).json({ success: true, data: character, error: null });
@@ -51,6 +56,29 @@ router.patch('/:id/state', async (req, res, next) => {
   try {
     await updateCharacterState(req.params.id, req.body);
     res.json({ success: true, data: null, error: null });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 스토리 기록 → 소설 생성
+router.post('/:id/novel', async (req, res, next) => {
+  try {
+    const character = await getCharacterById(req.params.id);
+    const log = character.storyLog;
+    if (!log || log.length === 0) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        error: { code: 'NO_LOG', message: '모험 기록이 없습니다.' },
+      });
+    }
+    const novel = await generateNovel(
+      character.generated.name,
+      character.generated.story || '',
+      log,
+    );
+    res.json({ success: true, data: novel, error: null });
   } catch (err) {
     next(err);
   }

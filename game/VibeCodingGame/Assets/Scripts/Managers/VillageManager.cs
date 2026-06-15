@@ -31,6 +31,7 @@ public class VillageManager : MonoBehaviour
 
     private static readonly int[] _missionTargets  = { 1, 3, 10, 500 };
     private static readonly int[] _missionRewards  = { 1000, 200, 300, 100 };
+    private static readonly int[] _missionXpRewards = { 300, 100, 150, 80 };
     private TextMeshProUGUI[]     _missionProgTexts = new TextMeshProUGUI[4];
     private Button[]              _missionRewBtns   = new Button[4];
     private bool[]                _missionRewarded  = new bool[4];
@@ -67,9 +68,35 @@ public class VillageManager : MonoBehaviour
         // 원정 목록 초기화
         if (_ch.expeditions == null) _ch.expeditions = new List<ExpeditionState>();
 
+        // XP / Level 복원
+        GameState.Xp    = Math.Max(GameState.Xp, _ch.xp);
+        GameState.Level = GameState.LevelFromXp(GameState.Xp);
+        _ch.xp    = GameState.Xp;
+        _ch.level = GameState.Level;
+
+        // 스킬 초기화
+        if (_ch.learnedSkills == null) _ch.learnedSkills = new List<SkillData>();
+        if (_ch.learnedSkills.Count == 0)
+        {
+            if (_ch.generated.uniqueSkill != null)
+                _ch.learnedSkills.Add(_ch.generated.uniqueSkill);
+            for (int lv = 2; lv <= GameState.Level; lv++)
+            {
+                var sk = GameState.GetSkillForLevel(lv);
+                if (sk != null) _ch.learnedSkills.Add(sk);
+            }
+        }
+
         SetupCamera();
         SetupWorld();
         SetupUI();
+
+        // GameScene에서 스토리가 갱신된 채로 돌아온 경우 알림
+        if (GameState.StoryUpdated)
+        {
+            GameState.StoryUpdated = false;
+            StartCoroutine(ShowStoryToastRoutine($"{_ch.generated.name}의 이야기가 갱신되었습니다"));
+        }
     }
 
     // 인벤토리 + 골드를 Firebase에 저장
@@ -105,7 +132,10 @@ public class VillageManager : MonoBehaviour
         _ch.questProgress.monsterCount = GameState.MonsterCount;
         _ch.questProgress.bossCount    = GameState.BossCount;
 
-        _ch.gold = GameState.Gold;
+        _ch.gold  = GameState.Gold;
+        _ch.xp    = GameState.Xp;
+        _ch.level = GameState.Level;
+        if (_ch.learnedSkills == null) _ch.learnedSkills = new List<SkillData>();
         StartCoroutine(_api.UpdateCharacterState(_ch, null, null));
     }
 
@@ -258,10 +288,71 @@ public class VillageManager : MonoBehaviour
             new Vector2(0f, 0.926f), new Vector2(1f, 0.929f));
     }
 
-    private int CalcLevel()
+    private int CalcLevel() => GameState.Level;
+
+    private void GainXp(int amount)
     {
-        var s = _ch.generated.stats;
-        return Mathf.Max(1, (s.hp / 20 + s.atk / 5 + s.def / 4 + s.mp / 20) / 4);
+        int oldLevel = GameState.Level;
+        GameState.Xp += amount;
+        GameState.Level = GameState.LevelFromXp(GameState.Xp);
+        _ch.xp    = GameState.Xp;
+        _ch.level = GameState.Level;
+
+        for (int lv = oldLevel + 1; lv <= GameState.Level; lv++)
+        {
+            var skill = GameState.GetSkillForLevel(lv);
+            if (skill != null)
+            {
+                if (_ch.learnedSkills == null) _ch.learnedSkills = new List<SkillData>();
+                _ch.learnedSkills.Add(skill);
+            }
+            StartCoroutine(ShowLevelUpBanner(lv, skill));
+        }
+    }
+
+    private IEnumerator ShowLevelUpBanner(int newLevel, SkillData newSkill)
+    {
+        var panel = new GameObject("LvBanner");
+        panel.transform.SetParent(_canvasTF, false);
+        panel.transform.SetAsLastSibling();
+        var border = panel.AddComponent<Image>();
+        border.color = new Color(0.80f, 0.65f, 0.10f, 0.85f);
+
+        var inner = UIHelper.CreatePanel(panel.transform, new Color(0.05f, 0.03f, 0.16f, 1f), "I");
+        UIHelper.SetAnchors(inner.GetComponent<RectTransform>(), new Vector2(0.02f, 0.06f), new Vector2(0.98f, 0.94f));
+
+        UIHelper.CreateText(inner.transform, "LEVEL  UP!", 26,
+            new Vector2(0.05f, 0.65f), new Vector2(0.95f, 0.97f))
+            .color = new Color(1f, 0.85f, 0.20f);
+        UIHelper.CreateText(inner.transform, $"Lv. {newLevel}", 38,
+            new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.66f))
+            .color = Color.white;
+        if (newSkill != null)
+            UIHelper.CreateText(inner.transform, $"새 스킬: {newSkill.name}", 20,
+                new Vector2(0.05f, 0.03f), new Vector2(0.95f, 0.31f))
+                .color = new Color(0.5f, 0.9f, 1f);
+
+        var rt = panel.GetComponent<RectTransform>();
+        for (float t = 0; t < 0.35f; t += Time.deltaTime)
+        {
+            float a = Mathf.SmoothStep(0, 1, t / 0.35f);
+            rt.anchorMin = new Vector2(Mathf.Lerp(1.02f, 0.53f, a), 0.38f);
+            rt.anchorMax = new Vector2(Mathf.Lerp(1.50f, 1.01f, a), 0.62f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            yield return null;
+        }
+        rt.anchorMin = new Vector2(0.53f, 0.38f); rt.anchorMax = new Vector2(1.01f, 0.62f);
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        yield return new WaitForSeconds(3.0f);
+        for (float t = 0; t < 0.35f; t += Time.deltaTime)
+        {
+            float a = Mathf.SmoothStep(0, 1, t / 0.35f);
+            rt.anchorMin = new Vector2(Mathf.Lerp(0.53f, 1.02f, a), 0.38f);
+            rt.anchorMax = new Vector2(Mathf.Lerp(1.01f, 1.50f, a), 0.62f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            yield return null;
+        }
+        Destroy(panel);
     }
 
     private void RefreshGold()
@@ -290,6 +381,77 @@ public class VillageManager : MonoBehaviour
                 new Vector2(0.03f, y1), new Vector2(0.97f, y2));
             visible++;
         }
+    }
+
+    private void AddStoryEntry(string text)
+    {
+        if (_ch.storyLog == null) _ch.storyLog = new List<string>();
+        _ch.storyLog.Add($"[{DateTime.Now:yyyy.MM.dd}] {text}");
+        GameState.StoryUpdated = true;
+        SaveState();
+        StartCoroutine(ShowStoryToastRoutine($"{_ch.generated.name}의 이야기가 갱신되었습니다"));
+    }
+
+    private IEnumerator ShowStoryToastRoutine(string msg)
+    {
+        var panel = new GameObject("StoryToast");
+        panel.transform.SetParent(_canvasTF, false);
+        panel.transform.SetAsLastSibling();
+        panel.AddComponent<Image>().color = new Color(0.06f, 0.04f, 0.18f, 0f);
+        UIHelper.SetAnchors(panel.GetComponent<RectTransform>(),
+            new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.84f));
+        var cg = panel.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        var txt = UIHelper.CreateText(panel.transform, msg, 26,
+            new Vector2(0.04f, 0.1f), new Vector2(0.96f, 0.9f));
+        txt.color = new Color(1f, 0.88f, 0.40f);
+
+        for (float t = 0; t < 0.25f; t += Time.deltaTime) { cg.alpha = t / 0.25f; yield return null; }
+        cg.alpha = 1f;
+        yield return new WaitForSeconds(2.2f);
+        for (float t = 0; t < 0.4f; t += Time.deltaTime) { cg.alpha = 1f - t / 0.4f; yield return null; }
+        Destroy(panel);
+    }
+
+    private void OpenNovelView()
+    {
+        var overlay = UIHelper.CreatePanel(_canvasTF, new Color(0f, 0f, 0f, 0.97f), "NovelOverlay");
+        UIHelper.Stretch(overlay.GetComponent<RectTransform>());
+        overlay.transform.SetAsLastSibling();
+        var nt = overlay.transform;
+
+        var title = UIHelper.CreateText(nt, _ch.generated.name + "의 이야기", 36,
+            new Vector2(0.05f, 0.88f), new Vector2(0.95f, 0.97f));
+        title.color     = new Color(1f, 0.85f, 0.4f);
+        title.fontStyle = FontStyles.Bold;
+
+        var loadingTxt = UIHelper.CreateText(nt, "소설을 생성하는 중...", 28,
+            new Vector2(0.05f, 0.44f), new Vector2(0.95f, 0.56f));
+        loadingTxt.color = new Color(0.70f, 0.70f, 0.90f);
+
+        var novelTxt = UIHelper.CreateText(nt, "", 22,
+            new Vector2(0.04f, 0.08f), new Vector2(0.96f, 0.86f), TextAlignmentOptions.TopLeft);
+        novelTxt.color              = new Color(0.88f, 0.88f, 0.98f);
+        novelTxt.enableWordWrapping = true;
+        novelTxt.gameObject.SetActive(false);
+
+        var closeBtn = UIHelper.CreateButton(nt, "닫기",
+            new Vector2(0.20f, 0.01f), new Vector2(0.80f, 0.07f),
+            new Color(0.30f, 0.10f, 0.10f));
+        closeBtn.onClick.AddListener(() => Destroy(overlay));
+
+        StartCoroutine(_api.GenerateNovel(_ch,
+            novel =>
+            {
+                loadingTxt.gameObject.SetActive(false);
+                novelTxt.text = novel;
+                novelTxt.gameObject.SetActive(true);
+            },
+            err =>
+            {
+                loadingTxt.text  = "오류: " + err;
+                loadingTxt.color = new Color(1f, 0.4f, 0.4f);
+            }));
     }
 
     private void ShowMsg(string msg) => StartCoroutine(ShowMsgRoutine(msg));
@@ -608,8 +770,9 @@ public class VillageManager : MonoBehaviour
                     GameState.Gold -= capturedPrice;
                     RefreshGold();
                     ShowMsg($"{capturedName} 구매 완료!");
-                    if (capturedBagIdx >= 0) AddToBag(capturedBagIdx, 1); // AddToBag 안에서 SaveState 호출
-                    else SaveState(); // 가방 추가 없는 아이템은 골드만 저장
+                    if (capturedBagIdx >= 0) AddToBag(capturedBagIdx, 1);
+                    else SaveState();
+                    AddStoryEntry($"{_ch.generated.name}은(는) 마을 상점에서 {capturedName}을(를) 구입했다.");
                 }
                 else ShowMsg("골드가 부족합니다");
             });
@@ -667,17 +830,20 @@ public class VillageManager : MonoBehaviour
             rewBtn.gameObject.SetActive(false);
             _missionRewBtns[capturedIdx] = rewBtn;
 
+            string capturedMissionName = m.name;
             rewBtn.onClick.AddListener(() =>
             {
                 if (_missionRewarded[capturedIdx]) return;
                 _missionRewarded[capturedIdx] = true;
                 GameState.Gold += _missionRewards[capturedIdx];
                 RefreshGold();
-                ShowMsg($"미션 보상 획득! +{_missionRewards[capturedIdx]}G");
+                GainXp(_missionXpRewards[capturedIdx]);
+                ShowMsg($"미션 보상 획득! +{_missionRewards[capturedIdx]}G  +{_missionXpRewards[capturedIdx]}XP");
                 if (rewTmp != null) rewTmp.text = "수령됨";
                 rewBtn.image.color  = new Color(0.25f, 0.25f, 0.32f);
                 rewBtn.interactable = false;
                 SaveState();
+                AddStoryEntry($"{_ch.generated.name}은(는) '{capturedMissionName}' 임무를 완수하고 보상을 받았다.");
             });
         }
 
@@ -881,9 +1047,10 @@ public class VillageManager : MonoBehaviour
     // ── 캐릭터 정보 팝업 ─────────────────────────────────────────
     private GameObject BuildInfoPopup()
     {
-        var overlay = BuildPopupShell(_ch.generated.name, out Transform tf);
+        var overlay = BuildPopupShell($"{_ch.generated.name}  Lv.{GameState.Level}", out Transform tf);
         var s = _ch.generated.stats;
 
+        // 스탯 2×2 그리드 (공간 절약)
         var statData = new (string label, int val, Color col)[]
         {
             ("HP",  s.hp,  new Color(0.9f, 0.2f, 0.2f)),
@@ -891,37 +1058,152 @@ public class VillageManager : MonoBehaviour
             ("DEF", s.def, new Color(0.3f, 0.6f, 0.9f)),
             ("MP",  s.mp,  new Color(0.5f, 0.3f, 0.9f)),
         };
-
         for (int i = 0; i < statData.Length; i++)
         {
-            float y2 = 0.84f - i * 0.12f;
-            float y1 = y2 - 0.10f;
+            int r = i / 2; int c = i % 2;
+            float x1 = 0.03f + c * 0.485f;
+            float x2 = x1 + 0.465f;
+            float y2 = 0.875f - r * 0.097f;
+            float y1 = y2 - 0.085f;
             var sd = statData[i];
 
             var row = UIHelper.CreatePanel(tf, new Color(0.10f, 0.09f, 0.20f), $"S{i}");
             UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
-                new Vector2(0.03f, y1), new Vector2(0.97f, y2));
+                new Vector2(x1, y1), new Vector2(x2, y2));
 
-            var lbl = UIHelper.CreateText(row.transform, sd.label, 36,
-                new Vector2(0.03f, 0.1f), new Vector2(0.55f, 0.9f), TextAlignmentOptions.Left);
-            lbl.color     = sd.col;
-            lbl.fontStyle = FontStyles.Bold;
+            var lbl = UIHelper.CreateText(row.transform, sd.label, 30,
+                new Vector2(0.03f, 0.1f), new Vector2(0.48f, 0.9f), TextAlignmentOptions.Left);
+            lbl.color = sd.col; lbl.fontStyle = FontStyles.Bold;
 
-            var val = UIHelper.CreateText(row.transform, sd.val.ToString(), 42,
-                new Vector2(0.55f, 0.1f), new Vector2(0.97f, 0.9f), TextAlignmentOptions.Right);
-            val.color     = Color.white;
-            val.fontStyle = FontStyles.Bold;
+            var val = UIHelper.CreateText(row.transform, sd.val.ToString(), 34,
+                new Vector2(0.48f, 0.1f), new Vector2(0.97f, 0.9f), TextAlignmentOptions.Right);
+            val.color = Color.white; val.fontStyle = FontStyles.Bold;
         }
 
-        // 스토리 요약
-        if (!string.IsNullOrEmpty(_ch.generated.story))
+        // XP 바 (스탯 바로 아래)
         {
-            string brief = _ch.generated.story;
-            if (brief.Length > 55) brief = brief.Substring(0, 55) + "...";
-            var storyTxt = UIHelper.CreateText(tf, brief, 26,
-                new Vector2(0.03f, 0.14f), new Vector2(0.97f, 0.34f), TextAlignmentOptions.Left);
-            storyTxt.color              = new Color(0.80f, 0.80f, 0.95f);
+            int curXp   = GameState.Xp;
+            int xpNeeds = GameState.TotalXpForLevel(GameState.Level + 1);
+            int xpBase  = GameState.TotalXpForLevel(GameState.Level);
+            float ratio = xpNeeds > xpBase ? (float)(curXp - xpBase) / (xpNeeds - xpBase) : 1f;
+            ratio = Mathf.Clamp01(ratio);
+
+            var xpBG = UIHelper.CreatePanel(tf, new Color(0.10f, 0.08f, 0.20f), "XpBG");
+            UIHelper.SetAnchors(xpBG.GetComponent<RectTransform>(),
+                new Vector2(0.03f, 0.668f), new Vector2(0.97f, 0.693f));
+            var xpFill = UIHelper.CreatePanel(xpBG.transform, new Color(0.28f, 0.72f, 0.28f), "XpFill");
+            UIHelper.SetAnchors(xpFill.GetComponent<RectTransform>(),
+                Vector2.zero, new Vector2(ratio, 1f));
+            var xpTxt = UIHelper.CreateText(xpBG.transform,
+                $"XP  {curXp - xpBase} / {xpNeeds - xpBase}", 15,
+                new Vector2(0.02f, 0f), Vector2.one, TextAlignmentOptions.Left);
+            xpTxt.color = Color.white;
+        }
+
+        // ── 보유 스킬 섹션 ──────────────────────────────────────
+        var skillSep = UIHelper.CreatePanel(tf, new Color(0.5f, 0.4f, 0.8f, 0.35f), "SkSep");
+        UIHelper.SetAnchors(skillSep.GetComponent<RectTransform>(),
+            new Vector2(0.03f, 0.657f), new Vector2(0.97f, 0.661f));
+
+        var skills = _ch.learnedSkills ?? new List<SkillData>();
+        var skHdr = UIHelper.CreateText(tf, $"보유 스킬  ({skills.Count})", 21,
+            new Vector2(0.03f, 0.624f), new Vector2(0.97f, 0.656f), TextAlignmentOptions.Left);
+        skHdr.color = new Color(1f, 0.85f, 0.3f); skHdr.fontStyle = FontStyles.Bold;
+
+        float skillBottom;
+        if (skills.Count == 0)
+        {
+            var noSk = UIHelper.CreateText(tf, "스킬 없음  (레벨업 시 해금)", 19,
+                new Vector2(0.03f, 0.583f), new Vector2(0.97f, 0.622f), TextAlignmentOptions.Left);
+            noSk.color = new Color(0.55f, 0.55f, 0.70f);
+            skillBottom = 0.580f;
+        }
+        else
+        {
+            SkillData uniqueRef = _ch.generated?.uniqueSkill;
+            for (int i = 0; i < skills.Count; i++)
+            {
+                var sk       = skills[i];
+                float y2     = 0.620f - i * 0.092f;
+                float y1     = y2 - 0.082f;
+                bool isUniq  = uniqueRef != null && sk.name == uniqueRef.name;
+
+                var row = UIHelper.CreatePanel(tf,
+                    isUniq ? new Color(0.18f, 0.12f, 0.05f) : new Color(0.06f, 0.09f, 0.18f), $"Sk{i}");
+                UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
+                    new Vector2(0.03f, y1), new Vector2(0.97f, y2));
+
+                // 태그 (고유/일반)
+                var tag = UIHelper.CreatePanel(row.transform,
+                    isUniq ? new Color(0.65f, 0.40f, 0.04f) : new Color(0.18f, 0.32f, 0.60f), "Tag");
+                UIHelper.SetAnchors(tag.GetComponent<RectTransform>(),
+                    new Vector2(0f, 0.1f), new Vector2(0.16f, 0.9f));
+                UIHelper.CreateText(tag.transform, isUniq ? "고유" : "일반", 16,
+                    Vector2.zero, Vector2.one).color = Color.white;
+
+                // 스킬 이름
+                var skName = UIHelper.CreateText(row.transform, sk.name, 22,
+                    new Vector2(0.18f, 0.50f), new Vector2(0.72f, 0.96f), TextAlignmentOptions.Left);
+                skName.color     = isUniq ? new Color(1f, 0.80f, 0.30f) : new Color(0.70f, 0.88f, 1f);
+                skName.fontStyle = FontStyles.Bold;
+
+                // 설명
+                var skDesc = UIHelper.CreateText(row.transform, sk.description, 16,
+                    new Vector2(0.18f, 0.04f), new Vector2(0.72f, 0.48f), TextAlignmentOptions.Left);
+                skDesc.color = new Color(0.72f, 0.72f, 0.86f);
+
+                // MP 비용 or 패시브
+                string costLbl = sk.isPassive ? "패시브" : $"MP {sk.mpCost}";
+                var costTxt = UIHelper.CreateText(row.transform, costLbl, 18,
+                    new Vector2(0.73f, 0.1f), new Vector2(0.98f, 0.9f), TextAlignmentOptions.Right);
+                costTxt.color = sk.isPassive ? new Color(0.55f, 0.92f, 0.55f) : new Color(0.55f, 0.75f, 1f);
+            }
+            skillBottom = 0.620f - skills.Count * 0.092f;
+        }
+
+        // ── 스토리 + 모험 기록 ──────────────────────────────────
+        bool hasLog = _ch.storyLog != null && _ch.storyLog.Count > 0;
+        float storyTop = skillBottom - 0.012f;
+        float storyBot = hasLog ? 0.245f : 0.03f;
+
+        if (!string.IsNullOrEmpty(_ch.generated.story) && storyTop - storyBot > 0.05f)
+        {
+            var storyTxt = UIHelper.CreateText(tf, _ch.generated.story,
+                hasLog ? 18 : 22,
+                new Vector2(0.03f, storyBot), new Vector2(0.97f, storyTop), TextAlignmentOptions.Left);
+            storyTxt.color              = new Color(0.82f, 0.82f, 0.96f);
             storyTxt.enableWordWrapping = true;
+            storyTxt.overflowMode       = TMPro.TextOverflowModes.Ellipsis;
+        }
+
+        if (hasLog)
+        {
+            var sep = UIHelper.CreatePanel(tf, new Color(0.5f, 0.4f, 0.8f, 0.35f), "LogSep");
+            UIHelper.SetAnchors(sep.GetComponent<RectTransform>(),
+                new Vector2(0.03f, 0.233f), new Vector2(0.97f, 0.237f));
+
+            var logLabel = UIHelper.CreateText(tf, $"모험 기록  ({_ch.storyLog.Count})",
+                22, new Vector2(0.03f, 0.19f), new Vector2(0.65f, 0.232f), TextAlignmentOptions.Left);
+            logLabel.color = new Color(1f, 0.85f, 0.3f); logLabel.fontStyle = FontStyles.Bold;
+
+            var novelBtn = UIHelper.CreateButton(tf, "소설로 보기",
+                new Vector2(0.66f, 0.187f), new Vector2(0.97f, 0.235f),
+                new Color(0.25f, 0.10f, 0.40f));
+            var novelBtnTmp = novelBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (novelBtnTmp != null) novelBtnTmp.fontSize = 18;
+            novelBtn.onClick.AddListener(OpenNovelView);
+
+            int showCount = Mathf.Min(2, _ch.storyLog.Count);
+            for (int i = 0; i < showCount; i++)
+            {
+                string entry = _ch.storyLog[_ch.storyLog.Count - 1 - i];
+                float y2 = 0.185f - i * 0.095f;
+                float y1 = y2 - 0.085f;
+                var et = UIHelper.CreateText(tf, entry, 17,
+                    new Vector2(0.03f, y1), new Vector2(0.97f, y2), TextAlignmentOptions.Left);
+                et.color = i == 0 ? new Color(0.78f, 0.84f, 0.98f) : new Color(0.55f, 0.60f, 0.75f);
+                et.enableWordWrapping = true;
+            }
         }
 
         return overlay;
@@ -1049,12 +1331,15 @@ public class VillageManager : MonoBehaviour
                         new Color(0.18f, 0.42f, 0.18f));
                     var cTmp = collectBtn.GetComponentInChildren<TextMeshProUGUI>();
                     if (cTmp != null) cTmp.fontSize = 20;
+                    string capturedPlace = def.place;
                     collectBtn.onClick.AddListener(() =>
                     {
+                        int xpGain = 50 + capturedIdx * 50;
                         _ch.expeditions.RemoveAll(x => x.slotIdx == capturedIdx);
                         GameState.Gold += def.goldReward;
                         RefreshGold();
-                        ShowMsg($"원정 보상 획득! +{def.goldReward}G");
+                        GainXp(xpGain);
+                        ShowMsg($"원정 보상 획득! +{def.goldReward}G  +{xpGain}XP");
                         if (def.bagItem >= 0) AddToBag(def.bagItem, 1);
                         else SaveState();
                         if (cTmp != null) cTmp.text = "수령됨";
@@ -1062,6 +1347,7 @@ public class VillageManager : MonoBehaviour
                         collectBtn.interactable = false;
                         statusT.text  = "파견 가능 (팝업 재열기)";
                         statusT.color = new Color(0.75f, 0.75f, 0.90f);
+                        AddStoryEntry($"{_ch.generated.name}의 원정대가 {capturedPlace}에서 보상을 가져왔다.");
                     });
                 }
             }
@@ -1252,11 +1538,11 @@ public class VillageManager : MonoBehaviour
             _ch.lastAttendanceDate = DateTime.Now.ToString("yyyy-MM-dd");
             GameState.Gold += todayGold;
             RefreshGold();
-            SaveState();
             ShowMsg(todayGold > 0 ? $"출석 보상 획득! +{todayGold}G" : "출석 보상 획득!");
             if (claimTmp != null) claimTmp.text = "수령 완료";
             claimBtn.image.color = new Color(0.25f, 0.25f, 0.32f);
             claimBtn.interactable = false;
+            AddStoryEntry($"오늘도 변함없이 {_ch.generated.name}은(는) 모험을 이어가고 있다.");
             if (todayBoxImg != null) todayBoxImg.color = new Color(0.14f, 0.35f, 0.14f);
             if (todayRewardTxt != null) { todayRewardTxt.text = "완료"; todayRewardTxt.color = new Color(0.5f, 0.9f, 0.5f); }
         });

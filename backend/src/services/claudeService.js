@@ -58,7 +58,8 @@ ${SPUM_PARTS}
   "abilities": [
     { "name": "능력 이름", "description": "효과 설명 (MP 소모량 포함)" }
   ],
-  "story": "배경 스토리 2~3문장",
+  "story": "캐릭터 배경 스토리 4~5문장. 반드시 완결된 문장으로 끝낼 것",
+  "uniqueSkill": { "name": "고유 스킬 이름", "description": "스킬 효과 설명", "mpCost": 정수, "isPassive": 불리언, "atkMultiplier": 숫자, "healAmount": 정수 },
   "locations": [
     { "name": "장소 이름", "description": "분위기 설명 1문장" }
   ]
@@ -75,7 +76,12 @@ ${SPUM_PARTS}
 - 스탯은 무기와 컨셉에 논리적으로 연관되어야 한다
 - 능력은 1~3개 생성한다
 - locations는 세계관에 어울리는 장소 5개를 생성한다
-- locations는 난이도 순서로 쉬운 곳부터 어려운 곳 순으로 정렬한다`;
+- locations는 난이도 순서로 쉬운 곳부터 어려운 곳 순으로 정렬한다
+- story는 유저가 입력한 외형·무기·컨셉·세계관을 바탕으로 자연스럽게 이어지는 서사를 만들고, 반드시 완결된 문장으로 끝낸다
+- uniqueSkill은 캐릭터의 컨셉·무기에 완벽히 어울리는 고유 스킬을 생성한다
+- 패시브(isPassive: true): mpCost=0, atkMultiplier=1.1~1.5 (모든 공격에 ATK 배율 적용), healAmount=0
+- 액티브(isPassive: false): mpCost=20~60, atkMultiplier=1.5~3.0 (사용 시 적에게 피해), 또는 healAmount=30~80 (회복 스킬, 이때 atkMultiplier=0)
+- uniqueSkill의 healAmount가 0보다 크면 회복 스킬, atkMultiplier가 0보다 크면 공격 스킬`;
 
 const hashStr = (s) => {
   let h = 0;
@@ -157,6 +163,40 @@ const mockResponse = (appearance, weapon, concept, worldview) => ({
   ],
 });
 
+const generateNovel = async (charName, originalStory, storyLog) => {
+  if (IS_MOCK) {
+    return `[MOCK] ${charName}의 이야기\n\n${originalStory}\n\n— 모험 기록 —\n${storyLog.join('\n')}`;
+  }
+
+  const logText = storyLog.join('\n');
+  const prompt = `다음은 "${charName}"이라는 캐릭터의 배경과 모험 기록입니다.
+
+[배경 스토리]
+${originalStory}
+
+[모험 기록]
+${logText}
+
+위 내용을 바탕으로 하나의 자연스러운 단편 소설 형식으로 재구성해주세요.
+3인칭 시점으로 작성하고, 기록들을 이야기의 흐름에 맞게 연결해주세요.
+500자 내외로 완결된 이야기를 써주세요.
+
+[필수 규칙]
+- 오직 한국어(한글)로만 작성하세요.
+- 한자, 중국어, 일본어, 영어, 로마자, 특수문자는 절대 사용하지 마세요.
+- 숫자는 한글로 표기하세요 (예: 3 → 세, 10 → 열).
+- 이 캐릭터의 이름은 반드시 "${charName}"입니다. 다른 이름이 나와도 모두 "${charName}"으로 바꾸세요.`;
+
+  const completion = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.8,
+    max_tokens: 1200,
+  });
+
+  return completion.choices[0].message.content.trim();
+};
+
 const generateCharacter = async (appearance, weapon, concept, worldview) => {
   if (IS_MOCK) {
     console.log('[MOCK] Groq API 호출 생략 — mock 응답 반환');
@@ -171,10 +211,11 @@ const generateCharacter = async (appearance, weapon, concept, worldview) => {
     ],
     response_format: { type: 'json_object' },
     temperature: 0.7,
+    max_tokens: 1800,
   });
 
   const text = completion.choices[0].message.content.trim();
   return JSON.parse(text);
 };
 
-module.exports = { generateCharacter };
+module.exports = { generateCharacter, generateNovel };

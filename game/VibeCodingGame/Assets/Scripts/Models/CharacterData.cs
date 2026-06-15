@@ -2,6 +2,17 @@ using System;
 using System.Collections.Generic;
 
 [Serializable]
+public class SkillData
+{
+    public string name;
+    public string description;
+    public int    mpCost;
+    public bool   isPassive;
+    public float  atkMultiplier;
+    public int    healAmount;
+}
+
+[Serializable]
 public class InventoryItem
 {
     public string name;
@@ -70,6 +81,7 @@ public class GeneratedData
     public List<AbilityData> abilities;
     public string story;
     public List<LocationData> locations;
+    public SkillData uniqueSkill;
 }
 
 [Serializable]
@@ -87,11 +99,15 @@ public class CharacterData
     public string id;
     public UserInputData userInput;
     public GeneratedData generated;
-    public List<InventoryItem>  inventory;
-    public int                  gold;
-    public QuestProgress        questProgress;
-    public string               lastAttendanceDate;
+    public List<InventoryItem>   inventory;
+    public int                   gold;
+    public QuestProgress         questProgress;
+    public string                lastAttendanceDate;
     public List<ExpeditionState> expeditions;
+    public List<string>          storyLog;
+    public int                   xp;
+    public int                   level;
+    public List<SkillData>       learnedSkills;
 }
 
 [Serializable]

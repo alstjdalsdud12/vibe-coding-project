@@ -80,17 +80,25 @@ public class ApiClient : MonoBehaviour
         public QuestProgress     questProgress;
         public string            lastAttendanceDate;
         public ExpeditionState[] expeditions;
+        public string[]          storyLog;
+        public int               xp;
+        public int               level;
+        public SkillData[]       learnedSkills;
     }
 
     public IEnumerator UpdateCharacterState(CharacterData ch, Action onSuccess, Action<string> onError)
     {
         var body = new StateRequest
         {
-            inventory          = ch.inventory   != null ? ch.inventory.ToArray()   : new InventoryItem[0],
+            inventory          = ch.inventory      != null ? ch.inventory.ToArray()      : new InventoryItem[0],
             gold               = ch.gold,
-            questProgress      = ch.questProgress      ?? new QuestProgress(),
-            lastAttendanceDate = ch.lastAttendanceDate ?? "",
-            expeditions        = ch.expeditions != null ? ch.expeditions.ToArray() : new ExpeditionState[0],
+            questProgress      = ch.questProgress         ?? new QuestProgress(),
+            lastAttendanceDate = ch.lastAttendanceDate    ?? "",
+            expeditions        = ch.expeditions    != null ? ch.expeditions.ToArray()    : new ExpeditionState[0],
+            storyLog           = ch.storyLog       != null ? ch.storyLog.ToArray()       : new string[0],
+            xp                 = ch.xp,
+            level              = ch.level,
+            learnedSkills      = ch.learnedSkills  != null ? ch.learnedSkills.ToArray()  : new SkillData[0],
         };
         string json = JsonUtility.ToJson(body);
 
@@ -102,5 +110,27 @@ public class ApiClient : MonoBehaviour
 
         if (req.result != UnityWebRequest.Result.Success) onError?.Invoke(req.error);
         else onSuccess?.Invoke();
+    }
+
+    [Serializable]
+    private class NovelResponse
+    {
+        public bool   success;
+        public string data;
+    }
+
+    public IEnumerator GenerateNovel(CharacterData ch, Action<string> onSuccess, Action<string> onError)
+    {
+        using var req = new UnityWebRequest(BASE_URL + "/characters/" + ch.id + "/novel", "POST");
+        req.uploadHandler   = new UploadHandlerRaw(new byte[0]);
+        req.downloadHandler = new DownloadHandlerBuffer();
+        req.SetRequestHeader("Content-Type", "application/json");
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success) { onError?.Invoke(req.error); yield break; }
+
+        var res = JsonUtility.FromJson<NovelResponse>(req.downloadHandler.text);
+        if (res.success) onSuccess?.Invoke(res.data);
+        else onError?.Invoke("소설 생성 실패");
     }
 }

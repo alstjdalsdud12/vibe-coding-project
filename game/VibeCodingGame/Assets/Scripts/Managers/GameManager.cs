@@ -14,6 +14,8 @@ public class GameManager : MonoBehaviour
 
     private MapPlayerController _playerController;
     private MonsterController _currentMonster;
+    private readonly System.Collections.Generic.HashSet<int> _visitedZones = new System.Collections.Generic.HashSet<int>();
+    private int _monsterCountAtEntry;
 
     // HUD
     private TextMeshProUGUI _hudHpText, _hudMpText, _zoneNameText;
@@ -21,10 +23,11 @@ public class GameManager : MonoBehaviour
     private GameObject _zoneBox;
 
     // Battle panel
-    private GameObject _battlePanel, _resultPanel;
+    private GameObject _battlePanel, _resultPanel, _skillPanel;
     private TextMeshProUGUI _battleLog, _playerHpText, _playerMpText,
                             _enemyNameText, _enemyHpText, _resultText;
     private Button _attackBtn, _skillBtn, _fleeBtn;
+    private TextMeshProUGUI _levelText;
 
     private Sprite _squareSprite;
     private Sprite[] _treeSprites;
@@ -56,6 +59,24 @@ public class GameManager : MonoBehaviour
         _playerHp = _player.generated.stats.hp;
         _playerMp = _player.generated.stats.mp;
         _squareSprite = CreateSquareSprite();
+        _monsterCountAtEntry = GameState.MonsterCount;
+
+        // XP/Level 복원
+        GameState.Xp    = System.Math.Max(GameState.Xp, _player.xp);
+        GameState.Level = GameState.LevelFromXp(GameState.Xp);
+        _player.level   = GameState.Level;
+
+        // learnedSkills 초기화 (최초 진입 시)
+        if (_player.learnedSkills == null) _player.learnedSkills = new System.Collections.Generic.List<SkillData>();
+        if (_player.learnedSkills.Count == 0 && _player.generated.uniqueSkill != null)
+        {
+            _player.learnedSkills.Add(_player.generated.uniqueSkill);
+            for (int lv = 2; lv <= GameState.Level; lv++)
+            {
+                var s = GameState.GetSkillForLevel(lv);
+                if (s != null) _player.learnedSkills.Add(s);
+            }
+        }
 
         SetupCamera();
         SetupMap();
@@ -227,8 +248,13 @@ public class GameManager : MonoBehaviour
 
         // 캐릭터 이름
         var nameText = UIHelper.CreateText(hudBG.transform, _player.generated.name, 22,
-            new Vector2(0.02f, 0.55f), new Vector2(0.60f, 0.98f), TextAlignmentOptions.Left);
+            new Vector2(0.02f, 0.55f), new Vector2(0.50f, 0.98f), TextAlignmentOptions.Left);
         nameText.color = new Color(1f, 0.88f, 0.50f);
+
+        // 레벨 표시
+        _levelText = UIHelper.CreateText(hudBG.transform, $"Lv.{GameState.Level}", 20,
+            new Vector2(0.52f, 0.55f), new Vector2(0.78f, 0.98f), TextAlignmentOptions.Left);
+        _levelText.color = new Color(0.6f, 1f, 0.6f);
 
         // HP 바
         var hpBarBG = UIHelper.CreatePanel(hudBG.transform, new Color(0.20f, 0.04f, 0.04f), "HPBarBG");
@@ -254,7 +280,18 @@ public class GameManager : MonoBehaviour
         var villageBtn = UIHelper.CreateButton(canvas, "마을",
             new Vector2(0.82f, 0.913f), new Vector2(0.98f, 0.993f),
             new Color(0.12f, 0.28f, 0.18f));
-        villageBtn.onClick.AddListener(() => SceneManager.LoadScene("VillageScene"));
+        villageBtn.onClick.AddListener(() =>
+        {
+            int killed = GameState.MonsterCount - _monsterCountAtEntry;
+            if (killed > 0)
+            {
+                string entry = killed == 1
+                    ? $"{_player.generated.name}은(는) 몬스터 1마리를 처치하고 마을로 귀환했다."
+                    : $"{_player.generated.name}은(는) {killed}마리의 몬스터를 처치하고 마을로 귀환했다.";
+                AddStoryEntry(entry);
+            }
+            SceneManager.LoadScene("VillageScene");
+        });
 
         // 구역 진입 알림 (배경 박스 포함)
         _zoneBox = UIHelper.CreatePanel(canvas, new Color(0.06f, 0.04f, 0.16f, 0.82f), "ZoneBox");
@@ -290,6 +327,9 @@ public class GameManager : MonoBehaviour
         _zoneBox.SetActive(true);
         StopCoroutine("ClearZoneBox");
         StartCoroutine("ClearZoneBox");
+
+        if (_visitedZones.Add(zone.ZoneIndex))
+            AddStoryEntry($"{_player.generated.name}은(는) {zone.ZoneName}에 처음 발을 내딛었다.");
     }
 
     private IEnumerator ClearZoneBox()
@@ -439,10 +479,19 @@ public class GameManager : MonoBehaviour
         _fleeBtn.onClick.AddListener(OnFlee);
     }
 
+    private float GetPassiveAtkBonus()
+    {
+        if (_player.learnedSkills == null) return 1f;
+        float bonus = 1f;
+        foreach (var s in _player.learnedSkills)
+            if (s.isPassive && s.atkMultiplier > 1f) bonus *= s.atkMultiplier;
+        return bonus;
+    }
+
     private void OnAttack()
     {
         SetButtonsInteractable(false);
-        int dmg = Mathf.Max(1, _player.generated.stats.atk - _enemyDef);
+        int dmg = Mathf.Max(1, (int)(_player.generated.stats.atk * GetPassiveAtkBonus()) - _enemyDef);
         _enemyHp -= dmg;
         AppendLog($"{_player.generated.name}의 공격! {dmg} 피해!");
         AfterPlayerAction();
@@ -450,16 +499,101 @@ public class GameManager : MonoBehaviour
 
     private void OnSkill()
     {
-        if (_player.generated.abilities == null || _player.generated.abilities.Count == 0)
-        { AppendLog("사용 가능한 스킬이 없습니다."); return; }
-        int mpCost = 20;
-        if (_playerMp < mpCost) { AppendLog("MP가 부족합니다!"); return; }
         SetButtonsInteractable(false);
-        _playerMp -= mpCost;
-        int dmg = Mathf.Max(1, (int)(_player.generated.stats.atk * 1.8f) - _enemyDef);
-        _enemyHp -= dmg;
-        AppendLog($"{_player.generated.abilities[0].name} 사용! {dmg} 피해!");
-        AfterPlayerAction();
+        ShowSkillPanel();
+    }
+
+    private void ShowSkillPanel()
+    {
+        if (_skillPanel != null) Destroy(_skillPanel);
+        _skillPanel = UIHelper.CreatePanel(_battlePanel.transform, new Color(0.04f, 0.03f, 0.14f, 0.97f), "SkillPanel");
+        _skillPanel.transform.SetAsLastSibling();
+        UIHelper.Stretch(_skillPanel.GetComponent<RectTransform>());
+        var sp = _skillPanel.transform;
+
+        UIHelper.CreateText(sp, "스킬 선택", 30,
+            new Vector2(0.05f, 0.915f), new Vector2(0.95f, 0.99f))
+            .color = new Color(1f, 0.85f, 0.4f);
+
+        var skills = _player.learnedSkills ?? new System.Collections.Generic.List<SkillData>();
+        float y2 = 0.895f;
+        int shown = 0;
+        foreach (var skill in skills)
+        {
+            float rowH = 0.135f;
+            float y1 = y2 - rowH;
+            var capturedSkill = skill;
+            bool passive = skill.isPassive;
+
+            var row = UIHelper.CreatePanel(sp, passive ? new Color(0.07f, 0.07f, 0.14f) : new Color(0.10f, 0.10f, 0.26f), $"SR{shown}");
+            UIHelper.SetAnchors(row.GetComponent<RectTransform>(), new Vector2(0.02f, y1), new Vector2(0.98f, y2 - 0.005f));
+
+            var nameTxt = UIHelper.CreateText(row.transform, skill.name, 23,
+                new Vector2(0.03f, 0.52f), new Vector2(0.65f, 0.97f), TextAlignmentOptions.Left);
+            nameTxt.color = passive ? new Color(0.6f, 0.6f, 0.75f) : new Color(1f, 0.85f, 0.4f);
+
+            if (passive)
+            {
+                UIHelper.CreateText(row.transform, "[패시브] 전투 중 항상 적용됨", 17,
+                    new Vector2(0.03f, 0.05f), new Vector2(0.97f, 0.50f), TextAlignmentOptions.Left)
+                    .color = new Color(0.55f, 0.55f, 0.70f);
+            }
+            else
+            {
+                UIHelper.CreateText(row.transform, $"MP {skill.mpCost}", 18,
+                    new Vector2(0.03f, 0.05f), new Vector2(0.40f, 0.50f), TextAlignmentOptions.Left)
+                    .color = new Color(0.5f, 0.65f, 1f);
+                bool canAfford = _playerMp >= skill.mpCost;
+                var useBtn = UIHelper.CreateButton(row.transform, "사용",
+                    new Vector2(0.67f, 0.10f), new Vector2(0.97f, 0.90f),
+                    canAfford ? new Color(0.15f, 0.25f, 0.72f) : new Color(0.25f, 0.25f, 0.35f));
+                var ut = useBtn.GetComponentInChildren<TextMeshProUGUI>();
+                if (ut != null) ut.fontSize = 22;
+                useBtn.interactable = canAfford;
+                if (canAfford)
+                    useBtn.onClick.AddListener(() => { CloseSkillPanel(); UseSkill(capturedSkill); });
+            }
+
+            y2 -= rowH + 0.008f;
+            if (++shown >= 5) break;
+        }
+
+        if (shown == 0)
+            UIHelper.CreateText(sp, "아직 스킬이 없습니다.", 26,
+                new Vector2(0.05f, 0.45f), new Vector2(0.95f, 0.55f))
+                .color = new Color(0.6f, 0.6f, 0.75f);
+
+        var cancelBtn = UIHelper.CreateButton(sp, "취소",
+            new Vector2(0.10f, 0.02f), new Vector2(0.90f, 0.085f),
+            new Color(0.35f, 0.10f, 0.10f));
+        cancelBtn.onClick.AddListener(CloseSkillPanel);
+    }
+
+    private void CloseSkillPanel()
+    {
+        if (_skillPanel != null) { Destroy(_skillPanel); _skillPanel = null; }
+        SetButtonsInteractable(true);
+    }
+
+    private void UseSkill(SkillData skill)
+    {
+        SetButtonsInteractable(false);
+        _playerMp = Mathf.Max(0, _playerMp - skill.mpCost);
+        if (skill.healAmount > 0)
+        {
+            int healed = Mathf.Min(skill.healAmount, _player.generated.stats.hp - _playerHp);
+            _playerHp += healed;
+            AppendLog($"{skill.name} 사용! HP +{healed} 회복!");
+            RefreshBattleUI(); RefreshHUD();
+            EnemyCounterAttack();
+        }
+        else
+        {
+            int dmg = Mathf.Max(1, (int)(_player.generated.stats.atk * skill.atkMultiplier * GetPassiveAtkBonus()) - _enemyDef);
+            _enemyHp -= dmg;
+            AppendLog($"{skill.name} 사용! {dmg} 피해!");
+            AfterPlayerAction();
+        }
     }
 
     private void OnFlee()
@@ -479,19 +613,132 @@ public class GameManager : MonoBehaviour
         StartCoroutine(_api.UpdateCharacterState(_player, null, null));
     }
 
+    private void AddStoryEntry(string text)
+    {
+        if (_player.storyLog == null) _player.storyLog = new System.Collections.Generic.List<string>();
+        _player.storyLog.Add($"[{System.DateTime.Now:yyyy.MM.dd}] {text}");
+        GameState.StoryUpdated = true;
+        SaveGameState();
+        StartCoroutine(ShowToast($"{_player.generated.name}의 이야기가 갱신되었습니다"));
+    }
+
+    private IEnumerator ShowToast(string msg)
+    {
+        var canvas = FindObjectOfType<Canvas>().transform;
+        var panel = new GameObject("StoryToast");
+        panel.transform.SetParent(canvas, false);
+        panel.transform.SetAsLastSibling();
+        var img = panel.AddComponent<UnityEngine.UI.Image>();
+        img.color = new Color(0.06f, 0.04f, 0.18f, 0f);
+        UIHelper.SetAnchors(panel.GetComponent<RectTransform>(),
+            new Vector2(0.05f, 0.74f), new Vector2(0.95f, 0.84f));
+        var cg = panel.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        var txt = UIHelper.CreateText(panel.transform, msg, 26,
+            new Vector2(0.04f, 0.1f), new Vector2(0.96f, 0.9f));
+        txt.color = new Color(1f, 0.88f, 0.40f);
+
+        for (float t = 0; t < 0.25f; t += Time.deltaTime) { cg.alpha = t / 0.25f; yield return null; }
+        cg.alpha = 1f;
+        yield return new WaitForSeconds(2.0f);
+        for (float t = 0; t < 0.4f; t += Time.deltaTime) { cg.alpha = 1f - t / 0.4f; yield return null; }
+        Destroy(panel);
+    }
+
+    private void GainXp(int amount)
+    {
+        int oldLevel = GameState.Level;
+        GameState.Xp += amount;
+        GameState.Level = GameState.LevelFromXp(GameState.Xp);
+        _player.xp    = GameState.Xp;
+        _player.level = GameState.Level;
+        if (_levelText != null) _levelText.text = $"Lv.{GameState.Level}";
+
+        for (int lv = oldLevel + 1; lv <= GameState.Level; lv++)
+        {
+            var skill = GameState.GetSkillForLevel(lv);
+            if (skill != null)
+            {
+                if (_player.learnedSkills == null) _player.learnedSkills = new System.Collections.Generic.List<SkillData>();
+                _player.learnedSkills.Add(skill);
+            }
+            StartCoroutine(ShowLevelUpBanner(lv, skill));
+        }
+    }
+
+    private IEnumerator ShowLevelUpBanner(int newLevel, SkillData newSkill)
+    {
+        var canvas = FindObjectOfType<Canvas>().transform;
+        var panel = UIHelper.CreatePanel(canvas, new Color(0.05f, 0.03f, 0.16f, 0.96f), "LvBanner");
+        panel.transform.SetAsLastSibling();
+        var border = UIHelper.CreatePanel(panel.transform, new Color(0.80f, 0.65f, 0.10f, 0.85f), "B");
+        UIHelper.Stretch(border.GetComponent<RectTransform>());
+        var inner = UIHelper.CreatePanel(panel.transform, new Color(0.05f, 0.03f, 0.16f, 1f), "I");
+        UIHelper.SetAnchors(inner.GetComponent<RectTransform>(), new Vector2(0.02f, 0.04f), new Vector2(0.98f, 0.96f));
+        UIHelper.CreateText(inner.transform, "LEVEL  UP!", 26,
+            new Vector2(0.05f, 0.65f), new Vector2(0.95f, 0.97f))
+            .color = new Color(1f, 0.85f, 0.20f);
+        UIHelper.CreateText(inner.transform, $"Lv. {newLevel}", 38,
+            new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.66f))
+            .color = Color.white;
+        if (newSkill != null)
+            UIHelper.CreateText(inner.transform, $"새 스킬: {newSkill.name}", 20,
+                new Vector2(0.05f, 0.03f), new Vector2(0.95f, 0.31f))
+                .color = new Color(0.5f, 0.9f, 1f);
+
+        var rt = panel.GetComponent<RectTransform>();
+        // 오른쪽 밖에서 슬라이드 인
+        for (float t = 0; t < 0.35f; t += Time.deltaTime)
+        {
+            float a = Mathf.SmoothStep(0, 1, t / 0.35f);
+            rt.anchorMin = new Vector2(Mathf.Lerp(1.02f, 0.53f, a), 0.38f);
+            rt.anchorMax = new Vector2(Mathf.Lerp(1.50f, 1.01f, a), 0.62f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            yield return null;
+        }
+        rt.anchorMin = new Vector2(0.53f, 0.38f); rt.anchorMax = new Vector2(1.01f, 0.62f);
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        yield return new WaitForSeconds(3.0f);
+        for (float t = 0; t < 0.35f; t += Time.deltaTime)
+        {
+            float a = Mathf.SmoothStep(0, 1, t / 0.35f);
+            rt.anchorMin = new Vector2(Mathf.Lerp(0.53f, 1.02f, a), 0.38f);
+            rt.anchorMax = new Vector2(Mathf.Lerp(1.01f, 1.50f, a), 0.62f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            yield return null;
+        }
+        Destroy(panel);
+    }
+
     private void AfterPlayerAction()
     {
         RefreshBattleUI();
         if (_enemyHp <= 0)
         {
             int goldGain = 30 + _currentMonster.ZoneIndex * 20;
+            int xpGain   = 20 + _currentMonster.ZoneIndex * 15;
             GameState.MonsterCount++;
             GameState.Gold += goldGain;
-            AppendLog($"{_enemyName} 처치! +{goldGain}G");
-            SaveGameState();
+            GainXp(xpGain);
+            AppendLog($"{_enemyName} 처치! +{goldGain}G  +{xpGain}XP");
+
+            string monsterKind = _currentMonster.ZoneIndex <= 1 ? "고블린"
+                : _currentMonster.ZoneIndex <= 3 ? "해골 전사" : "슬라임";
+            if (GameState.MonsterCount == 1)
+                AddStoryEntry($"처음으로 {monsterKind}을(를) 마주한 {_player.generated.name}은(는) 첫 전투에서 승리했다.");
+            else if (GameState.MonsterCount % 5 == 0)
+                AddStoryEntry($"{_player.generated.name}은(는) {_currentMonster.ZoneName}을(를) 누비며 {GameState.MonsterCount}번째 전투를 승리로 이끌었다.");
+            else
+                SaveGameState();
+
             StartCoroutine(DelayEndBattle(1.5f));
             return;
         }
+        EnemyCounterAttack();
+    }
+
+    private void EnemyCounterAttack()
+    {
         int dmg = Mathf.Max(1, _enemyAtk - _player.generated.stats.def);
         _playerHp -= dmg;
         AppendLog($"{_enemyName}의 반격! {dmg} 피해!");
