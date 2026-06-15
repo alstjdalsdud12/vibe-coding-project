@@ -761,18 +761,20 @@ public class VillageManager : MonoBehaviour
             var tagPanel = UIHelper.CreatePanel(row.transform, m.tagCol, "Tag");
             UIHelper.SetAnchors(tagPanel.GetComponent<RectTransform>(),
                 new Vector2(0f, 0f), new Vector2(0.18f, 1f));
-            UIHelper.CreateText(tagPanel.transform, m.tag, 20, Vector2.zero, Vector2.one)
-                .color = Color.white;
+            var tagTxt = UIHelper.CreateText(tagPanel.transform, m.tag, 30, Vector2.zero, Vector2.one);
+            tagTxt.color     = Color.white;
+            tagTxt.fontStyle = FontStyles.Bold;
 
-            UIHelper.CreateText(row.transform, m.title, 22,
-                new Vector2(0.20f, 0.50f), new Vector2(0.97f, 0.95f), TextAlignmentOptions.Left)
-                .color = new Color(1f, 0.88f, 0.5f);
+            var titleTxt = UIHelper.CreateText(row.transform, m.title, 34,
+                new Vector2(0.20f, 0.48f), new Vector2(0.97f, 0.95f), TextAlignmentOptions.Left);
+            titleTxt.color     = new Color(1f, 0.93f, 0.60f);
+            titleTxt.fontStyle = FontStyles.Bold;
 
             string preview = m.content.Replace("\n", " ");
-            if (preview.Length > 34) preview = preview.Substring(0, 34) + "...";
-            UIHelper.CreateText(row.transform, preview, 17,
-                new Vector2(0.20f, 0.05f), new Vector2(0.97f, 0.48f), TextAlignmentOptions.Left)
-                .color = new Color(0.75f, 0.75f, 0.90f);
+            if (preview.Length > 26) preview = preview.Substring(0, 26) + "...";
+            UIHelper.CreateText(row.transform, preview, 24,
+                new Vector2(0.20f, 0.05f), new Vector2(0.97f, 0.46f), TextAlignmentOptions.Left)
+                .color = new Color(0.82f, 0.82f, 0.95f);
         }
 
         // ── 상세 패널 (행보다 나중에 추가 → 위 z-order) ─────────
@@ -781,25 +783,25 @@ public class VillageManager : MonoBehaviour
             new Vector2(0f, 0f), new Vector2(1f, 0.87f));
         detailPanel.SetActive(false);
 
-        var detailTitle = UIHelper.CreateText(detailPanel.transform, "", 28,
-            new Vector2(0.03f, 0.82f), new Vector2(0.97f, 0.95f), TextAlignmentOptions.Left);
-        detailTitle.color     = new Color(1f, 0.88f, 0.5f);
+        var detailTitle = UIHelper.CreateText(detailPanel.transform, "", 40,
+            new Vector2(0.03f, 0.82f), new Vector2(0.97f, 0.96f), TextAlignmentOptions.Left);
+        detailTitle.color     = new Color(1f, 0.93f, 0.58f);
         detailTitle.fontStyle = FontStyles.Bold;
 
-        var detailContent = UIHelper.CreateText(detailPanel.transform, "", 20,
-            new Vector2(0.03f, 0.26f), new Vector2(0.97f, 0.79f), TextAlignmentOptions.Left);
-        detailContent.color              = new Color(0.82f, 0.82f, 0.92f);
+        var detailContent = UIHelper.CreateText(detailPanel.transform, "", 28,
+            new Vector2(0.03f, 0.24f), new Vector2(0.97f, 0.80f), TextAlignmentOptions.Left);
+        detailContent.color              = new Color(0.90f, 0.90f, 0.98f);
         detailContent.enableWordWrapping = true;
 
-        var detailRewardInfo = UIHelper.CreateText(detailPanel.transform, "", 22,
-            new Vector2(0.03f, 0.16f), new Vector2(0.97f, 0.25f), TextAlignmentOptions.Left);
-        detailRewardInfo.color = new Color(1f, 0.85f, 0.3f);
+        var detailRewardInfo = UIHelper.CreateText(detailPanel.transform, "", 30,
+            new Vector2(0.03f, 0.15f), new Vector2(0.97f, 0.23f), TextAlignmentOptions.Left);
+        detailRewardInfo.color = new Color(1f, 0.88f, 0.28f);
 
         var rewardBtn = UIHelper.CreateButton(detailPanel.transform, "보상 받기",
             new Vector2(0.03f, 0.03f), new Vector2(0.54f, 0.14f),
             new Color(0.18f, 0.48f, 0.18f));
         var rewardTmp = rewardBtn.GetComponentInChildren<TextMeshProUGUI>();
-        if (rewardTmp != null) rewardTmp.fontSize = 24;
+        if (rewardTmp != null) rewardTmp.fontSize = 28;
         rewardBtn.gameObject.SetActive(false);
 
         rewardBtn.onClick.AddListener(() =>
@@ -900,11 +902,12 @@ public class VillageManager : MonoBehaviour
             UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
                 new Vector2(0.03f, y1), new Vector2(0.97f, y2));
 
-            var lbl = UIHelper.CreateText(row.transform, sd.label, 26,
+            var lbl = UIHelper.CreateText(row.transform, sd.label, 36,
                 new Vector2(0.03f, 0.1f), new Vector2(0.55f, 0.9f), TextAlignmentOptions.Left);
-            lbl.color = sd.col;
+            lbl.color     = sd.col;
+            lbl.fontStyle = FontStyles.Bold;
 
-            var val = UIHelper.CreateText(row.transform, sd.val.ToString(), 28,
+            var val = UIHelper.CreateText(row.transform, sd.val.ToString(), 42,
                 new Vector2(0.55f, 0.1f), new Vector2(0.97f, 0.9f), TextAlignmentOptions.Right);
             val.color     = Color.white;
             val.fontStyle = FontStyles.Bold;
@@ -914,10 +917,11 @@ public class VillageManager : MonoBehaviour
         if (!string.IsNullOrEmpty(_ch.generated.story))
         {
             string brief = _ch.generated.story;
-            if (brief.Length > 65) brief = brief.Substring(0, 65) + "...";
-            UIHelper.CreateText(tf, brief, 20,
-                new Vector2(0.03f, 0.17f), new Vector2(0.97f, 0.32f), TextAlignmentOptions.Left)
-                .color = new Color(0.72f, 0.72f, 0.88f);
+            if (brief.Length > 55) brief = brief.Substring(0, 55) + "...";
+            var storyTxt = UIHelper.CreateText(tf, brief, 26,
+                new Vector2(0.03f, 0.14f), new Vector2(0.97f, 0.34f), TextAlignmentOptions.Left);
+            storyTxt.color              = new Color(0.80f, 0.80f, 0.95f);
+            storyTxt.enableWordWrapping = true;
         }
 
         return overlay;
