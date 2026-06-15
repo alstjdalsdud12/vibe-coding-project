@@ -548,7 +548,7 @@ public class VillageManager : MonoBehaviour
         titleTxt.color     = new Color(1f, 0.88f, 0.50f);
         titleTxt.fontStyle = FontStyles.Bold;
 
-        var closeBtn = UIHelper.CreateButton(panel.transform, "✕",
+        var closeBtn = UIHelper.CreateButton(panel.transform, "X",
             new Vector2(0.80f, 0.888f), new Vector2(0.97f, 0.988f),
             new Color(0.40f, 0.08f, 0.08f));
         closeBtn.onClick.AddListener(() => overlay.SetActive(false));

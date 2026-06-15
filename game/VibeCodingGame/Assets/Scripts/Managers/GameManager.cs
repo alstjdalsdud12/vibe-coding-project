@@ -468,6 +468,17 @@ public class GameManager : MonoBehaviour
         StartCoroutine(DelayEndBattle(0.8f));
     }
 
+    private void SaveGameState()
+    {
+        if (_player == null || _api == null) return;
+        _player.gold = GameState.Gold;
+        if (_player.questProgress == null) _player.questProgress = new QuestProgress();
+        _player.questProgress.monsterCount = GameState.MonsterCount;
+        _player.questProgress.dungeonCount = GameState.DungeonCount;
+        _player.questProgress.bossCount    = GameState.BossCount;
+        StartCoroutine(_api.UpdateCharacterState(_player, null, null));
+    }
+
     private void AfterPlayerAction()
     {
         RefreshBattleUI();
@@ -477,6 +488,7 @@ public class GameManager : MonoBehaviour
             GameState.MonsterCount++;
             GameState.Gold += goldGain;
             AppendLog($"{_enemyName} 처치! +{goldGain}G");
+            SaveGameState();
             StartCoroutine(DelayEndBattle(1.5f));
             return;
         }

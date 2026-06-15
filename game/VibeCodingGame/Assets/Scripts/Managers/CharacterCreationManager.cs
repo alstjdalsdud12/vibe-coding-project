@@ -133,7 +133,7 @@ public class CharacterCreationManager : MonoBehaviour
             character =>
             {
                 GameState.CurrentCharacter = character;
-                SceneManager.LoadScene("GameScene");
+                SceneManager.LoadScene("VillageScene");
             },
             err =>
             {
