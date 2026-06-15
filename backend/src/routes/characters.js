@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { generateCharacter } = require('../services/claudeService');
-const { saveCharacter, getAllCharacters, getCharacterById, deleteCharacter } = require('../services/firebaseService');
+const { saveCharacter, getAllCharacters, getCharacterById, deleteCharacter, updateCharacterState } = require('../services/firebaseService');
 
 // 캐릭터 생성
 router.post('/', async (req, res, next) => {
@@ -41,6 +41,16 @@ router.get('/:id', async (req, res, next) => {
   try {
     const character = await getCharacterById(req.params.id);
     res.json({ success: true, data: character, error: null });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 게임 상태 저장 (인벤토리, 골드, 퀘스트, 출석, 원정)
+router.patch('/:id/state', async (req, res, next) => {
+  try {
+    await updateCharacterState(req.params.id, req.body);
+    res.json({ success: true, data: null, error: null });
   } catch (err) {
     next(err);
   }

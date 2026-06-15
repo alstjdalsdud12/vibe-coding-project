@@ -19,10 +19,16 @@ const saveCharacter = async (userInput, generated) => {
     id: ref.id,
     userInput,
     generated,
+    inventory: [],
+    gold: 0,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   };
   await ref.set(data);
   return data;
+};
+
+const updateCharacterState = async (id, updates) => {
+  await db.collection(COLLECTION).doc(id).update(updates);
 };
 
 const getAllCharacters = async () => {
@@ -55,4 +61,4 @@ const deleteCharacter = async (id) => {
   await db.collection(COLLECTION).doc(id).delete();
 };
 
-module.exports = { saveCharacter, getAllCharacters, getCharacterById, deleteCharacter };
+module.exports = { saveCharacter, getAllCharacters, getCharacterById, deleteCharacter, updateCharacterState };

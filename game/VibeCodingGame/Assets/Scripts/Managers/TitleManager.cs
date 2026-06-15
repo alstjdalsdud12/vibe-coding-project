@@ -6,10 +6,6 @@ using System.Collections;
 
 public class TitleManager : MonoBehaviour
 {
-    [SerializeField] private Sprite _heroSprite;       // 인스펙터에서 캐릭터 스프라이트 할당
-    [SerializeField] private float  _heroScale = 1.0f; // 크기 (1.0 기준, 줄이려면 0.5 등)
-    [SerializeField] private float  _heroYOffset = 0f; // 위아래 위치 조정 (위=양수, 아래=음수)
-
     private TextMeshProUGUI _tapText;
     private RectTransform   _titleFloat;
     private RectTransform   _subFloat;
@@ -146,94 +142,24 @@ public class TitleManager : MonoBehaviour
     // ─── 영웅 ─────────────────────────────────────────────
     private void BuildHero()
     {
+        const float heroScale = 1.2f;
+        const float legLocalY = 0.22f; // 프리팹 기준 발 위치 — 이만큼 내려야 발이 땅에 닿음
         var go = new GameObject("Hero");
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sortingOrder = SO_Hero;
+        go.transform.position = new Vector3(-0.4f, HorizonY - legLocalY * heroScale, 0);
 
-        if (_heroSprite != null)
-        {
-            sr.sprite = _heroSprite;
-            sr.color  = Color.white;
+        var visual = new GameObject("Visual");
+        visual.transform.SetParent(go.transform, false);
+        visual.transform.localScale = Vector3.one * heroScale;
 
-            // 크기: 해상도 무관하게 목표 높이로 자동 스케일
-            float targetH   = 1.8f * _heroScale;
-            float autoScale = targetH / _heroSprite.bounds.size.y;
-            go.transform.localScale = new Vector3(autoScale, autoScale, 1f);
+        int charIdx = (GameState.CurrentCharacter != null)
+            ? GameState.CurrentCharacter.generated.characterIndex
+            : 1;
+        var lc = LayerLabCharacter.AttachPlayer(visual, charIdx);
+        lc.SetWalking(true);
 
-            // 위치: 크기 완전히 무관. Hero Y Offset으로만 조정 (기본 0, 내리려면 -0.5 등)
-            go.transform.position = new Vector3(-0.4f, HorizonY + 0.5f + _heroYOffset, 0);
-        }
-        else
-        {
-            sr.sprite = MakeHeroPixelArt();
-            sr.color  = new Color(0.06f, 0.05f, 0.12f);
-            go.transform.localScale = new Vector3(1.6f, 1.6f, 1f);
-            go.transform.position   = new Vector3(-0.4f, HorizonY, 0);
-        }
-    }
-
-    // 48x80 픽셀 후드 암살자 - 팔 오른쪽으로 뻗어 단검 겨누는 포즈
-    private static Sprite MakeHeroPixelArt()
-    {
-        const int W = 48, H = 80;
-        var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Point;
-
-        for (int x = 0; x < W; x++)
-            for (int y = 0; y < H; y++)
-                tex.SetPixel(x, y, Color.clear);
-
-        void F(int x0, int y0, int x1, int y1)
-        {
-            for (int xx = Mathf.Max(0,x0); xx <= Mathf.Min(W-1,x1); xx++)
-                for (int yy = Mathf.Max(0,y0); yy <= Mathf.Min(H-1,y1); yy++)
-                    tex.SetPixel(xx, yy, Color.white);
-        }
-
-        // ── 부츠 ────────────────────────────────────────────
-        F(7,  0, 13,  3);
-        F(8,  4, 12, 10);
-        F(17, 0, 23,  3);
-        F(18, 4, 22, 10);
-
-        // ── 다리 ────────────────────────────────────────────
-        F(8,  11, 12, 26);
-        F(18, 11, 22, 26);
-        F(7,  27, 13, 36);   // 왼 허벅지
-        F(17, 27, 23, 36);   // 오른 허벅지
-
-        // ── 망토 (왼쪽으로만 길게 펄럭임) ──────────────────
-        F(0,  14,  7, 30);   // 왼 망토 하단
-        F(0,  30,  6, 48);   // 왼 망토 상단
-
-        // ── 몸통 ────────────────────────────────────────────
-        F(7,  37, 22, 52);
-
-        // ── 어깨 ────────────────────────────────────────────
-        F(5,  53, 24, 58);
-
-        // ── 목 ──────────────────────────────────────────────
-        F(10, 59, 16, 62);
-
-        // ── 후드 (왼쪽으로 치우쳐 뾰족) ─────────────────────
-        F(7,  63, 20, 67);
-        F(8,  68, 18, 71);
-        F(9,  72, 17, 74);
-        F(10, 75, 16, 76);
-        F(11, 77, 15, 77);
-        F(12, 78, 14, 79);   // 뾰족한 끝
-
-        // ── 오른팔 (수평으로 오른쪽 쭉 뻗음) ───────────────
-        F(22, 50, 36, 55);
-
-        // ── 단검 (오른쪽 끝에서 비스듬히 겨눔) ──────────────
-        F(34, 48, 37, 55);   // 그립
-        F(34, 45, 34, 48);   // 가드 (세로 막대)
-        F(35, 43, 47, 46);   // 날 (오른쪽으로 뻗음)
-        F(46, 40, 47, 43);   // 날끝 (뾰족)
-
-        tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.3f, 0f), H);
+        // 타이틀 화면 소팅오더 맞춤
+        foreach (var sr in visual.GetComponentsInChildren<SpriteRenderer>())
+            sr.sortingOrder += SO_Hero;
     }
 
     // ─── 몬스터 실루엣 (밤에만 나무 뒤에서 등장) ──────────

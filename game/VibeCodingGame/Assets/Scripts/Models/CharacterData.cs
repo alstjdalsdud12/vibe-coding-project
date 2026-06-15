@@ -2,6 +2,30 @@ using System;
 using System.Collections.Generic;
 
 [Serializable]
+public class InventoryItem
+{
+    public string name;
+    public int    qty;
+    public string itemType;  // "material" | "consume"
+    public int    sellPrice; // 판매가 (consume 은 -1)
+}
+
+[Serializable]
+public class QuestProgress
+{
+    public int dungeonCount;
+    public int monsterCount;
+    public int bossCount;
+}
+
+[Serializable]
+public class ExpeditionState
+{
+    public int  slotIdx;
+    public long returnTime; // Unix ms timestamp
+}
+
+[Serializable]
 public class AbilityData
 {
     public string name;
@@ -63,6 +87,11 @@ public class CharacterData
     public string id;
     public UserInputData userInput;
     public GeneratedData generated;
+    public List<InventoryItem>  inventory;
+    public int                  gold;
+    public QuestProgress        questProgress;
+    public string               lastAttendanceDate;
+    public List<ExpeditionState> expeditions;
 }
 
 [Serializable]

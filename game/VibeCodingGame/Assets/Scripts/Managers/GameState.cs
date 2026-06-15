@@ -2,4 +2,8 @@
 public static class GameState
 {
     public static CharacterData CurrentCharacter;
+    public static int Gold         = 0;
+    public static int DungeonCount = 0;
+    public static int MonsterCount = 0;
+    public static int BossCount    = 0;
 }

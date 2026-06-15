@@ -250,11 +250,11 @@ public class GameManager : MonoBehaviour
         _hudMpText = UIHelper.CreateText(mpBarBG.transform, "", 20,
             new Vector2(0.02f, 0f), new Vector2(0.98f, 1f), TextAlignmentOptions.Left);
 
-        // 메뉴 버튼
-        var menuBtn = UIHelper.CreateButton(canvas, "메뉴",
+        // 마을 귀환 버튼
+        var villageBtn = UIHelper.CreateButton(canvas, "마을",
             new Vector2(0.82f, 0.913f), new Vector2(0.98f, 0.993f),
-            new Color(0.22f, 0.18f, 0.35f));
-        menuBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
+            new Color(0.12f, 0.28f, 0.18f));
+        villageBtn.onClick.AddListener(() => SceneManager.LoadScene("VillageScene"));
 
         // 구역 진입 알림 (배경 박스 포함)
         _zoneBox = UIHelper.CreatePanel(canvas, new Color(0.06f, 0.04f, 0.16f, 0.82f), "ZoneBox");
@@ -473,7 +473,10 @@ public class GameManager : MonoBehaviour
         RefreshBattleUI();
         if (_enemyHp <= 0)
         {
-            AppendLog($"{_enemyName} 처치!");
+            int goldGain = 30 + _currentMonster.ZoneIndex * 20;
+            GameState.MonsterCount++;
+            GameState.Gold += goldGain;
+            AppendLog($"{_enemyName} 처치! +{goldGain}G");
             StartCoroutine(DelayEndBattle(1.5f));
             return;
         }
@@ -547,6 +550,10 @@ public class GameManager : MonoBehaviour
         var backBtn = UIHelper.CreateButton(rp, "메인 메뉴로",
             new Vector2(0.2f, 0.32f), new Vector2(0.8f, 0.42f));
         backBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
+        var villageBtn = UIHelper.CreateButton(rp, "마을로 복귀",
+            new Vector2(0.2f, 0.20f), new Vector2(0.8f, 0.30f),
+            new Color(0.12f, 0.28f, 0.18f));
+        villageBtn.onClick.AddListener(() => SceneManager.LoadScene("VillageScene"));
     }
 
     private void ShowResult()

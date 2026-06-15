@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,71 +10,156 @@ using TMPro;
 // 상점/미션/우편/캐릭터정보 팝업 + 던전 입장 버튼 제공
 public class VillageManager : MonoBehaviour
 {
+    // 아이템 정의표 (슬롯 0~3 고정)
+    private static readonly (string name, string type, int sell)[] ItemDefs =
+    {
+        ("낡은 단검 조각", "material",  50),
+        ("철제 갑옷 파편", "material",  80),
+        ("회복 포션",      "consume",   -1),
+        ("마나 포션",      "consume",   -1),
+    };
+
     private CharacterData _ch;
-    private Transform _canvasTF;
-    private GameObject _shopPanel, _missionPanel, _mailPanel, _infoPanel;
+    private ApiClient     _api;
+    private Transform     _canvasTF;
+    private GameObject    _shopPanel, _missionPanel, _mailPanel, _infoPanel, _bagPanel, _eventPanel, _expeditionPanel;
+    private TextMeshProUGUI _goldText;
+    private bool _attendanceCollected;
+    private int[]                _bagQty      = new int[4];
+    private TextMeshProUGUI[]    _bagQtyTexts = new TextMeshProUGUI[4];
+    private GameObject[]         _bagRows     = new GameObject[4];
+
+    private static readonly int[] _missionTargets  = { 1, 3, 10, 500 };
+    private static readonly int[] _missionRewards  = { 1000, 200, 300, 100 };
+    private TextMeshProUGUI[]     _missionProgTexts = new TextMeshProUGUI[4];
+    private Button[]              _missionRewBtns   = new Button[4];
+    private bool[]                _missionRewarded  = new bool[4];
 
     private void Start()
     {
-        _ch = GameState.CurrentCharacter;
+        _ch  = GameState.CurrentCharacter;
+        _api = gameObject.AddComponent<ApiClient>();
+
+        // 저장된 골드 복원 (던전 수익이 있으면 그 값 유지)
+        GameState.Gold = Math.Max(GameState.Gold, _ch.gold);
+
+        // 인벤토리 → 슬롯 수량 초기화
+        if (_ch.inventory != null)
+        {
+            for (int i = 0; i < ItemDefs.Length; i++)
+            {
+                var item = _ch.inventory.Find(x => x.name == ItemDefs[i].name);
+                _bagQty[i] = item != null ? item.qty : 0;
+            }
+        }
+
+        // 퀘스트 진행도 복원 (GameState와 Firebase 중 더 큰 값 사용)
+        if (_ch.questProgress != null)
+        {
+            GameState.DungeonCount = Math.Max(GameState.DungeonCount, _ch.questProgress.dungeonCount);
+            GameState.MonsterCount = Math.Max(GameState.MonsterCount, _ch.questProgress.monsterCount);
+            GameState.BossCount    = Math.Max(GameState.BossCount,    _ch.questProgress.bossCount);
+        }
+
+        // 출석 체크 복원 (오늘 날짜와 비교)
+        _attendanceCollected = (_ch.lastAttendanceDate == DateTime.Now.ToString("yyyy-MM-dd"));
+
+        // 원정 목록 초기화
+        if (_ch.expeditions == null) _ch.expeditions = new List<ExpeditionState>();
+
         SetupCamera();
         SetupWorld();
         SetupUI();
     }
 
+    // 인벤토리 + 골드를 Firebase에 저장
+    private void SaveState()
+    {
+        if (_ch == null || _api == null) return;
+
+        if (_ch.inventory == null) _ch.inventory = new System.Collections.Generic.List<InventoryItem>();
+
+        for (int i = 0; i < ItemDefs.Length; i++)
+        {
+            var existing = _ch.inventory.Find(x => x.name == ItemDefs[i].name);
+            if (_bagQty[i] > 0)
+            {
+                if (existing != null) existing.qty = _bagQty[i];
+                else _ch.inventory.Add(new InventoryItem
+                {
+                    name      = ItemDefs[i].name,
+                    qty       = _bagQty[i],
+                    itemType  = ItemDefs[i].type,
+                    sellPrice = ItemDefs[i].sell,
+                });
+            }
+            else
+            {
+                if (existing != null) _ch.inventory.Remove(existing);
+            }
+        }
+
+        // 퀘스트 진행도 동기화
+        if (_ch.questProgress == null) _ch.questProgress = new QuestProgress();
+        _ch.questProgress.dungeonCount = GameState.DungeonCount;
+        _ch.questProgress.monsterCount = GameState.MonsterCount;
+        _ch.questProgress.bossCount    = GameState.BossCount;
+
+        _ch.gold = GameState.Gold;
+        StartCoroutine(_api.UpdateCharacterState(_ch, null, null));
+    }
+
     // ── 카메라 ──────────────────────────────────────────────────
     private void SetupCamera()
     {
-        if (Camera.main != null) return;
-        var go = new GameObject("Main Camera");
-        go.tag = "MainCamera";
-        var cam = go.AddComponent<Camera>();
-        cam.orthographic     = true;
-        cam.orthographicSize = 5f;
-        cam.clearFlags       = CameraClearFlags.SolidColor;
-        cam.backgroundColor  = new Color(0.04f, 0.07f, 0.14f);
+        Camera cam;
+        if (Camera.main != null)
+        {
+            cam = Camera.main;
+        }
+        else
+        {
+            var go = new GameObject("Main Camera");
+            go.tag = "MainCamera";
+            cam = go.AddComponent<Camera>();
+        }
+        cam.orthographic          = true;
+        cam.orthographicSize      = 4.5f;
+        cam.clearFlags            = CameraClearFlags.SolidColor;
+        cam.backgroundColor       = new Color(0.04f, 0.06f, 0.12f);
+        cam.transform.position    = new Vector3(0f, 0.3f, -10f);
     }
 
-    // ── 월드 (배경 + 건물 + 캐릭터) ─────────────────────────────
+    // ── 월드 (배경 + 캐릭터 대형 표시) ──────────────────────────
     private void SetupWorld()
     {
         var sq = MakeSquare();
 
+        // 하늘 (전체 배경)
+        Decor(sq, new Vector3(0f, 0f, 5f), new Vector3(20f, 20f, 1f),
+              new Color(0.04f, 0.06f, 0.13f), -3);
+
+        // 캐릭터 뒤 연보라 글로우
+        Decor(sq, new Vector3(0f, 0.8f, 2f), new Vector3(2.5f, 6.0f, 1f),
+              new Color(0.12f, 0.08f, 0.28f, 0.30f), -2);
+
         // 지면
-        Decor(sq, new Vector3(0f, -3.2f, 1f), new Vector3(40f, 5f, 1f),
-              new Color(0.10f, 0.20f, 0.09f), -1);
+        Decor(sq, new Vector3(0f, -3.0f, 1f), new Vector3(20f, 1.2f, 1f),
+              new Color(0.08f, 0.18f, 0.07f), -1);
 
-        // 건물 몸체
-        Decor(sq, new Vector3(-4.6f, -1.4f, 0.5f), new Vector3(2.2f, 3.0f, 1f),
-              new Color(0.32f, 0.20f, 0.07f), 0);
-        Decor(sq, new Vector3( 4.6f, -1.3f, 0.5f), new Vector3(2.0f, 3.5f, 1f),
-              new Color(0.18f, 0.25f, 0.42f), 0);
-        Decor(sq, new Vector3(-7.8f, -2.0f, 0.5f), new Vector3(1.8f, 2.2f, 1f),
-              new Color(0.28f, 0.16f, 0.05f), 0);
-        Decor(sq, new Vector3( 7.8f, -1.8f, 0.5f), new Vector3(2.0f, 2.8f, 1f),
-              new Color(0.14f, 0.30f, 0.16f), 0);
+        // 발 아래 그림자
+        Decor(sq, new Vector3(0f, -2.85f, 0.5f), new Vector3(2.5f, 0.10f, 1f),
+              new Color(0f, 0f, 0f, 0.40f), 0);
 
-        // 지붕
-        Decor(sq, new Vector3(-4.6f,  0.0f, 0.4f), new Vector3(2.6f, 0.8f, 1f),
-              new Color(0.20f, 0.10f, 0.04f), 1);
-        Decor(sq, new Vector3( 4.6f,  0.1f, 0.4f), new Vector3(2.4f, 0.9f, 1f),
-              new Color(0.10f, 0.14f, 0.28f), 1);
-
-        // 창문 (작은 밝은 사각형)
-        Decor(sq, new Vector3(-4.6f, -1.2f, 0.3f), new Vector3(0.5f, 0.4f, 1f),
-              new Color(0.9f, 0.85f, 0.5f, 0.7f), 2);
-        Decor(sq, new Vector3( 4.6f, -1.0f, 0.3f), new Vector3(0.5f, 0.4f, 1f),
-              new Color(0.9f, 0.85f, 0.5f, 0.7f), 2);
-
-        // 캐릭터
+        // 캐릭터 (전신이 보이도록 스케일 조정)
         int idx = _ch.generated.characterIndex;
         if (idx < 1 || idx > 8) idx = 1;
         var heroGO = new GameObject("VillageHero");
-        heroGO.transform.position = new Vector3(0f, -1.5f, 0f);
+        heroGO.transform.position = new Vector3(0f, -0.3f, 0f);
         var visual = new GameObject("Visual");
         visual.transform.SetParent(heroGO.transform, false);
-        visual.transform.localScale = Vector3.one * 2f;
-        LayerLabCharacter.AttachPlayer(visual, idx).SetWalking(true);
+        visual.transform.localScale = Vector3.one * 2.0f;
+        LayerLabCharacter.AttachPlayer(visual, idx).SetWalking(false);
     }
 
     private void Decor(Sprite sq, Vector3 pos, Vector3 scale, Color color, int order)
@@ -104,7 +191,6 @@ public class VillageManager : MonoBehaviour
         BuildQuestBanner();
         BuildSideIcons();
         BuildVillageName();
-        BuildFeatureButtons();
         BuildBottomBar();
 
         // 팝업 미리 생성 (비활성 상태)
@@ -112,6 +198,9 @@ public class VillageManager : MonoBehaviour
         _missionPanel = BuildMissionPopup();
         _mailPanel    = BuildMailPopup();
         _infoPanel    = BuildInfoPopup();
+        _bagPanel        = BuildBagPopup();
+        _eventPanel      = BuildEventPopup();
+        _expeditionPanel = BuildExpeditionPopup();
     }
 
     // ── 상단 HUD ────────────────────────────────────────────────
@@ -131,7 +220,7 @@ public class VillageManager : MonoBehaviour
         // HP 바
         var hpBG = UIHelper.CreatePanel(t, new Color(0.28f, 0.05f, 0.05f), "HPBG");
         UIHelper.SetAnchors(hpBG.GetComponent<RectTransform>(),
-            new Vector2(0.14f, 0.950f), new Vector2(0.55f, 0.990f));
+            new Vector2(0.14f, 0.950f), new Vector2(0.47f, 0.990f));
         var hpFill = UIHelper.CreatePanel(hpBG.transform, new Color(0.85f, 0.14f, 0.14f), "HPFill");
         UIHelper.SetAnchors(hpFill.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
         var hpTxt = UIHelper.CreateText(hpBG.transform, $"HP  {_ch.generated.stats.hp}",
@@ -141,14 +230,22 @@ public class VillageManager : MonoBehaviour
         // ATK
         var atkBG = UIHelper.CreatePanel(t, new Color(0.55f, 0.26f, 0.04f), "AtkBG");
         UIHelper.SetAnchors(atkBG.GetComponent<RectTransform>(),
-            new Vector2(0.57f, 0.950f), new Vector2(0.73f, 0.990f));
+            new Vector2(0.49f, 0.950f), new Vector2(0.63f, 0.990f));
         UIHelper.CreateText(atkBG.transform, $"ATK  {_ch.generated.stats.atk}", 20,
             Vector2.zero, Vector2.one).color = new Color(1f, 0.85f, 0.5f);
+
+        // 골드
+        var goldBG = UIHelper.CreatePanel(t, new Color(0.40f, 0.30f, 0.02f), "GoldBG");
+        UIHelper.SetAnchors(goldBG.GetComponent<RectTransform>(),
+            new Vector2(0.65f, 0.950f), new Vector2(0.82f, 0.990f));
+        _goldText = UIHelper.CreateText(goldBG.transform, $"G  {GameState.Gold}", 20,
+            Vector2.zero, Vector2.one);
+        _goldText.color = new Color(1f, 0.88f, 0.20f);
 
         // MP 바
         var mpBG = UIHelper.CreatePanel(t, new Color(0.05f, 0.07f, 0.28f), "MPBG");
         UIHelper.SetAnchors(mpBG.GetComponent<RectTransform>(),
-            new Vector2(0.75f, 0.950f), new Vector2(0.99f, 0.990f));
+            new Vector2(0.84f, 0.950f), new Vector2(0.99f, 0.990f));
         var mpFill = UIHelper.CreatePanel(mpBG.transform, new Color(0.14f, 0.32f, 0.85f), "MPFill");
         UIHelper.SetAnchors(mpFill.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
         var mpTxt = UIHelper.CreateText(mpBG.transform, $"MP  {_ch.generated.stats.mp}",
@@ -167,6 +264,57 @@ public class VillageManager : MonoBehaviour
         return Mathf.Max(1, (s.hp / 20 + s.atk / 5 + s.def / 4 + s.mp / 20) / 4);
     }
 
+    private void RefreshGold()
+    {
+        if (_goldText != null) _goldText.text = $"G  {GameState.Gold}";
+    }
+
+    private void AddToBag(int slotIdx, int amount)
+    {
+        _bagQty[slotIdx] += amount;
+        if (_bagQtyTexts[slotIdx] != null) _bagQtyTexts[slotIdx].text = $"x {_bagQty[slotIdx]}";
+        if (_bagRows[slotIdx] != null) _bagRows[slotIdx].SetActive(true);
+        RefreshBagLayout();
+        SaveState();
+    }
+
+    private void RefreshBagLayout()
+    {
+        int visible = 0;
+        for (int i = 0; i < _bagRows.Length; i++)
+        {
+            if (_bagRows[i] == null || !_bagRows[i].activeSelf) continue;
+            float y2 = 0.84f - visible * 0.17f;
+            float y1 = y2 - 0.14f;
+            UIHelper.SetAnchors(_bagRows[i].GetComponent<RectTransform>(),
+                new Vector2(0.03f, y1), new Vector2(0.97f, y2));
+            visible++;
+        }
+    }
+
+    private void ShowMsg(string msg) => StartCoroutine(ShowMsgRoutine(msg));
+
+    private IEnumerator ShowMsgRoutine(string msg)
+    {
+        var toast = new GameObject("Toast");
+        toast.transform.SetParent(_canvasTF, false);
+        toast.transform.SetAsLastSibling();
+        UIHelper.SetAnchors(toast.AddComponent<RectTransform>(),
+            new Vector2(0.10f, 0.43f), new Vector2(0.90f, 0.57f));
+        toast.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.10f, 0.92f);
+        var cg = toast.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        UIHelper.CreateText(toast.transform, msg, 28,
+            new Vector2(0.05f, 0.1f), new Vector2(0.95f, 0.9f)).color = Color.white;
+        float t = 0f;
+        while (t < 0.2f) { t += Time.deltaTime; cg.alpha = t / 0.2f; yield return null; }
+        cg.alpha = 1f;
+        yield return new WaitForSeconds(1.2f);
+        t = 0f;
+        while (t < 0.3f) { t += Time.deltaTime; cg.alpha = 1f - t / 0.3f; yield return null; }
+        Destroy(toast);
+    }
+
     // ── 퀘스트 배너 + 설정 ──────────────────────────────────────
     private void BuildQuestBanner()
     {
@@ -183,7 +331,7 @@ public class VillageManager : MonoBehaviour
             new Vector2(0.04f, 0.08f), new Vector2(0.96f, 0.92f), TextAlignmentOptions.Left);
         txt.color = new Color(1f, 0.88f, 0.50f);
 
-        var settingsBtn = UIHelper.CreateButton(t, "⚙",
+        var settingsBtn = UIHelper.CreateButton(t, "설정",
             new Vector2(0.878f, 0.881f), new Vector2(0.994f, 0.922f),
             new Color(0.18f, 0.14f, 0.30f));
         settingsBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
@@ -194,25 +342,31 @@ public class VillageManager : MonoBehaviour
     {
         var t = _canvasTF;
 
-        // 좌측
-        MakeSideIcon(t, "선물", new Vector2(0.01f, 0.770f), new Vector2(0.12f, 0.870f),
-            new Color(0.12f, 0.09f, 0.24f), () => TogglePanel(_shopPanel));
-        MakeSideIcon(t, "미션", new Vector2(0.01f, 0.640f), new Vector2(0.12f, 0.740f),
-            new Color(0.12f, 0.09f, 0.24f), () => TogglePanel(_missionPanel));
+        // 좌측 3개
+        MakeSideIcon(t, "가방", new Vector2(0.01f, 0.768f), new Vector2(0.12f, 0.868f),
+            new Color(0.12f, 0.09f, 0.24f), () => TogglePanel(_bagPanel));
+        MakeSideIcon(t, "이벤트", new Vector2(0.01f, 0.648f), new Vector2(0.12f, 0.748f),
+            new Color(0.10f, 0.18f, 0.12f), () => TogglePanel(_eventPanel));
+        MakeSideIcon(t, "미션", new Vector2(0.01f, 0.528f), new Vector2(0.12f, 0.628f),
+            new Color(0.12f, 0.09f, 0.24f), () => { RefreshMissionPopup(); TogglePanel(_missionPanel); });
 
         // 우측 — 우편
-        MakeSideIcon(t, "우편", new Vector2(0.88f, 0.770f), new Vector2(0.99f, 0.870f),
+        MakeSideIcon(t, "우편", new Vector2(0.88f, 0.768f), new Vector2(0.99f, 0.868f),
             new Color(0.12f, 0.09f, 0.24f), () => TogglePanel(_mailPanel));
 
         // 알림 배지 (빨간 점)
         var badge = UIHelper.CreatePanel(t, new Color(0.88f, 0.14f, 0.14f), "MailBadge");
         UIHelper.SetAnchors(badge.GetComponent<RectTransform>(),
-            new Vector2(0.944f, 0.854f), new Vector2(0.992f, 0.878f));
+            new Vector2(0.944f, 0.852f), new Vector2(0.992f, 0.876f));
         UIHelper.CreateText(badge.transform, "1", 14, Vector2.zero, Vector2.one);
 
         // 우측 — 캐릭터 정보
-        MakeSideIcon(t, "정보", new Vector2(0.88f, 0.640f), new Vector2(0.99f, 0.740f),
+        MakeSideIcon(t, "정보", new Vector2(0.88f, 0.648f), new Vector2(0.99f, 0.748f),
             new Color(0.10f, 0.18f, 0.28f), () => TogglePanel(_infoPanel));
+
+        // 우측 — 상점 (정보 아래)
+        MakeSideIcon(t, "상점", new Vector2(0.88f, 0.528f), new Vector2(0.99f, 0.628f),
+            new Color(0.12f, 0.09f, 0.24f), () => TogglePanel(_shopPanel));
     }
 
     private void MakeSideIcon(Transform parent, string label, Vector2 min, Vector2 max,
@@ -225,30 +379,59 @@ public class VillageManager : MonoBehaviour
         lbl.color = new Color(0.78f, 0.78f, 1f, 0.9f);
     }
 
-    // ── 마을 이름 ────────────────────────────────────────────────
+    // ── 마을 이름 (진입 연출: 페이드인 → 유지 → 페이드아웃) ─────
     private void BuildVillageName()
     {
-        var t = _canvasTF;
+        // 전체를 하나의 CanvasGroup으로 감싸 fade 처리
+        var container = new GameObject("VillageNameFade");
+        container.transform.SetParent(_canvasTF, false);
+        UIHelper.Stretch(container.AddComponent<RectTransform>());
+        var cg = container.AddComponent<CanvasGroup>();
+        cg.alpha           = 0f;
+        cg.blocksRaycasts  = false;  // 클릭 투과
+        var ct = container.transform;
 
-        var title = UIHelper.CreateText(t, $"{_ch.generated.name}의 마을", 46,
-            new Vector2(0.05f, 0.640f), new Vector2(0.95f, 0.740f));
-        title.color      = new Color(1f, 0.92f, 0.55f);
-        title.fontStyle  = FontStyles.Bold;
+        var title = UIHelper.CreateText(ct, $"{_ch.generated.name}의 마을", 54,
+            new Vector2(0.05f, 0.615f), new Vector2(0.95f, 0.745f));
+        title.color         = new Color(1f, 0.92f, 0.55f);
+        title.fontStyle     = FontStyles.Bold;
+        title.raycastTarget = false;
         var ol = title.gameObject.AddComponent<Outline>();
         ol.effectColor    = new Color(0.35f, 0.08f, 0.0f, 0.85f);
         ol.effectDistance = new Vector2(2, -2);
 
-        var sub = UIHelper.CreateText(t, "— 안전 구역 —", 24,
-            new Vector2(0.15f, 0.607f), new Vector2(0.85f, 0.638f));
-        sub.color = new Color(0.65f, 0.85f, 0.65f, 0.85f);
+        var sub = UIHelper.CreateText(ct, "— 안전 구역 —", 28,
+            new Vector2(0.15f, 0.578f), new Vector2(0.85f, 0.612f));
+        sub.color         = new Color(0.65f, 0.85f, 0.65f, 0.9f);
+        sub.raycastTarget = false;
 
-        // 장식 라인
-        var lineL = UIHelper.CreatePanel(t, new Color(0.6f, 0.45f, 0.10f, 0.45f), "LineL");
+        var lineL = UIHelper.CreatePanel(ct, new Color(0.6f, 0.45f, 0.10f, 0.7f), "LineL");
         UIHelper.SetAnchors(lineL.GetComponent<RectTransform>(),
-            new Vector2(0.05f, 0.649f), new Vector2(0.28f, 0.653f));
-        var lineR = UIHelper.CreatePanel(t, new Color(0.6f, 0.45f, 0.10f, 0.45f), "LineR");
+            new Vector2(0.05f, 0.626f), new Vector2(0.28f, 0.630f));
+        lineL.GetComponent<Image>().raycastTarget = false;
+
+        var lineR = UIHelper.CreatePanel(ct, new Color(0.6f, 0.45f, 0.10f, 0.7f), "LineR");
         UIHelper.SetAnchors(lineR.GetComponent<RectTransform>(),
-            new Vector2(0.72f, 0.649f), new Vector2(0.95f, 0.653f));
+            new Vector2(0.72f, 0.626f), new Vector2(0.95f, 0.630f));
+        lineR.GetComponent<Image>().raycastTarget = false;
+
+        StartCoroutine(FadeVillageName(cg));
+    }
+
+    private IEnumerator FadeVillageName(CanvasGroup cg)
+    {
+        // 페이드 인 (0.6초)
+        float t = 0f;
+        while (t < 0.6f) { t += Time.deltaTime; cg.alpha = t / 0.6f; yield return null; }
+        cg.alpha = 1f;
+
+        // 유지 (2.5초)
+        yield return new WaitForSeconds(2.5f);
+
+        // 페이드 아웃 (1초)
+        t = 0f;
+        while (t < 1f) { t += Time.deltaTime; cg.alpha = 1f - t; yield return null; }
+        cg.gameObject.SetActive(false);
     }
 
     // ── 기능 버튼 3개 (상점 / 던전 / 선술집) ────────────────────
@@ -263,27 +446,15 @@ public class VillageManager : MonoBehaviour
         UIHelper.SetAnchors(topLine.GetComponent<RectTransform>(),
             new Vector2(0f, 0.380f), new Vector2(1f, 0.383f));
 
-        var labels  = new[] { "상점",  "던전",   "선술집" };
-        var colors  = new[] {
-            new Color(0.50f, 0.36f, 0.04f),
-            new Color(0.58f, 0.08f, 0.08f),
-            new Color(0.10f, 0.32f, 0.16f),
-        };
-        float[] xs = { 0.02f, 0.35f, 0.68f };
-        float[] xe = { 0.33f, 0.66f, 0.98f };
+        var shopBtn = UIHelper.CreateButton(t, "상점",
+            new Vector2(0.02f, 0.273f), new Vector2(0.48f, 0.374f),
+            new Color(0.50f, 0.36f, 0.04f));
+        shopBtn.onClick.AddListener(() => TogglePanel(_shopPanel));
 
-        for (int i = 0; i < labels.Length; i++)
-        {
-            int captured = i;
-            var btn = UIHelper.CreateButton(t, labels[i],
-                new Vector2(xs[i], 0.273f), new Vector2(xe[i], 0.374f), colors[i]);
-            btn.onClick.AddListener(() =>
-            {
-                if (captured == 1) SceneManager.LoadScene("GameScene");
-                else if (captured == 0) TogglePanel(_shopPanel);
-                else TogglePanel(_missionPanel);
-            });
-        }
+        var dungBtn = UIHelper.CreateButton(t, "던전",
+            new Vector2(0.52f, 0.273f), new Vector2(0.98f, 0.374f),
+            new Color(0.58f, 0.08f, 0.08f));
+        dungBtn.onClick.AddListener(() => SceneManager.LoadScene("GameScene"));
     }
 
     // ── 하단 바 (버튼 + 캐릭터 정보) ────────────────────────────
@@ -304,17 +475,27 @@ public class VillageManager : MonoBehaviour
             new Color(0.18f, 0.14f, 0.30f));
         backBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
 
-        var dungeonBtn = UIHelper.CreateButton(t, "⚔ 던전 입장!",
+        var dungeonBtn = UIHelper.CreateButton(t, "던전 입장!",
             new Vector2(0.32f, 0.183f), new Vector2(0.68f, 0.260f),
             new Color(0.68f, 0.38f, 0.04f));
-        dungeonBtn.onClick.AddListener(() => SceneManager.LoadScene("GameScene"));
+        dungeonBtn.onClick.AddListener(() =>
+        {
+            GameState.DungeonCount++;
+            SaveState();
+            SceneManager.LoadScene("GameScene");
+        });
         var dTmp = dungeonBtn.GetComponentInChildren<TextMeshProUGUI>();
         if (dTmp != null) dTmp.fontSize = 42;
 
         var expBtn = UIHelper.CreateButton(t, "원정 →",
             new Vector2(0.70f, 0.188f), new Vector2(0.98f, 0.256f),
             new Color(0.10f, 0.30f, 0.42f));
-        expBtn.onClick.AddListener(() => TogglePanel(_missionPanel));
+        expBtn.onClick.AddListener(() =>
+        {
+            if (_expeditionPanel != null) { _expeditionPanel.SetActive(false); Destroy(_expeditionPanel); }
+            _expeditionPanel = BuildExpeditionPopup();
+            TogglePanel(_expeditionPanel);
+        });
 
         // 캐릭터 이름
         var nameTxt = UIHelper.CreateText(t, _ch.generated.name, 36,
@@ -382,12 +563,12 @@ public class VillageManager : MonoBehaviour
     {
         var overlay = BuildPopupShell("상점", out Transform tf);
 
-        var items = new (string name, string price, Color strip)[]
+        var items = new (string name, int price, Color strip, int bagIdx)[]
         {
-            ("회복 포션",   "500 G",   new Color(0.7f, 0.1f, 0.1f)),
-            ("마나 포션",   "300 G",   new Color(0.1f, 0.2f, 0.7f)),
-            ("방어구 강화", "1,000 G", new Color(0.3f, 0.3f, 0.1f)),
-            ("무기 강화",   "1,500 G", new Color(0.5f, 0.2f, 0.05f)),
+            ("회복 포션",    500,  new Color(0.7f, 0.1f, 0.1f),   2),
+            ("마나 포션",    300,  new Color(0.1f, 0.2f, 0.7f),   3),
+            ("방어구 강화", 1000,  new Color(0.3f, 0.3f, 0.1f),  -1),
+            ("무기 강화",   1500,  new Color(0.5f, 0.2f, 0.05f), -1),
         };
 
         for (int i = 0; i < items.Length; i++)
@@ -402,15 +583,36 @@ public class VillageManager : MonoBehaviour
 
             var strip = UIHelper.CreatePanel(row.transform, it.strip, "Strip");
             UIHelper.SetAnchors(strip.GetComponent<RectTransform>(),
-                new Vector2(0f, 0f), new Vector2(0.04f, 1f));
+                Vector2.zero, new Vector2(0.04f, 1f));
 
-            var nameT = UIHelper.CreateText(row.transform, it.name, 28,
-                new Vector2(0.07f, 0.1f), new Vector2(0.62f, 0.9f), TextAlignmentOptions.Left);
-            nameT.color = Color.white;
+            UIHelper.CreateText(row.transform, it.name, 24,
+                new Vector2(0.07f, 0.1f), new Vector2(0.50f, 0.9f), TextAlignmentOptions.Left)
+                .color = Color.white;
 
-            var priceT = UIHelper.CreateText(row.transform, it.price, 28,
-                new Vector2(0.63f, 0.1f), new Vector2(0.97f, 0.9f), TextAlignmentOptions.Right);
-            priceT.color = new Color(1f, 0.85f, 0.3f);
+            UIHelper.CreateText(row.transform, $"{it.price} G", 22,
+                new Vector2(0.51f, 0.1f), new Vector2(0.72f, 0.9f), TextAlignmentOptions.Right)
+                .color = new Color(1f, 0.85f, 0.3f);
+
+            int capturedPrice = it.price;
+            string capturedName = it.name;
+            int capturedBagIdx = it.bagIdx;
+            var buyBtn = UIHelper.CreateButton(row.transform, "구매",
+                new Vector2(0.74f, 0.12f), new Vector2(0.98f, 0.88f),
+                new Color(0.18f, 0.42f, 0.18f));
+            var buyTmp = buyBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (buyTmp != null) buyTmp.fontSize = 22;
+            buyBtn.onClick.AddListener(() =>
+            {
+                if (GameState.Gold >= capturedPrice)
+                {
+                    GameState.Gold -= capturedPrice;
+                    RefreshGold();
+                    ShowMsg($"{capturedName} 구매 완료!");
+                    if (capturedBagIdx >= 0) AddToBag(capturedBagIdx, 1); // AddToBag 안에서 SaveState 호출
+                    else SaveState(); // 가방 추가 없는 아이템은 골드만 저장
+                }
+                else ShowMsg("골드가 부족합니다");
+            });
         }
 
         return overlay;
@@ -420,90 +622,248 @@ public class VillageManager : MonoBehaviour
     private GameObject BuildMissionPopup()
     {
         var overlay = BuildPopupShell("미션", out Transform tf);
-        var abilities = _ch.generated.abilities;
 
-        if (abilities != null && abilities.Count > 0)
+        var missionDefs = new (string tag, string name)[]
         {
-            for (int i = 0; i < Mathf.Min(4, abilities.Count); i++)
+            ("[주]", "강력한 던전 보스를 처치하라"),
+            ("[일]", "던전 3회 입장하기"),
+            ("[일]", "몬스터 10마리 처치"),
+            ("[일]", "골드 500 획득하기"),
+        };
+
+        for (int i = 0; i < missionDefs.Length; i++)
+        {
+            float y2 = 0.84f - i * 0.19f;
+            float y1 = y2 - 0.16f;
+            var m = missionDefs[i];
+            int capturedIdx = i;
+
+            var row = UIHelper.CreatePanel(tf, new Color(0.08f, 0.10f, 0.18f), $"M{i}");
+            UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
+                new Vector2(0.03f, y1), new Vector2(0.97f, y2));
+
+            Color tagCol = m.tag == "[주]" ? new Color(0.60f, 0.10f, 0.10f)
+                                           : new Color(0.18f, 0.30f, 0.55f);
+            var tagPanel = UIHelper.CreatePanel(row.transform, tagCol, "Tag");
+            UIHelper.SetAnchors(tagPanel.GetComponent<RectTransform>(),
+                new Vector2(0f, 0.1f), new Vector2(0.17f, 0.9f));
+            UIHelper.CreateText(tagPanel.transform, m.tag, 18, Vector2.zero, Vector2.one)
+                .color = Color.white;
+
+            UIHelper.CreateText(row.transform, m.name, 22,
+                new Vector2(0.19f, 0.50f), new Vector2(0.97f, 0.94f), TextAlignmentOptions.Left)
+                .color = Color.white;
+
+            var progT = UIHelper.CreateText(row.transform, "0 / 0", 20,
+                new Vector2(0.19f, 0.05f), new Vector2(0.72f, 0.46f), TextAlignmentOptions.Left);
+            progT.color = new Color(0.75f, 0.75f, 0.90f);
+            _missionProgTexts[capturedIdx] = progT;
+
+            var rewBtn = UIHelper.CreateButton(row.transform, "보상 수령",
+                new Vector2(0.74f, 0.08f), new Vector2(0.97f, 0.46f),
+                new Color(0.18f, 0.45f, 0.18f));
+            var rewTmp = rewBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (rewTmp != null) rewTmp.fontSize = 18;
+            rewBtn.gameObject.SetActive(false);
+            _missionRewBtns[capturedIdx] = rewBtn;
+
+            rewBtn.onClick.AddListener(() =>
             {
-                float y2 = 0.84f - i * 0.19f;
-                float y1 = y2 - 0.16f;
-                var ab = abilities[i];
-
-                var row = UIHelper.CreatePanel(tf, new Color(0.08f, 0.12f, 0.10f), $"M{i}");
-                UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
-                    new Vector2(0.03f, y1), new Vector2(0.97f, y2));
-
-                bool done = (i == 0);
-                var badge = UIHelper.CreatePanel(row.transform,
-                    done ? new Color(0.18f, 0.58f, 0.18f) : new Color(0.48f, 0.28f, 0.04f), "Badge");
-                UIHelper.SetAnchors(badge.GetComponent<RectTransform>(),
-                    new Vector2(0f, 0.1f), new Vector2(0.20f, 0.9f));
-                UIHelper.CreateText(badge.transform, done ? "완료" : "진행중", 20,
-                    Vector2.zero, Vector2.one);
-
-                var nameT = UIHelper.CreateText(row.transform, ab.name, 26,
-                    new Vector2(0.22f, 0.50f), new Vector2(0.97f, 0.92f), TextAlignmentOptions.Left);
-                nameT.color = Color.white;
-
-                var descT = UIHelper.CreateText(row.transform, ab.description, 20,
-                    new Vector2(0.22f, 0.05f), new Vector2(0.97f, 0.50f), TextAlignmentOptions.Left);
-                descT.color = new Color(0.70f, 0.70f, 0.88f);
-            }
-        }
-        else
-        {
-            UIHelper.CreateText(tf, "임무가 없습니다.", 30,
-                new Vector2(0.1f, 0.42f), new Vector2(0.9f, 0.58f))
-                .color = new Color(0.6f, 0.6f, 0.8f);
+                if (_missionRewarded[capturedIdx]) return;
+                _missionRewarded[capturedIdx] = true;
+                GameState.Gold += _missionRewards[capturedIdx];
+                RefreshGold();
+                ShowMsg($"미션 보상 획득! +{_missionRewards[capturedIdx]}G");
+                if (rewTmp != null) rewTmp.text = "수령됨";
+                rewBtn.image.color  = new Color(0.25f, 0.25f, 0.32f);
+                rewBtn.interactable = false;
+                SaveState();
+            });
         }
 
         return overlay;
     }
 
-    // ── 우편함 팝업 ──────────────────────────────────────────────
+    private void RefreshMissionPopup()
+    {
+        int[] currents = { GameState.BossCount, GameState.DungeonCount, GameState.MonsterCount, GameState.Gold };
+        for (int i = 0; i < 4; i++)
+        {
+            if (_missionProgTexts[i] == null) continue;
+            int  cur  = Mathf.Min(currents[i], _missionTargets[i]);
+            bool done = currents[i] >= _missionTargets[i];
+            _missionProgTexts[i].text  = $"{cur} / {_missionTargets[i]}";
+            _missionProgTexts[i].color = done ? new Color(0.5f, 0.9f, 0.5f) : new Color(0.75f, 0.75f, 0.90f);
+
+            if (_missionRewBtns[i] == null) continue;
+            _missionRewBtns[i].gameObject.SetActive(done);
+            if (done && !_missionRewarded[i])
+            {
+                _missionRewBtns[i].interactable = true;
+                _missionRewBtns[i].image.color  = new Color(0.18f, 0.45f, 0.18f);
+                var tmp = _missionRewBtns[i].GetComponentInChildren<TextMeshProUGUI>();
+                if (tmp != null) tmp.text = "보상 수령";
+            }
+        }
+    }
+
+    // ── 우편함 팝업 (목록 → 상세 네비게이션) ────────────────────
     private GameObject BuildMailPopup()
     {
         var overlay = BuildPopupShell("우편함", out Transform tf);
 
-        // 캐릭터 스토리 메일
-        var mail1 = UIHelper.CreatePanel(tf, new Color(0.10f, 0.08f, 0.20f), "Mail1");
-        UIHelper.SetAnchors(mail1.GetComponent<RectTransform>(),
-            new Vector2(0.03f, 0.62f), new Vector2(0.97f, 0.84f));
-
-        var sender = UIHelper.CreateText(mail1.transform, "📜 " + _ch.generated.name + "의 이야기", 24,
-            new Vector2(0.03f, 0.58f), new Vector2(0.97f, 0.96f), TextAlignmentOptions.Left);
-        sender.color = new Color(1f, 0.88f, 0.5f);
-
         string story = _ch.generated.story ?? "이 모험가의 이야기는 아직 쓰여지지 않았습니다.";
-        if (story.Length > 90) story = story.Substring(0, 90) + "...";
-        var storyT = UIHelper.CreateText(mail1.transform, story, 20,
-            new Vector2(0.03f, 0.03f), new Vector2(0.97f, 0.57f), TextAlignmentOptions.Left);
-        storyT.color = new Color(0.80f, 0.80f, 0.92f);
-
-        // 탐험 지역 메일
+        string locTitle   = "탐험 지역";
+        string locContent = "탐험할 지역 정보가 없습니다.";
         if (_ch.generated.locations != null && _ch.generated.locations.Count > 0)
         {
-            var mail2 = UIHelper.CreatePanel(tf, new Color(0.08f, 0.12f, 0.22f), "Mail2");
-            UIHelper.SetAnchors(mail2.GetComponent<RectTransform>(),
-                new Vector2(0.03f, 0.40f), new Vector2(0.97f, 0.60f));
-
-            UIHelper.CreateText(mail2.transform, "🗺 탐험 지역 안내", 24,
-                new Vector2(0.03f, 0.55f), new Vector2(0.97f, 0.95f), TextAlignmentOptions.Left)
-                .color = new Color(0.5f, 0.8f, 1.0f);
-
-            var loc = _ch.generated.locations[0];
-            string locDesc = loc.name;
-            if (!string.IsNullOrEmpty(loc.description))
-                locDesc += " — " + loc.description.Substring(0, Mathf.Min(40, loc.description.Length));
-            UIHelper.CreateText(mail2.transform, locDesc, 20,
-                new Vector2(0.03f, 0.05f), new Vector2(0.97f, 0.54f), TextAlignmentOptions.Left)
-                .color = new Color(0.75f, 0.85f, 0.95f);
+            locTitle   = _ch.generated.locations[0].name ?? "탐험 지역";
+            locContent = _ch.generated.locations[0].description ?? "";
         }
 
-        UIHelper.CreateText(tf, "그 외 새 편지 없음", 22,
-            new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.39f))
-            .color = new Color(0.45f, 0.45f, 0.58f);
+        var mails = new (string tag, Color tagCol, string title, string content, int goldReward)[]
+        {
+            ("공지", new Color(0.45f, 0.10f, 0.10f),
+             "정기 점검 안내",
+             "매주 화요일 04:00~06:00 서버 점검이 진행됩니다.\n점검 중에는 접속이 불가합니다.\n점검 보상: 골드 200G",
+             200),
+            ("보상", new Color(0.14f, 0.40f, 0.18f),
+             "v1.2 패치 보상",
+             "v1.2 업데이트를 기념하여 보상이 지급됩니다.\n골드 1,000G + 회복 포션 x5\n7일 이내에 수령하세요.",
+             1000),
+            ("편지", new Color(0.25f, 0.18f, 0.50f),
+             _ch.generated.name + "의 이야기",
+             story,
+             0),
+            ("지도", new Color(0.10f, 0.25f, 0.50f),
+             locTitle,
+             locContent,
+             0),
+        };
+
+        bool[] rewarded   = new bool[4];
+        int[]  selectedIdx = { -1 };
+        var    mailRowGOs  = new GameObject[4];
+
+        // ── 목록 행 (tf 직접 자식) ─────────────────────────────
+        for (int i = 0; i < mails.Length; i++)
+        {
+            float y2 = 0.84f - i * 0.185f;
+            float y1 = y2 - 0.155f;
+            var m = mails[i];
+            int capturedIdx = i;
+
+            var row = UIHelper.CreatePanel(tf, new Color(0.08f, 0.06f, 0.20f), $"Mail{i}");
+            UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
+                new Vector2(0.03f, y1), new Vector2(0.97f, y2));
+            mailRowGOs[capturedIdx] = row;
+
+            var tagPanel = UIHelper.CreatePanel(row.transform, m.tagCol, "Tag");
+            UIHelper.SetAnchors(tagPanel.GetComponent<RectTransform>(),
+                new Vector2(0f, 0f), new Vector2(0.18f, 1f));
+            UIHelper.CreateText(tagPanel.transform, m.tag, 20, Vector2.zero, Vector2.one)
+                .color = Color.white;
+
+            UIHelper.CreateText(row.transform, m.title, 22,
+                new Vector2(0.20f, 0.50f), new Vector2(0.97f, 0.95f), TextAlignmentOptions.Left)
+                .color = new Color(1f, 0.88f, 0.5f);
+
+            string preview = m.content.Replace("\n", " ");
+            if (preview.Length > 34) preview = preview.Substring(0, 34) + "...";
+            UIHelper.CreateText(row.transform, preview, 17,
+                new Vector2(0.20f, 0.05f), new Vector2(0.97f, 0.48f), TextAlignmentOptions.Left)
+                .color = new Color(0.75f, 0.75f, 0.90f);
+        }
+
+        // ── 상세 패널 (행보다 나중에 추가 → 위 z-order) ─────────
+        var detailPanel = UIHelper.CreatePanel(tf, new Color(0.06f, 0.05f, 0.14f), "MailDetail");
+        UIHelper.SetAnchors(detailPanel.GetComponent<RectTransform>(),
+            new Vector2(0f, 0f), new Vector2(1f, 0.87f));
+        detailPanel.SetActive(false);
+
+        var detailTitle = UIHelper.CreateText(detailPanel.transform, "", 28,
+            new Vector2(0.03f, 0.82f), new Vector2(0.97f, 0.95f), TextAlignmentOptions.Left);
+        detailTitle.color     = new Color(1f, 0.88f, 0.5f);
+        detailTitle.fontStyle = FontStyles.Bold;
+
+        var detailContent = UIHelper.CreateText(detailPanel.transform, "", 20,
+            new Vector2(0.03f, 0.26f), new Vector2(0.97f, 0.79f), TextAlignmentOptions.Left);
+        detailContent.color              = new Color(0.82f, 0.82f, 0.92f);
+        detailContent.enableWordWrapping = true;
+
+        var detailRewardInfo = UIHelper.CreateText(detailPanel.transform, "", 22,
+            new Vector2(0.03f, 0.16f), new Vector2(0.97f, 0.25f), TextAlignmentOptions.Left);
+        detailRewardInfo.color = new Color(1f, 0.85f, 0.3f);
+
+        var rewardBtn = UIHelper.CreateButton(detailPanel.transform, "보상 받기",
+            new Vector2(0.03f, 0.03f), new Vector2(0.54f, 0.14f),
+            new Color(0.18f, 0.48f, 0.18f));
+        var rewardTmp = rewardBtn.GetComponentInChildren<TextMeshProUGUI>();
+        if (rewardTmp != null) rewardTmp.fontSize = 24;
+        rewardBtn.gameObject.SetActive(false);
+
+        rewardBtn.onClick.AddListener(() =>
+        {
+            int idx = selectedIdx[0];
+            if (idx < 0 || rewarded[idx]) return;
+            rewarded[idx] = true;
+            GameState.Gold += mails[idx].goldReward;
+            RefreshGold();
+            ShowMsg($"보상 수령! +{mails[idx].goldReward}G");
+            if (rewardTmp != null) rewardTmp.text = "수령됨";
+            rewardBtn.image.color  = new Color(0.25f, 0.25f, 0.32f);
+            rewardBtn.interactable = false;
+        });
+
+        var backBtn = UIHelper.CreateButton(detailPanel.transform, "← 목록",
+            new Vector2(0.60f, 0.03f), new Vector2(0.97f, 0.14f),
+            new Color(0.18f, 0.14f, 0.30f));
+        backBtn.onClick.AddListener(() =>
+        {
+            detailPanel.SetActive(false);
+            foreach (var r in mailRowGOs) if (r != null) r.SetActive(true);
+        });
+
+        // ── 행 클릭 → 상세보기 (투명 히트 영역 — 최우선 레이캐스트) ─
+        for (int i = 0; i < mails.Length; i++)
+        {
+            int capturedIdx = i;
+
+            // Image 추가 → RectTransform 자동 생성, 투명하게 설정
+            var hitGO  = new GameObject("MailHit");
+            hitGO.transform.SetParent(mailRowGOs[capturedIdx].transform, false);
+            var hitImg = hitGO.AddComponent<Image>();
+            hitImg.color = Color.clear;
+            UIHelper.Stretch(hitGO.GetComponent<RectTransform>());
+            var rowBtn = hitGO.AddComponent<Button>();
+            rowBtn.transition  = Selectable.Transition.None;
+            rowBtn.targetGraphic = hitImg;
+
+            rowBtn.onClick.AddListener(() =>
+            {
+                selectedIdx[0]     = capturedIdx;
+                detailTitle.text   = mails[capturedIdx].title;
+                detailContent.text = mails[capturedIdx].content;
+
+                bool hasReward = mails[capturedIdx].goldReward > 0;
+                rewardBtn.gameObject.SetActive(hasReward);
+                if (hasReward)
+                {
+                    bool alreadyClaimed = rewarded[capturedIdx];
+                    if (rewardTmp != null) rewardTmp.text = alreadyClaimed ? "수령됨" : "보상 받기";
+                    rewardBtn.image.color  = alreadyClaimed ? new Color(0.25f, 0.25f, 0.32f) : new Color(0.18f, 0.48f, 0.18f);
+                    rewardBtn.interactable = !alreadyClaimed;
+                    detailRewardInfo.text  = $"보상: 골드 {mails[capturedIdx].goldReward}G";
+                }
+                else
+                {
+                    detailRewardInfo.text = "";
+                }
+
+                foreach (var r in mailRowGOs) if (r != null) r.SetActive(false);
+                detailPanel.SetActive(true);
+            });
+        }
 
         return overlay;
     }
@@ -516,10 +876,10 @@ public class VillageManager : MonoBehaviour
 
         var statData = new (string label, int val, Color col)[]
         {
-            ("❤ HP",  s.hp,  new Color(0.9f, 0.2f, 0.2f)),
-            ("⚔ ATK", s.atk, new Color(0.9f, 0.5f, 0.1f)),
-            ("🛡 DEF", s.def, new Color(0.3f, 0.6f, 0.9f)),
-            ("✦ MP",  s.mp,  new Color(0.5f, 0.3f, 0.9f)),
+            ("HP",  s.hp,  new Color(0.9f, 0.2f, 0.2f)),
+            ("ATK", s.atk, new Color(0.9f, 0.5f, 0.1f)),
+            ("DEF", s.def, new Color(0.3f, 0.6f, 0.9f)),
+            ("MP",  s.mp,  new Color(0.5f, 0.3f, 0.9f)),
         };
 
         for (int i = 0; i < statData.Length; i++)
@@ -558,11 +918,337 @@ public class VillageManager : MonoBehaviour
     // ── 팝업 토글 ────────────────────────────────────────────────
     private void TogglePanel(GameObject panel)
     {
-        bool wasActive = panel.activeSelf;
-        _shopPanel.SetActive(false);
-        _missionPanel.SetActive(false);
-        _mailPanel.SetActive(false);
-        _infoPanel.SetActive(false);
-        if (!wasActive) panel.SetActive(true);
+        bool wasActive = panel != null && panel.activeSelf;
+        if (_shopPanel)       _shopPanel.SetActive(false);
+        if (_missionPanel)    _missionPanel.SetActive(false);
+        if (_mailPanel)       _mailPanel.SetActive(false);
+        if (_infoPanel)       _infoPanel.SetActive(false);
+        if (_bagPanel)        _bagPanel.SetActive(false);
+        if (_eventPanel)      _eventPanel.SetActive(false);
+        if (_expeditionPanel) _expeditionPanel.SetActive(false);
+        if (!wasActive && panel != null) panel.SetActive(true);
+    }
+
+    // ── 원정 팝업 (매번 재빌드하여 최신 상태 반영) ──────────────
+    private GameObject BuildExpeditionPopup()
+    {
+        var overlay = BuildPopupShell("원정", out Transform tf);
+
+        UIHelper.CreateText(tf, "원정대를 파견해 보상을 획득하세요", 22,
+            new Vector2(0.03f, 0.85f), new Vector2(0.97f, 0.93f))
+            .color = new Color(0.70f, 0.82f, 1.0f);
+
+        var slotDefs = new (string place, string reward, Color col, long durMs, int goldReward, int bagItem)[]
+        {
+            ("어두운 숲", "골드 300G + 재료 아이템", new Color(0.08f, 0.20f, 0.08f),  7_200_000L, 300,  0),
+            ("고대 유적", "골드 500G + 장비 파편",   new Color(0.18f, 0.15f, 0.06f), 10_800_000L, 500,  1),
+            ("화산 지대", "골드 800G + 희귀 아이템", new Color(0.16f, 0.06f, 0.04f), 14_400_000L, 800, -1),
+        };
+
+        int myLevel = CalcLevel();
+
+        for (int i = 0; i < slotDefs.Length; i++)
+        {
+            float y2 = 0.81f - i * 0.23f;
+            float y1 = y2 - 0.20f;
+            var def = slotDefs[i];
+            int capturedIdx = i;
+            bool locked = (i == 2 && myLevel < 10);
+
+            var row = UIHelper.CreatePanel(tf, def.col, $"E{i}");
+            UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
+                new Vector2(0.03f, y1), new Vector2(0.97f, y2));
+
+            var placeT = UIHelper.CreateText(row.transform, def.place, 26,
+                new Vector2(0.04f, 0.58f), new Vector2(0.65f, 0.96f), TextAlignmentOptions.Left);
+            placeT.color     = Color.white;
+            placeT.fontStyle = FontStyles.Bold;
+
+            var statusT = UIHelper.CreateText(row.transform, "", 18,
+                new Vector2(0.04f, 0.30f), new Vector2(0.65f, 0.57f), TextAlignmentOptions.Left);
+
+            UIHelper.CreateText(row.transform, def.reward, 16,
+                new Vector2(0.04f, 0.04f), new Vector2(0.65f, 0.28f), TextAlignmentOptions.Left)
+                .color = new Color(0.75f, 0.75f, 0.90f);
+
+            if (locked)
+            {
+                statusT.text  = "Lv.10 해금";
+                statusT.color = new Color(0.5f, 0.5f, 0.6f);
+                var lockLbl = UIHelper.CreatePanel(row.transform, new Color(0.20f, 0.18f, 0.25f), "Lock");
+                UIHelper.SetAnchors(lockLbl.GetComponent<RectTransform>(),
+                    new Vector2(0.67f, 0.15f), new Vector2(0.98f, 0.85f));
+                UIHelper.CreateText(lockLbl.transform, "잠금", 20, Vector2.zero, Vector2.one)
+                    .color = new Color(0.5f, 0.5f, 0.6f);
+            }
+            else
+            {
+                var exp   = _ch.expeditions.Find(x => x.slotIdx == capturedIdx);
+                long nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+                if (exp == null)
+                {
+                    // ① 파견 가능
+                    statusT.text  = "파견 가능";
+                    statusT.color = new Color(1.0f, 0.85f, 0.3f);
+
+                    var dispBtn = UIHelper.CreateButton(row.transform, "파견하기",
+                        new Vector2(0.67f, 0.15f), new Vector2(0.98f, 0.85f),
+                        new Color(0.38f, 0.28f, 0.06f));
+                    var dTmp = dispBtn.GetComponentInChildren<TextMeshProUGUI>();
+                    if (dTmp != null) dTmp.fontSize = 20;
+                    dispBtn.onClick.AddListener(() =>
+                    {
+                        long rt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + def.durMs;
+                        _ch.expeditions.RemoveAll(x => x.slotIdx == capturedIdx);
+                        _ch.expeditions.Add(new ExpeditionState { slotIdx = capturedIdx, returnTime = rt });
+                        SaveState();
+                        ShowMsg($"원정대 파견! ({def.place})");
+                        statusT.text  = "파견 중...";
+                        statusT.color = new Color(0.4f, 0.9f, 0.4f);
+                        if (dTmp != null) dTmp.text = "파견 중";
+                        dispBtn.image.color  = new Color(0.25f, 0.25f, 0.32f);
+                        dispBtn.interactable = false;
+                        StartCoroutine(ExpeditionCountdown(rt, statusT));
+                    });
+                }
+                else if (nowMs < exp.returnTime)
+                {
+                    // ② 파견 중 (복귀 대기)
+                    statusT.text  = "파견 중...";
+                    statusT.color = new Color(0.4f, 0.9f, 0.4f);
+
+                    var dispBtn = UIHelper.CreateButton(row.transform, "파견 중",
+                        new Vector2(0.67f, 0.15f), new Vector2(0.98f, 0.85f),
+                        new Color(0.25f, 0.25f, 0.32f));
+                    var dTmp = dispBtn.GetComponentInChildren<TextMeshProUGUI>();
+                    if (dTmp != null) dTmp.fontSize = 20;
+                    dispBtn.interactable = false;
+                    StartCoroutine(ExpeditionCountdown(exp.returnTime, statusT));
+                }
+                else
+                {
+                    // ③ 수령 가능
+                    statusT.text  = "귀환 완료!";
+                    statusT.color = new Color(0.4f, 0.9f, 0.4f);
+
+                    var collectBtn = UIHelper.CreateButton(row.transform, "수령하기",
+                        new Vector2(0.67f, 0.15f), new Vector2(0.98f, 0.85f),
+                        new Color(0.18f, 0.42f, 0.18f));
+                    var cTmp = collectBtn.GetComponentInChildren<TextMeshProUGUI>();
+                    if (cTmp != null) cTmp.fontSize = 20;
+                    collectBtn.onClick.AddListener(() =>
+                    {
+                        _ch.expeditions.RemoveAll(x => x.slotIdx == capturedIdx);
+                        GameState.Gold += def.goldReward;
+                        RefreshGold();
+                        ShowMsg($"원정 보상 획득! +{def.goldReward}G");
+                        if (def.bagItem >= 0) AddToBag(def.bagItem, 1);
+                        else SaveState();
+                        if (cTmp != null) cTmp.text = "수령됨";
+                        collectBtn.image.color  = new Color(0.25f, 0.25f, 0.32f);
+                        collectBtn.interactable = false;
+                        statusT.text  = "파견 가능 (팝업 재열기)";
+                        statusT.color = new Color(0.75f, 0.75f, 0.90f);
+                    });
+                }
+            }
+        }
+
+        return overlay;
+    }
+
+    private IEnumerator ExpeditionCountdown(long returnTimeMs, TextMeshProUGUI statusText)
+    {
+        while (true)
+        {
+            if (statusText == null) yield break;
+            long remaining = returnTimeMs - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            if (remaining <= 0)
+            {
+                statusText.text  = "귀환 완료!";
+                statusText.color = new Color(0.4f, 0.9f, 0.4f);
+                yield break;
+            }
+            long totalSec = remaining / 1000;
+            long h = totalSec / 3600;
+            long m = (totalSec % 3600) / 60;
+            long s = totalSec % 60;
+            statusText.text = $"복귀까지  {h:D2}:{m:D2}:{s:D2}";
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    // ── 가방 팝업 (드랍템 + 소비 아이템) ────────────────────────
+    private GameObject BuildBagPopup()
+    {
+        var overlay = BuildPopupShell("가방", out Transform tf);
+
+        var items = new (string name, Color col, int sellPrice)[]
+        {
+            ("낡은 단검 조각", new Color(0.50f, 0.38f, 0.04f),  50),
+            ("철제 갑옷 파편", new Color(0.30f, 0.34f, 0.40f),  80),
+            ("회복 포션",      new Color(0.60f, 0.10f, 0.10f),  -1),
+            ("마나 포션",      new Color(0.10f, 0.20f, 0.65f),  -1),
+        };
+
+        for (int i = 0; i < items.Length; i++)
+        {
+            float y2 = 0.84f - i * 0.17f;
+            float y1 = y2 - 0.14f;
+            var it = items[i];
+            int capturedIdx = i;
+
+            var row = UIHelper.CreatePanel(tf, new Color(0.10f, 0.09f, 0.20f), $"B{i}");
+            UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
+                new Vector2(0.03f, y1), new Vector2(0.97f, y2));
+            _bagRows[capturedIdx] = row;
+            if (_bagQty[capturedIdx] == 0) row.SetActive(false); // 수량 0이면 처음부터 숨김
+
+            var strip = UIHelper.CreatePanel(row.transform, it.col, "Strip");
+            UIHelper.SetAnchors(strip.GetComponent<RectTransform>(),
+                Vector2.zero, new Vector2(0.04f, 1f));
+
+            UIHelper.CreateText(row.transform, it.name, 24,
+                new Vector2(0.07f, 0.1f), new Vector2(0.52f, 0.9f), TextAlignmentOptions.Left)
+                .color = Color.white;
+
+            var qtyTxt = UIHelper.CreateText(row.transform, $"x {_bagQty[capturedIdx]}", 24,
+                new Vector2(0.53f, 0.1f), new Vector2(0.72f, 0.9f), TextAlignmentOptions.Right);
+            qtyTxt.color = new Color(1f, 0.85f, 0.3f);
+            _bagQtyTexts[capturedIdx] = qtyTxt;
+
+            bool isConsume = it.sellPrice < 0;
+            int capturedPrice = it.sellPrice;
+            string capturedName = it.name;
+
+            var actionBtn = UIHelper.CreateButton(row.transform,
+                isConsume ? "사용" : "판매",
+                new Vector2(0.74f, 0.12f), new Vector2(0.98f, 0.88f),
+                isConsume ? new Color(0.14f, 0.28f, 0.50f) : new Color(0.40f, 0.28f, 0.06f));
+            var aTmp = actionBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (aTmp != null) aTmp.fontSize = 22;
+
+            actionBtn.onClick.AddListener(() =>
+            {
+                if (_bagQty[capturedIdx] <= 0) return;
+                _bagQty[capturedIdx]--;
+                qtyTxt.text = $"x {_bagQty[capturedIdx]}";
+                if (isConsume)
+                {
+                    ShowMsg($"{capturedName} 사용! HP/MP 회복");
+                }
+                else
+                {
+                    GameState.Gold += capturedPrice;
+                    RefreshGold();
+                    ShowMsg($"{capturedName} 판매! +{capturedPrice}G");
+                }
+                SaveState();
+                if (_bagQty[capturedIdx] == 0)
+                {
+                    _bagRows[capturedIdx].SetActive(false);
+                    RefreshBagLayout();
+                }
+            });
+        }
+
+        RefreshBagLayout(); // 초기 가시 행 정렬
+        return overlay;
+    }
+
+    // ── 이벤트 팝업 (출석 체크) ─────────────────────────────────
+    private GameObject BuildEventPopup()
+    {
+        var overlay = BuildPopupShell("이벤트", out Transform tf);
+
+        UIHelper.CreateText(tf, "출석 체크", 30,
+            new Vector2(0.03f, 0.84f), new Vector2(0.97f, 0.93f))
+            .color = new Color(1f, 0.88f, 0.30f);
+
+        string[] dayLabels = { "1일", "2일", "3일", "4일", "5일", "6일", "7일" };
+        string[] rewards   = { "G100", "포션", "G200", "포션x2", "G300", "장비", "G500" };
+        int todayIdx = (int)DateTime.Now.DayOfWeek; // 0=일, 1=월, ..., 6=토
+
+        Image todayBoxImg = null;
+        TextMeshProUGUI todayRewardTxt = null;
+
+        // 윗줄: 1~4일
+        for (int i = 0; i < 4; i++)
+        {
+            float x1 = 0.03f + i * 0.235f;
+            float x2 = x1 + 0.215f;
+            bool claimed = i < todayIdx;
+            bool isToday = i == todayIdx;
+            Color col = claimed ? new Color(0.14f, 0.35f, 0.14f)
+                      : isToday ? new Color(0.45f, 0.28f, 0.04f)
+                      :           new Color(0.12f, 0.10f, 0.22f);
+            var box = UIHelper.CreatePanel(tf, col, $"D{i}");
+            UIHelper.SetAnchors(box.GetComponent<RectTransform>(),
+                new Vector2(x1, 0.62f), new Vector2(x2, 0.80f));
+            UIHelper.CreateText(box.transform, dayLabels[i], 20,
+                new Vector2(0.05f, 0.58f), new Vector2(0.95f, 0.95f))
+                .color = isToday ? new Color(1f, 0.85f, 0.2f) : Color.white;
+            var rwdTxt = UIHelper.CreateText(box.transform, claimed ? "완료" : rewards[i], 18,
+                new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.56f));
+            rwdTxt.color = claimed ? new Color(0.5f, 0.9f, 0.5f) : new Color(0.8f, 0.8f, 0.8f);
+            if (isToday) { todayBoxImg = box.GetComponent<Image>(); todayRewardTxt = rwdTxt; }
+        }
+
+        // 아랫줄: 5~7일
+        for (int i = 4; i < 7; i++)
+        {
+            int col = i - 4;
+            float x1 = 0.03f + col * 0.315f;
+            float x2 = x1 + 0.295f;
+            bool claimed = i < todayIdx;
+            bool isToday = i == todayIdx;
+            Color boxCol = claimed ? new Color(0.14f, 0.35f, 0.14f)
+                         : isToday ? new Color(0.45f, 0.28f, 0.04f)
+                         :           new Color(0.12f, 0.10f, 0.22f);
+            var box = UIHelper.CreatePanel(tf, boxCol, $"D{i}");
+            UIHelper.SetAnchors(box.GetComponent<RectTransform>(),
+                new Vector2(x1, 0.44f), new Vector2(x2, 0.60f));
+            UIHelper.CreateText(box.transform, dayLabels[i], 20,
+                new Vector2(0.05f, 0.58f), new Vector2(0.95f, 0.95f))
+                .color = isToday ? new Color(1f, 0.85f, 0.2f) : Color.white;
+            var rwdTxt = UIHelper.CreateText(box.transform, claimed ? "완료" : rewards[i], 18,
+                new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.56f));
+            rwdTxt.color = claimed ? new Color(0.5f, 0.9f, 0.5f) : new Color(0.8f, 0.8f, 0.8f);
+            if (isToday) { todayBoxImg = box.GetComponent<Image>(); todayRewardTxt = rwdTxt; }
+        }
+
+        UIHelper.CreateText(tf, $"오늘의 보상: {rewards[todayIdx]}", 26,
+            new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.41f))
+            .color = new Color(1f, 0.85f, 0.3f);
+
+        UIHelper.CreateText(tf, "7일 연속 출석 시 특별 보상 지급!", 22,
+            new Vector2(0.05f, 0.22f), new Vector2(0.95f, 0.30f))
+            .color = new Color(0.65f, 0.85f, 0.65f);
+
+        int[] goldRewards = { 100, 0, 200, 0, 300, 300, 500 };
+        int todayGold = goldRewards[todayIdx];
+
+        var claimBtn = UIHelper.CreateButton(tf, _attendanceCollected ? "수령 완료" : "수령하기",
+            new Vector2(0.20f, 0.06f), new Vector2(0.80f, 0.18f),
+            _attendanceCollected ? new Color(0.25f, 0.25f, 0.32f) : new Color(0.18f, 0.48f, 0.18f));
+        if (_attendanceCollected) claimBtn.interactable = false;
+        var claimTmp = claimBtn.GetComponentInChildren<TextMeshProUGUI>();
+        claimBtn.onClick.AddListener(() =>
+        {
+            _attendanceCollected = true;
+            _ch.lastAttendanceDate = DateTime.Now.ToString("yyyy-MM-dd");
+            GameState.Gold += todayGold;
+            RefreshGold();
+            SaveState();
+            ShowMsg(todayGold > 0 ? $"출석 보상 획득! +{todayGold}G" : "출석 보상 획득!");
+            if (claimTmp != null) claimTmp.text = "수령 완료";
+            claimBtn.image.color = new Color(0.25f, 0.25f, 0.32f);
+            claimBtn.interactable = false;
+            if (todayBoxImg != null) todayBoxImg.color = new Color(0.14f, 0.35f, 0.14f);
+            if (todayRewardTxt != null) { todayRewardTxt.text = "완료"; todayRewardTxt.color = new Color(0.5f, 0.9f, 0.5f); }
+        });
+
+        return overlay;
     }
 }
