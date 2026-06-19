@@ -25,10 +25,10 @@ public class GameManager : MonoBehaviour
     private GameObject _zoneBox;
 
     // Battle panel
-    private GameObject _battlePanel, _resultPanel, _skillPanel;
+    private GameObject _battlePanel, _resultPanel, _skillPanel, _itemPanel;
     private TextMeshProUGUI _battleLog, _playerHpText, _playerMpText,
                             _enemyNameText, _enemyHpText, _resultText;
-    private Button _attackBtn, _skillBtn, _fleeBtn;
+    private Button _attackBtn, _skillBtn, _itemBtn, _fleeBtn;
     private TextMeshProUGUI _levelText;
 
     private Sprite _squareSprite;
@@ -58,8 +58,10 @@ public class GameManager : MonoBehaviour
     {
         _api = gameObject.AddComponent<ApiClient>();
         _player = GameState.CurrentCharacter;
-        _playerHp = _player.generated.stats.hp;
-        _playerMp = _player.generated.stats.mp;
+        int _maxHp = _player.generated.stats.hp;
+        int _maxMp = _player.generated.stats.mp;
+        _playerHp = (GameState.CurrentHp > 0 && GameState.CurrentHp <= _maxHp) ? GameState.CurrentHp : _maxHp;
+        _playerMp = (GameState.CurrentMp > 0 && GameState.CurrentMp <= _maxMp) ? GameState.CurrentMp : _maxMp;
         _squareSprite = CreateSquareSprite();
         _monsterCountAtEntry = GameState.MonsterCount;
 
@@ -192,10 +194,10 @@ public class GameManager : MonoBehaviour
         monGO.transform.position = new Vector3(patrolA.x, patrolA.y, 0);
 
         var kind = zoneIndex <= 1
-            ? LayerLabCharacter.MonsterKind.Goblin
+            ? LayerLabCharacter.MonsterKind.Slime
             : zoneIndex <= 3
-                ? LayerLabCharacter.MonsterKind.Skull
-                : LayerLabCharacter.MonsterKind.Slime;
+                ? LayerLabCharacter.MonsterKind.Goblin
+                : LayerLabCharacter.MonsterKind.Skull;
         var visual = new GameObject("Visual");
         visual.transform.SetParent(monGO.transform, false);
         visual.transform.localScale = Vector3.one * 2f;
@@ -460,16 +462,19 @@ public class GameManager : MonoBehaviour
         UIHelper.SetAnchors(botLine.GetComponent<RectTransform>(),
             new Vector2(0f, 0.291f), new Vector2(1f, 0.294f));
 
-        // 전투 버튼
+        // 전투 버튼 (4개)
         _attackBtn = UIHelper.CreateButton(bp, "공격",
-            new Vector2(0.02f, 0.160f), new Vector2(0.31f, 0.278f), new Color(0.65f, 0.12f, 0.12f));
+            new Vector2(0.01f, 0.160f), new Vector2(0.24f, 0.278f), new Color(0.65f, 0.12f, 0.12f));
         _skillBtn = UIHelper.CreateButton(bp, "스킬",
-            new Vector2(0.34f, 0.160f), new Vector2(0.66f, 0.278f), new Color(0.15f, 0.25f, 0.72f));
+            new Vector2(0.26f, 0.160f), new Vector2(0.50f, 0.278f), new Color(0.15f, 0.25f, 0.72f));
+        _itemBtn = UIHelper.CreateButton(bp, "아이템",
+            new Vector2(0.52f, 0.160f), new Vector2(0.74f, 0.278f), new Color(0.10f, 0.38f, 0.30f));
         _fleeBtn  = UIHelper.CreateButton(bp, "도망",
-            new Vector2(0.69f, 0.160f), new Vector2(0.98f, 0.278f), new Color(0.28f, 0.28f, 0.18f));
+            new Vector2(0.76f, 0.160f), new Vector2(0.99f, 0.278f), new Color(0.28f, 0.28f, 0.18f));
 
         _attackBtn.onClick.AddListener(OnAttack);
         _skillBtn.onClick.AddListener(OnSkill);
+        _itemBtn.onClick.AddListener(OnItem);
         _fleeBtn.onClick.AddListener(OnFlee);
     }
 
@@ -485,7 +490,7 @@ public class GameManager : MonoBehaviour
     private void OnAttack()
     {
         SetButtonsInteractable(false);
-        int dmg = Mathf.Max(1, (int)(_player.generated.stats.atk * GetPassiveAtkBonus()) - _enemyDef);
+        int dmg = Mathf.Max(1, (int)((_player.generated.stats.atk + _player.bonusAtk) * GetPassiveAtkBonus()) - _enemyDef);
         _enemyHp -= dmg;
         AppendLog($"{_player.generated.name}의 공격! {dmg} 피해!");
         AfterPlayerAction();
@@ -569,6 +574,108 @@ public class GameManager : MonoBehaviour
         SetButtonsInteractable(true);
     }
 
+    private void OnItem()
+    {
+        SetButtonsInteractable(false);
+        ShowItemPanel();
+    }
+
+    private void ShowItemPanel()
+    {
+        if (_itemPanel != null) Destroy(_itemPanel);
+        _itemPanel = UIHelper.CreatePanel(_battlePanel.transform, new Color(0.03f, 0.08f, 0.14f, 0.97f), "ItemPanel");
+        _itemPanel.transform.SetAsLastSibling();
+        UIHelper.Stretch(_itemPanel.GetComponent<RectTransform>());
+        var ip = _itemPanel.transform;
+
+        UIHelper.CreateText(ip, "아이템 사용", 30,
+            new Vector2(0.05f, 0.915f), new Vector2(0.95f, 0.99f))
+            .color = new Color(0.4f, 0.9f, 1f);
+
+        var consumeItems = new (string name, int amount, bool isHp)[]
+        {
+            ("회복 포션", 50, true),
+            ("마나 포션", 40, false),
+        };
+
+        float y2 = 0.895f;
+        int shown = 0;
+        foreach (var ci in consumeItems)
+        {
+            float rowH = 0.155f;
+            float y1 = y2 - rowH;
+            InventoryItem itemRef = _player.inventory?.Find(i => i.name == ci.name);
+            int qty = itemRef?.qty ?? 0;
+            bool canUse = qty > 0 && (ci.isHp
+                ? _playerHp < _player.generated.stats.hp
+                : _playerMp < _player.generated.stats.mp);
+
+            var row = UIHelper.CreatePanel(ip, new Color(0.08f, 0.12f, 0.22f), $"IR{shown}");
+            UIHelper.SetAnchors(row.GetComponent<RectTransform>(),
+                new Vector2(0.02f, y1), new Vector2(0.98f, y2 - 0.005f));
+
+            var nameTxt = UIHelper.CreateText(row.transform, ci.name, 24,
+                new Vector2(0.03f, 0.52f), new Vector2(0.65f, 0.97f), TextAlignmentOptions.Left);
+            nameTxt.color = canUse ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            UIHelper.CreateText(row.transform, $"x{qty}  /  {(ci.isHp ? "HP" : "MP")} +{ci.amount}", 20,
+                new Vector2(0.03f, 0.05f), new Vector2(0.65f, 0.50f), TextAlignmentOptions.Left)
+                .color = new Color(0.75f, 0.75f, 0.90f);
+
+            var capturedItem = itemRef;
+            var capturedName = ci.name;
+            var capturedAmt  = ci.amount;
+            var capturedIsHp = ci.isHp;
+            var useBtn = UIHelper.CreateButton(row.transform, "사용",
+                new Vector2(0.67f, 0.10f), new Vector2(0.97f, 0.90f),
+                canUse ? new Color(0.15f, 0.35f, 0.60f) : new Color(0.25f, 0.25f, 0.35f));
+            var ut = useBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (ut != null) ut.fontSize = 22;
+            useBtn.interactable = canUse;
+            if (canUse)
+                useBtn.onClick.AddListener(() =>
+                {
+                    CloseItemPanel();
+                    UseItem(capturedName, capturedAmt, capturedIsHp, capturedItem);
+                });
+
+            y2 -= rowH + 0.008f;
+            shown++;
+        }
+
+        var cancelBtn = UIHelper.CreateButton(ip, "취소",
+            new Vector2(0.10f, 0.02f), new Vector2(0.90f, 0.085f),
+            new Color(0.35f, 0.10f, 0.10f));
+        cancelBtn.onClick.AddListener(CloseItemPanel);
+    }
+
+    private void CloseItemPanel()
+    {
+        if (_itemPanel != null) { Destroy(_itemPanel); _itemPanel = null; }
+        SetButtonsInteractable(true);
+    }
+
+    private void UseItem(string name, int amount, bool isHp, InventoryItem item)
+    {
+        SetButtonsInteractable(false);
+        if (item == null || item.qty <= 0) { SetButtonsInteractable(true); return; }
+        item.qty--;
+        if (isHp)
+        {
+            int healed = Mathf.Min(amount, _player.generated.stats.hp - _playerHp);
+            _playerHp += healed;
+            AppendLog($"{name} 사용! HP +{healed} 회복!");
+        }
+        else
+        {
+            int restored = Mathf.Min(amount, _player.generated.stats.mp - _playerMp);
+            _playerMp += restored;
+            AppendLog($"{name} 사용! MP +{restored} 회복!");
+        }
+        RefreshBattleUI();
+        RefreshHUD();
+        EnemyCounterAttack();
+    }
+
     private void UseSkill(SkillData skill)
     {
         SetButtonsInteractable(false);
@@ -583,7 +690,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            int dmg = Mathf.Max(1, (int)(_player.generated.stats.atk * skill.atkMultiplier * GetPassiveAtkBonus()) - _enemyDef);
+            int dmg = Mathf.Max(1, (int)((_player.generated.stats.atk + _player.bonusAtk) * skill.atkMultiplier * GetPassiveAtkBonus()) - _enemyDef);
             _enemyHp -= dmg;
             AppendLog($"{skill.name} 사용! {dmg} 피해!");
             AfterPlayerAction();
@@ -617,6 +724,8 @@ public class GameManager : MonoBehaviour
         }
 
         while (waiting) yield return null;
+        GameState.CurrentHp = _playerHp;
+        GameState.CurrentMp = _playerMp;
         SceneManager.LoadScene("VillageScene");
     }
 
@@ -746,8 +855,8 @@ public class GameManager : MonoBehaviour
             GainXp(xpGain);
             AppendLog($"{_enemyName} 처치! +{goldGain}G  +{xpGain}XP");
 
-            string monsterKind = _currentMonster.ZoneIndex <= 1 ? "고블린"
-                : _currentMonster.ZoneIndex <= 3 ? "해골 전사" : "슬라임";
+            string monsterKind = _currentMonster.ZoneIndex <= 1 ? "슬라임"
+                : _currentMonster.ZoneIndex <= 3 ? "고블린" : "해골 전사";
             if (GameState.MonsterCount == 1)
                 AddStoryEntry($"처음으로 {monsterKind}을(를) 마주한 {_player.generated.name}은(는) 첫 전투에서 승리했다.");
             else if (GameState.MonsterCount % 5 == 0)
@@ -763,7 +872,7 @@ public class GameManager : MonoBehaviour
 
     private void EnemyCounterAttack()
     {
-        int dmg = Mathf.Max(1, _enemyAtk - _player.generated.stats.def);
+        int dmg = Mathf.Max(1, _enemyAtk - (_player.generated.stats.def + _player.bonusDef));
         _playerHp -= dmg;
         AppendLog($"{_enemyName}의 반격! {dmg} 피해!");
         RefreshBattleUI();
@@ -795,6 +904,8 @@ public class GameManager : MonoBehaviour
             _currentMonster = null;
         }
         _playerController.SetMovementEnabled(true);
+        GameState.CurrentHp = _playerHp;
+        GameState.CurrentMp = _playerMp;
         RefreshHUD();
     }
 
@@ -817,7 +928,8 @@ public class GameManager : MonoBehaviour
     {
         _attackBtn.interactable = v;
         _skillBtn.interactable = v;
-        _fleeBtn.interactable = v;
+        _itemBtn.interactable  = v;
+        _fleeBtn.interactable  = v;
     }
 
     private void AppendLog(string msg) => _battleLog.text += msg + "\n";
@@ -831,12 +943,8 @@ public class GameManager : MonoBehaviour
         _resultText = UIHelper.CreateText(rp, "", 44,
             new Vector2(0.1f, 0.45f), new Vector2(0.9f, 0.65f));
         var backBtn = UIHelper.CreateButton(rp, "메인 메뉴로",
-            new Vector2(0.2f, 0.32f), new Vector2(0.8f, 0.42f));
+            new Vector2(0.2f, 0.28f), new Vector2(0.8f, 0.38f));
         backBtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenuScene"));
-        var villageBtn = UIHelper.CreateButton(rp, "마을로 복귀",
-            new Vector2(0.2f, 0.20f), new Vector2(0.8f, 0.30f),
-            new Color(0.12f, 0.28f, 0.18f));
-        villageBtn.onClick.AddListener(() => SceneManager.LoadScene("VillageScene"));
     }
 
     private void ShowResult()

@@ -109,6 +109,8 @@ public class CharacterData
     public int                   xp;
     public int                   level;
     public List<SkillData>       learnedSkills;
+    public int                   bonusAtk;  // 상점 무기 강화 누적 보너스
+    public int                   bonusDef;  // 상점 방어구 강화 누적 보너스
 }
 
 [Serializable]

@@ -11,6 +11,8 @@ public static class GameState
     public static int  Xp             = 0;
     public static int  Level          = 1;
     public static bool[] MissionRewarded = new bool[4]; // 씬 이동해도 수령 여부 유지
+    public static int  CurrentHp        = 0;
+    public static int  CurrentMp        = 0;
 
     // 캐릭터 선택/생성 시 호출. 다른 캐릭터로 전환되면 이전 캐릭터의
     // 잔여 골드/XP/퀘스트 진행도가 섞여 들어가지 않도록 상태를 완전히 초기화한다.
@@ -28,6 +30,8 @@ public static class GameState
         BossCount    = ch.questProgress?.bossCount    ?? 0;
         StoryUpdated     = false;
         MissionRewarded  = new bool[4];
+        CurrentHp = ch.generated?.stats?.hp ?? 0;
+        CurrentMp = ch.generated?.stats?.mp ?? 0;
     }
 
     public static int TotalXpForLevel(int level)

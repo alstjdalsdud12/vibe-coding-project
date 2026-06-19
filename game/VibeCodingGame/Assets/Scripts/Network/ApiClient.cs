@@ -84,6 +84,8 @@ public class ApiClient : MonoBehaviour
         public int               xp;
         public int               level;
         public SkillData[]       learnedSkills;
+        public int               bonusAtk;
+        public int               bonusDef;
     }
 
     public IEnumerator UpdateCharacterState(CharacterData ch, Action onSuccess, Action<string> onError)
@@ -99,6 +101,8 @@ public class ApiClient : MonoBehaviour
             xp                 = ch.xp,
             level              = ch.level,
             learnedSkills      = ch.learnedSkills  != null ? ch.learnedSkills.ToArray()  : new SkillData[0],
+            bonusAtk           = ch.bonusAtk,
+            bonusDef           = ch.bonusDef,
         };
         string json = JsonUtility.ToJson(body);
 

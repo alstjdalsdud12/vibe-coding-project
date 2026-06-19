@@ -25,6 +25,7 @@ public class VillageManager : MonoBehaviour
     private GameObject    _shopPanel, _missionPanel, _mailPanel, _infoPanel, _bagPanel, _eventPanel, _expeditionPanel;
     private TextMeshProUGUI _goldText;
     private TextMeshProUGUI _levelText;
+    private TextMeshProUGUI _hpTxt, _mpTxt, _atkTxt;
     private bool _attendanceCollected;
     private int[]                _bagQty      = new int[4];
     private TextMeshProUGUI[]    _bagQtyTexts = new TextMeshProUGUI[4];
@@ -259,16 +260,17 @@ public class VillageManager : MonoBehaviour
             new Vector2(0.14f, 0.950f), new Vector2(0.47f, 0.990f));
         var hpFill = UIHelper.CreatePanel(hpBG.transform, new Color(0.85f, 0.14f, 0.14f), "HPFill");
         UIHelper.SetAnchors(hpFill.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
-        var hpTxt = UIHelper.CreateText(hpBG.transform, $"HP  {_ch.generated.stats.hp}",
+        _hpTxt = UIHelper.CreateText(hpBG.transform, $"HP  {GameState.CurrentHp}/{_ch.generated.stats.hp}",
             20, new Vector2(0.03f, 0f), Vector2.one, TextAlignmentOptions.Left);
-        hpTxt.color = new Color(1f, 0.8f, 0.8f);
+        _hpTxt.color = new Color(1f, 0.8f, 0.8f);
 
         // ATK
         var atkBG = UIHelper.CreatePanel(t, new Color(0.55f, 0.26f, 0.04f), "AtkBG");
         UIHelper.SetAnchors(atkBG.GetComponent<RectTransform>(),
             new Vector2(0.49f, 0.950f), new Vector2(0.63f, 0.990f));
-        UIHelper.CreateText(atkBG.transform, $"ATK  {_ch.generated.stats.atk}", 20,
-            Vector2.zero, Vector2.one).color = new Color(1f, 0.85f, 0.5f);
+        _atkTxt = UIHelper.CreateText(atkBG.transform, $"ATK  {_ch.generated.stats.atk + _ch.bonusAtk}", 20,
+            Vector2.zero, Vector2.one);
+        _atkTxt.color = new Color(1f, 0.85f, 0.5f);
 
         // 골드
         var goldBG = UIHelper.CreatePanel(t, new Color(0.40f, 0.30f, 0.02f), "GoldBG");
@@ -284,9 +286,9 @@ public class VillageManager : MonoBehaviour
             new Vector2(0.84f, 0.950f), new Vector2(0.99f, 0.990f));
         var mpFill = UIHelper.CreatePanel(mpBG.transform, new Color(0.14f, 0.32f, 0.85f), "MPFill");
         UIHelper.SetAnchors(mpFill.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
-        var mpTxt = UIHelper.CreateText(mpBG.transform, $"MP  {_ch.generated.stats.mp}",
+        _mpTxt = UIHelper.CreateText(mpBG.transform, $"MP  {GameState.CurrentMp}/{_ch.generated.stats.mp}",
             20, new Vector2(0.03f, 0f), Vector2.one, TextAlignmentOptions.Left);
-        mpTxt.color = new Color(0.7f, 0.8f, 1f);
+        _mpTxt.color = new Color(0.7f, 0.8f, 1f);
 
         // 구분선
         var line = UIHelper.CreatePanel(t, new Color(0.5f, 0.28f, 0.9f, 0.55f), "TopLine");
@@ -859,9 +861,26 @@ public class VillageManager : MonoBehaviour
                 {
                     GameState.Gold -= capturedPrice;
                     RefreshGold();
-                    ShowMsg($"{capturedName} 구매 완료!");
-                    if (capturedBagIdx >= 0) AddToBag(capturedBagIdx, 1);
-                    else SaveState();
+                    if (capturedBagIdx >= 0)
+                    {
+                        ShowMsg($"{capturedName} 구매 완료!");
+                        AddToBag(capturedBagIdx, 1);
+                    }
+                    else
+                    {
+                        if (capturedName == "방어구 강화")
+                        {
+                            _ch.bonusDef += 5;
+                            ShowMsg("방어구 강화 완료! DEF +5");
+                        }
+                        else if (capturedName == "무기 강화")
+                        {
+                            _ch.bonusAtk += 8;
+                            ShowMsg("무기 강화 완료! ATK +8");
+                            if (_atkTxt != null) _atkTxt.text = $"ATK  {_ch.generated.stats.atk + _ch.bonusAtk}";
+                        }
+                        SaveState();
+                    }
                     AddStoryEntry($"{_ch.generated.name}은(는) 마을 상점에서 {capturedName}을(를) 구입했다.");
                 }
                 else ShowMsg("골드가 부족합니다");
@@ -1534,7 +1553,23 @@ public class VillageManager : MonoBehaviour
                 qtyTxt.text = $"x {_bagQty[capturedIdx]}";
                 if (isConsume)
                 {
-                    ShowMsg($"{capturedName} 사용! HP/MP 회복");
+                    if (capturedName == "회복 포션")
+                    {
+                        int maxHp = _ch.generated.stats.hp;
+                        int heal  = Mathf.Min(50, maxHp - GameState.CurrentHp);
+                        GameState.CurrentHp = Mathf.Min(GameState.CurrentHp + 50, maxHp);
+                        if (_hpTxt != null) _hpTxt.text = $"HP  {GameState.CurrentHp}/{maxHp}";
+                        ShowMsg($"회복 포션 사용! HP +{heal}");
+                    }
+                    else if (capturedName == "마나 포션")
+                    {
+                        int maxMp   = _ch.generated.stats.mp;
+                        int restore = Mathf.Min(40, maxMp - GameState.CurrentMp);
+                        GameState.CurrentMp = Mathf.Min(GameState.CurrentMp + 40, maxMp);
+                        if (_mpTxt != null) _mpTxt.text = $"MP  {GameState.CurrentMp}/{maxMp}";
+                        ShowMsg($"마나 포션 사용! MP +{restore}");
+                    }
+                    else ShowMsg($"{capturedName} 사용!");
                 }
                 else
                 {
@@ -1638,7 +1673,9 @@ public class VillageManager : MonoBehaviour
             _ch.lastAttendanceDate = DateTime.Now.ToString("yyyy-MM-dd");
             GameState.Gold += todayGold;
             RefreshGold();
-            ShowMsg(todayGold > 0 ? $"출석 보상 획득! +{todayGold}G" : "출석 보상 획득!");
+            if (todayIdx == 1)      { AddToBag(2, 1); ShowMsg("출석 보상 획득! 회복 포션 x1"); }
+            else if (todayIdx == 3) { AddToBag(2, 2); ShowMsg("출석 보상 획득! 회복 포션 x2"); }
+            else ShowMsg(todayGold > 0 ? $"출석 보상 획득! +{todayGold}G" : "출석 보상 획득!");
             if (claimTmp != null) claimTmp.text = "수령 완료";
             claimBtn.image.color = new Color(0.25f, 0.25f, 0.32f);
             claimBtn.interactable = false;
