@@ -228,8 +228,8 @@
             <div class="card" style="flex:1">
               <p style="color:#4ade80;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-gamepad"></i> 게임 시스템</p>
               <ul>
-                <li><span class="hl">마을 씬</span>: 상점(강화·포션)·미션·출석·가방 — 상태 실시간 반영</li>
-                <li><span class="hl">던전</span>: 5구역 (Slime→Goblin→Skull) 탑다운 탐험</li>
+                <li><span class="hl">마을 씬</span>: 상점·미션·출석·가방 관리</li>
+                <li><span class="hl">던전</span>: 5구역 탑다운 탐험 (Slime→Goblin→Skull)</li>
                 <li><span class="hl">전투</span>: 공격·스킬·아이템·도망 4버튼 구성</li>
                 <li><span class="hl">HP 지속성</span>: GameState로 던전 ↔ 마을 간 유지</li>
               </ul>
@@ -238,7 +238,7 @@
               <p style="color:#f5c842;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-book"></i> AI 소설 생성</p>
               <ul>
                 <li>플레이 레벨·전투 기록·습득 스킬 분석</li>
-                <li>캐릭터 컨셉 맞춤 개인화 소설 자동 생성</li>
+                <li>컨셉 맞춤 개인화 소설 자동 생성</li>
                 <li>스킬 이름이 <span class="hl">전투 장면에 직접 등장</span></li>
               </ul>
             </div>
@@ -316,23 +316,22 @@
             <div class="card" style="flex:1">
               <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .32em"><i class="fa-solid fa-mobile-screen"></i> Unity 씬 구조 (5개)</p>
               <div style="display:flex;flex-direction:column;gap:.2em;font-size:.74em">
-                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.28em .58em;border-radius:0 5px 5px 0">
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.16em .5em;border-radius:0 5px 5px 0">
                   <span style="color:#c4b5fd;font-weight:700">TitleScene</span><span style="color:#888;font-size:.9em"> — 서버 연결 확인</span>
                 </div>
-                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.28em .58em;border-radius:0 5px 5px 0">
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.16em .5em;border-radius:0 5px 5px 0">
                   <span style="color:#c4b5fd;font-weight:700">MainMenuScene</span><span style="color:#888;font-size:.9em"> — 캐릭터 목록·선택·삭제</span>
                 </div>
-                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.28em .58em;border-radius:0 5px 5px 0">
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.16em .5em;border-radius:0 5px 5px 0">
                   <span style="color:#c4b5fd;font-weight:700">CharacterCreationScene</span><span style="color:#888;font-size:.9em"> — 입력 → API → 결과</span>
                 </div>
-                <div style="background:#1a3a20;border-left:3px solid #22c55e;padding:.28em .58em;border-radius:0 5px 5px 0">
+                <div style="background:#1a3a20;border-left:3px solid #22c55e;padding:.16em .5em;border-radius:0 5px 5px 0">
                   <span style="color:#4ade80;font-weight:700">VillageScene</span><span style="color:#888;font-size:.9em"> — 상점·미션·출석·가방</span>
                 </div>
-                <div style="background:#2a1040;border-left:3px solid #f5c842;padding:.28em .58em;border-radius:0 5px 5px 0">
+                <div style="background:#2a1040;border-left:3px solid #f5c842;padding:.16em .5em;border-radius:0 5px 5px 0">
                   <span style="color:#f5c842;font-weight:700">GameScene (던전)</span><span style="color:#888;font-size:.9em"> — 전투·레벨업·사망</span>
                 </div>
               </div>
-              <div style="margin-top:.3em;font-size:.64em;color:#a78bfa;text-align:center">씬 간 데이터 → <span class="hl">GameState 정적 클래스</span></div>
             </div>
             <div class="card" style="flex:1">
               <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .28em"><i class="fa-solid fa-folder-tree"></i> 디렉토리 구조</p>
@@ -418,8 +417,7 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
               <p style="color:#4ade80;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-hammer"></i> 빌드 — 소스 코드 → 실행 파일</p>
               <ul>
                 <li><span class="hl-blue">백엔드</span>: Node.js 직접 실행 (별도 빌드 없음)</li>
-                <li><span class="hl-green">Unity</span>: File → Build Settings → Android<br>
-                  → Switch Platform → <span class="hl">Build → APK 생성</span></li>
+                <li><span class="hl-green">Unity</span>: Build Settings → Android → <span class="hl">APK 생성</span></li>
               </ul>
             </div>
             <div class="card card-gold" style="flex:1">
@@ -461,7 +459,7 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
             <div class="card card-gold" style="flex:1">
               <p style="color:#f5c842;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-solid fa-bolt"></i> 성능 최적화</p>
               <ul>
-                <li>AI 요청 설정을 미리 캐싱해 <span class="hl">불필요한 재전송 방지</span></li>
+                <li>API 요청 설정 캐싱으로 <span class="hl">재전송 방지</span></li>
                 <li>결과물 형식 확인 → 1회 재요청 후 기본값 사용</li>
                 <li>GameState 캐싱으로 <span class="hl">불필요 API 호출 방지</span></li>
                 <li>레벨스킬 캐릭터 생성 시 미리 생성 (추가 비용 없음)</li>
@@ -471,7 +469,7 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
               <p style="color:#93c5fd;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-solid fa-code-branch"></i> 코드 품질 &amp; 기술 습득</p>
               <ul>
                 <li>GitHub <span class="hl">30+ 의미 있는 커밋</span> (한국어 메시지)</li>
-                <li><span class="hl">AGENTS.md</span> — Agent·Skills·Rules·Commands 단일 통합</li>
+                <li><span class="hl">AGENTS.md</span> — AI 협업 규칙 통합 문서</li>
                 <li><span class="hl">ADR 5개</span> — 기술 결정 근거 문서화</li>
                 <li><span class="hl">LLM Wiki</span> — 노하우 기록으로 <span class="hl-green">지속적 기술 개선</span></li>
               </ul>
