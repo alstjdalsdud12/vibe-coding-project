@@ -12,74 +12,90 @@
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#09071a; }
     .reveal-viewport { background:#09071a; }
-    .reveal { font-family:'Noto Sans KR',sans-serif !important; font-size:30px !important; }
-    .reveal .slides section { box-sizing:border-box; padding:0; background:#09071a; height:100%; overflow:hidden; }
-    .inner-wrap { box-sizing:border-box; width:100%; height:100%; padding:14px 36px; display:flex; flex-direction:column; overflow:hidden; }
 
+    /* 기본 폰트 34px — 글씨 크고 빈공간 최소화 */
+    .reveal { font-family:'Noto Sans KR',sans-serif !important; font-size:34px !important; }
+    .reveal .slides section { box-sizing:border-box; padding:0; background:#09071a; height:100%; overflow:hidden; }
+
+    /* 슬라이드 전체 레이아웃 */
+    .inner-wrap { box-sizing:border-box; width:100%; height:100%; padding:16px 44px; display:flex; flex-direction:column; overflow:hidden; }
+
+    /* 타이포그래피 */
     .reveal h1,.reveal h2,.reveal h3 { font-family:'Noto Sans KR',sans-serif !important; text-transform:none !important; margin:0; }
-    .reveal h1 { font-size:2.6em; font-weight:900; color:#f5c842; text-shadow:0 4px 24px rgba(155,109,255,.6); }
-    .slide-title { font-size:1.05em; font-weight:700; color:#f5c842; border-bottom:2px solid #5b3fa0; padding-bottom:.12em; margin-bottom:.3em; flex-shrink:0; }
-    .slide-num { font-size:.6em; color:#5b3fa0; font-weight:400; margin-left:.45em; }
+    .reveal h1 { font-size:2.5em; font-weight:900; color:#f5c842; text-shadow:0 4px 24px rgba(155,109,255,.6); }
+    .slide-title { font-size:1.1em; font-weight:700; color:#f5c842; border-bottom:2px solid #5b3fa0; padding-bottom:.14em; margin-bottom:.38em; flex-shrink:0; }
+    .slide-num { font-size:.58em; color:#5b3fa0; font-weight:400; margin-left:.4em; }
 
     .reveal p,.reveal li { color:#ddd6fe; }
     .reveal ul { margin:0; padding-left:1.1em; }
-    .reveal li { margin-bottom:.16em; line-height:1.42; font-size:.75em; }
+    .reveal li { margin-bottom:.28em; line-height:1.52; font-size:.8em; }
 
-    .badge { display:inline-block; background:#4c1d95; color:#e9d5ff; border-radius:4px; padding:.09em .48em; font-size:.67em; margin:.08em .05em; }
+    /* 뱃지 */
+    .badge { display:inline-block; background:#4c1d95; color:#e9d5ff; border-radius:4px; padding:.1em .52em; font-size:.68em; margin:.08em .05em; }
     .badge-green  { background:#14532d; color:#86efac; }
     .badge-blue   { background:#1e3a5f; color:#93c5fd; }
     .badge-orange { background:#78350f; color:#fcd34d; }
 
+    /* 강조 색상 */
     .hl        { color:#f5c842; font-weight:700; }
     .hl-green  { color:#4ade80; font-weight:700; }
     .hl-blue   { color:#93c5fd; font-weight:700; }
     .hl-purple { color:#c4b5fd; }
     .hl-red    { color:#f87171; font-weight:700; }
 
-    .divider { width:55%; height:2px; margin:.38em auto; background:linear-gradient(90deg,transparent,#9b6dff,transparent); }
+    /* 구분선 */
+    .divider { width:55%; height:2px; margin:.4em auto; background:linear-gradient(90deg,transparent,#9b6dff,transparent); }
 
-    .card { background:#12103a; border:1px solid #5b3fa0; border-radius:8px; padding:.45em .72em; }
+    /* 카드 */
+    .card { background:#12103a; border:1px solid #5b3fa0; border-radius:8px; padding:.58em .9em; }
     .card-red    { border-color:#e74c3c; }
     .card-green  { border-color:#27ae60; }
     .card-blue   { border-color:#3b82f6; }
     .card-gold   { border-color:#f59e0b; }
     .card-purple { border-color:#9b6dff; }
 
-    .cols { display:flex; gap:.6em; flex:1; min-height:0; }
-    .col  { flex:1; min-height:0; overflow:hidden; }
+    /* 컬럼 레이아웃 — flex:1 로 빈공간 채움 */
+    .cols { display:flex; gap:.65em; flex:1; min-height:0; }
+    .col  { flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; }
 
-    .quote { margin-top:.28em; flex-shrink:0; text-align:center; font-size:.68em; color:#c4b5fd; border-top:1px solid #5b3fa0; padding-top:.28em; }
+    /* 하단 인용구 */
+    .quote { margin-top:.32em; flex-shrink:0; text-align:center; font-size:.68em; color:#c4b5fd; border-top:1px solid #5b3fa0; padding-top:.3em; }
 
-    .arch-node { display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; padding:.42em .18em; text-align:center; gap:.1em; }
-    .arch-node .n-icon  { font-size:1.05em; line-height:1; }
-    .arch-node .n-label { font-size:.56em; font-weight:700; color:#fff; }
-    .arch-node .n-sub   { font-size:.46em; color:rgba(255,255,255,.65); line-height:1.3; }
+    /* 아키텍처 노드 */
+    .arch-node { display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; padding:.5em .2em; text-align:center; gap:.1em; }
+    .arch-node .n-icon  { font-size:1.1em; line-height:1; }
+    .arch-node .n-label { font-size:.58em; font-weight:700; color:#fff; }
+    .arch-node .n-sub   { font-size:.48em; color:rgba(255,255,255,.65); line-height:1.3; }
     .node-user   { background:#1e1e2e; border:1px solid #555; }
     .node-unity  { background:#14532d; border:1px solid #22c55e; }
     .node-server { background:#1e3a5f; border:1px solid #3b82f6; }
     .node-ai     { background:#4a1d96; border:1px solid #9b6dff; }
     .node-db     { background:#78350f; border:1px solid #f59e0b; }
-    .arch-arrow  { color:#9b6dff; font-size:.9em; flex-shrink:0; }
+    .arch-arrow  { color:#9b6dff; font-size:.85em; flex-shrink:0; }
 
-    .wbs-header { font-size:.66em; font-weight:700; color:#fff; border-radius:5px; padding:.28em .38em; text-align:center; flex-shrink:0; }
+    /* WBS */
+    .wbs-header { font-size:.7em; font-weight:700; color:#fff; border-radius:5px; padding:.32em .42em; text-align:center; flex-shrink:0; }
     .phase-plan { background:#1a2f4a; border:1px solid #3b82f6; }
     .phase-impl { background:#142b1a; border:1px solid #22c55e; }
     .phase-game { background:#2a1a4a; border:1px solid #9b6dff; }
     .phase-done { background:#2e1f0e; border:1px solid #f59e0b; }
-    .wbs-item { font-size:.62em; color:#ddd6fe; background:#12103a; border-radius:4px; padding:.2em .48em; border-left:3px solid #5b3fa0; }
+    .wbs-item { font-size:.65em; color:#ddd6fe; background:#12103a; border-radius:4px; padding:.24em .5em; border-left:3px solid #5b3fa0; }
     .wbs-item.done-item { color:#86efac; border-left-color:#22c55e; }
 
-    .code-block { background:#0d0b2a; border:1px solid #3b2a6e; border-radius:6px; padding:.38em .65em; font-family:monospace; font-size:.63em; color:#a5f3fc; overflow:hidden; line-height:1.55; }
+    /* 코드 블록 */
+    .code-block { background:#0d0b2a; border:1px solid #3b2a6e; border-radius:6px; padding:.42em .7em; font-family:monospace; font-size:.65em; color:#a5f3fc; overflow:hidden; line-height:1.6; }
 
-    .tl-row { display:flex; align-items:flex-start; gap:.42em; margin-bottom:.2em; }
-    .tl-dot { width:7px; height:7px; border-radius:50%; background:#9b6dff; flex-shrink:0; margin-top:.3em; }
+    /* 타임라인 */
+    .tl-row { display:flex; align-items:flex-start; gap:.45em; margin-bottom:.28em; }
+    .tl-dot { width:8px; height:8px; border-radius:50%; background:#9b6dff; flex-shrink:0; margin-top:.28em; }
     .tl-done .tl-dot { background:#22c55e; }
-    .tl-text { font-size:.69em; color:#ddd6fe; }
+    .tl-text { font-size:.74em; color:#ddd6fe; }
     .tl-done .tl-text { color:#86efac; }
 
-    .step-row { display:flex; align-items:center; gap:.42em; margin-bottom:.2em; }
-    .step-num { display:inline-flex; align-items:center; justify-content:center; width:1.42em; height:1.42em; border-radius:50%; background:#4c1d95; color:#e9d5ff; font-weight:700; font-size:.7em; flex-shrink:0; }
-    .step-text { font-size:.73em; color:#ddd6fe; }
+    /* 스텝 */
+    .step-row { display:flex; align-items:center; gap:.45em; margin-bottom:.3em; }
+    .step-num { display:inline-flex; align-items:center; justify-content:center; width:1.5em; height:1.5em; border-radius:50%; background:#4c1d95; color:#e9d5ff; font-weight:700; font-size:.72em; flex-shrink:0; }
+    .step-text { font-size:.78em; color:#ddd6fe; }
   </style>
 </head>
 <body>
@@ -89,18 +105,18 @@
     <!-- ① 타이틀 -->
     <section>
       <div class="inner-wrap" style="align-items:center;justify-content:center;text-align:center">
-        <p style="color:#a78bfa;font-size:.58em;letter-spacing:.18em;margin:0 0 .2em">VIBE CODING PROJECT · 최종 발표 · 2026</p>
-        <h1 style="margin:.1em 0 .08em">나만의 스토리</h1>
-        <p style="color:#c4b5fd;font-size:.95em;margin:0 0 .35em">AI가 만드는 나만의 RPG 캐릭터</p>
+        <p style="color:#a78bfa;font-size:.6em;letter-spacing:.18em;margin:0 0 .2em">VIBE CODING PROJECT · 최종 발표 · 2026</p>
+        <h1 style="margin:.1em 0 .1em">나만의 스토리</h1>
+        <p style="color:#c4b5fd;font-size:.98em;margin:0 0 .38em">AI가 만드는 나만의 RPG 캐릭터</p>
         <div class="divider"></div>
-        <div style="margin:.3em 0">
+        <div style="margin:.35em 0">
           <span class="badge">Unity 2D</span>
           <span class="badge">Node.js + Express</span>
           <span class="badge">Groq AI · LLaMA 3.3 70B</span>
           <span class="badge">Firebase Firestore</span>
           <span class="badge">C# · JavaScript</span>
         </div>
-        <p style="color:#a78bfa;font-size:.58em;margin-top:.7em"><i class="fa-brands fa-github"></i> github.com/alstjdalsdud12/vibe-coding-project</p>
+        <p style="color:#a78bfa;font-size:.6em;margin-top:.8em"><i class="fa-brands fa-github"></i> github.com/alstjdalsdud12/vibe-coding-project</p>
       </div>
     </section>
 
@@ -108,14 +124,14 @@
     <section>
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-bullseye"></i> 비전 제시 &amp; 문제 정의</div>
-        <div style="flex:0;text-align:center;padding:.15em 0 .4em">
-          <p style="font-size:1.05em;color:#f5c842;font-weight:700;margin:0">
+        <div style="flex-shrink:0;text-align:center;padding:.12em 0 .38em">
+          <p style="font-size:1.08em;color:#f5c842;font-weight:700;margin:0">
             "유저가 <span style="color:#c4b5fd">상상하는 캐릭터</span>를, AI가 <span style="color:#4ade80">즉시 만들고</span>, <span style="color:#93c5fd">바로 게임을 플레이한다</span>"
           </p>
         </div>
         <div class="cols">
           <div class="col card card-red">
-            <p style="color:#f87171;font-weight:700;margin:0 0 .35em;font-size:.85em"><i class="fa-solid fa-circle-xmark"></i> 기존 RPG의 한계 (문제 정의)</p>
+            <p style="color:#f87171;font-weight:700;margin:0 0 .38em;font-size:.88em"><i class="fa-solid fa-circle-xmark"></i> 기존 RPG의 한계 (문제 정의)</p>
             <ul>
               <li>캐릭터는 개발자가 <span class="hl">미리 제작</span>한 것 중에서만 선택</li>
               <li>내가 원하는 캐릭터를 만들려면 <span class="hl">그림 실력·설계 능력</span> 필요</li>
@@ -124,7 +140,7 @@
             </ul>
           </div>
           <div class="col card card-green">
-            <p style="color:#4ade80;font-weight:700;margin:0 0 .35em;font-size:.85em"><i class="fa-solid fa-circle-check"></i> 우리의 비전 &amp; 해결책</p>
+            <p style="color:#4ade80;font-weight:700;margin:0 0 .38em;font-size:.88em"><i class="fa-solid fa-circle-check"></i> 우리의 비전 &amp; 해결책</p>
             <ul>
               <li><span class="hl">텍스트 3줄 입력</span>만으로 캐릭터 즉시 완성</li>
               <li>AI가 이름·스탯·스킬·배경스토리 <span class="hl">자동 생성</span></li>
@@ -142,9 +158,9 @@
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-list-check"></i> 프로젝트 계획 &amp; 진행 과정</div>
         <div class="cols">
-          <div class="col" style="flex:1.3">
-            <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0 0 .35em"><i class="fa-solid fa-calendar"></i> WBS (7주) — 기술 스택</p>
-            <div style="display:flex;gap:.45em;height:calc(100% - 1.8em)">
+          <div class="col" style="flex:1.3;overflow:hidden">
+            <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .38em;flex-shrink:0"><i class="fa-solid fa-calendar"></i> WBS (7주 일정)</p>
+            <div style="display:flex;gap:.45em;flex:1;min-height:0">
               <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
                 <div class="wbs-header phase-plan">1–2주 · 설계</div>
                 <div class="wbs-item done-item">기획·요구사항</div>
@@ -171,17 +187,17 @@
               </div>
             </div>
           </div>
-          <div class="col" style="flex:.9;display:flex;flex-direction:column;gap:.5em">
+          <div class="col" style="flex:.95;gap:.5em">
             <div class="card" style="flex:1">
-              <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0 0 .3em"><i class="fa-solid fa-person-running"></i> 진행 과정 (완료)</p>
+              <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .35em"><i class="fa-solid fa-person-running"></i> 진행 과정 (완료)</p>
               <div class="tl-row tl-done"><div class="tl-dot"></div><div class="tl-text">백엔드·AI 연동 완료 (2주차)</div></div>
               <div class="tl-row tl-done"><div class="tl-dot"></div><div class="tl-text">Unity 클라이언트 완료 (4주차)</div></div>
               <div class="tl-row tl-done"><div class="tl-dot"></div><div class="tl-text">마을·전투·레벨 시스템 완료 (6주차)</div></div>
               <div class="tl-row tl-done"><div class="tl-dot"></div><div class="tl-text">버그 수정 + 전체 문서 완성 (7주차)</div></div>
             </div>
             <div class="card" style="flex:1">
-              <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0 0 .3em"><i class="fa-solid fa-layer-group"></i> 기술 선택 근거</p>
-              <ul style="list-style:none;padding:0;font-size:.72em;line-height:1.9">
+              <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .35em"><i class="fa-solid fa-layer-group"></i> 기술 선택 근거</p>
+              <ul style="list-style:none;padding:0;font-size:.76em;line-height:2.0">
                 <li><span class="badge badge-green">Game</span> Unity — 씬관리·Android/iOS 빌드</li>
                 <li><span class="badge badge-blue">Server</span> Node.js — AI SDK npm, 비동기 I/O</li>
                 <li><span class="badge">AI</span> Groq — 빠른 응답, 한국어 이해</li>
@@ -199,18 +215,18 @@
         <div class="slide-title"><i class="fa-solid fa-code"></i> 구현 방법 설명</div>
         <div class="cols">
           <div class="col card">
-            <p style="color:#c4b5fd;font-weight:700;margin:0 0 .32em;font-size:.85em"><i class="fa-solid fa-robot"></i> AI 캐릭터 생성 흐름</p>
+            <p style="color:#c4b5fd;font-weight:700;margin:0 0 .38em;font-size:.88em"><i class="fa-solid fa-robot"></i> AI 캐릭터 생성 흐름</p>
             <div class="step-row"><div class="step-num">1</div><div class="step-text">외형·무기·컨셉·세계관 입력 → 서버 전달</div></div>
             <div class="step-row"><div class="step-num">2</div><div class="step-text">Groq API (LLaMA 3.3 70B) 호출 → JSON 1개 생성</div></div>
             <div class="step-row"><div class="step-num">3</div><div class="step-text">스키마 검증 실패 시 <span class="hl">자동 재시도</span> (1회)</div></div>
             <div class="step-row"><div class="step-num">4</div><div class="step-text">한자 sanitize 후 <span class="hl">Firebase 저장</span></div></div>
-            <div style="margin-top:.4em;padding:.35em .6em;background:#1a1040;border-radius:7px;font-size:.7em;color:#a78bfa">
+            <div style="margin-top:.45em;padding:.4em .65em;background:#1a1040;border-radius:7px;font-size:.74em;color:#a78bfa">
               생성 내용: 이름 · HP/ATK/DEF/MP · 고유스킬 · <span class="hl">레벨 5/10/15 스킬</span> · 배경스토리 · 던전 지역명
             </div>
           </div>
-          <div class="col" style="display:flex;flex-direction:column;gap:.5em">
-            <div class="card">
-              <p style="color:#4ade80;font-weight:700;margin:0 0 .28em;font-size:.85em"><i class="fa-solid fa-gamepad"></i> 게임 시스템</p>
+          <div class="col" style="gap:.5em">
+            <div class="card" style="flex:1">
+              <p style="color:#4ade80;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-gamepad"></i> 게임 시스템</p>
               <ul>
                 <li><span class="hl">마을 씬</span>: 상점(강화·포션)·미션·출석·가방 — 상태 실시간 반영</li>
                 <li><span class="hl">던전</span>: 5구역 (Slime→Goblin→Skull) 탑다운 탐험</li>
@@ -218,8 +234,8 @@
                 <li><span class="hl">HP 지속성</span>: GameState로 던전 ↔ 마을 간 유지</li>
               </ul>
             </div>
-            <div class="card">
-              <p style="color:#f5c842;font-weight:700;margin:0 0 .28em;font-size:.85em"><i class="fa-solid fa-book"></i> AI 소설 생성</p>
+            <div class="card" style="flex:1">
+              <p style="color:#f5c842;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-book"></i> AI 소설 생성</p>
               <ul>
                 <li>플레이 레벨·전투 기록·습득 스킬 분석</li>
                 <li>캐릭터 컨셉 맞춤 개인화 소설 자동 생성</li>
@@ -238,7 +254,7 @@
         <div class="slide-title"><i class="fa-solid fa-arrow-trend-up"></i> 활용 방안 및 기대 효과</div>
         <div class="cols">
           <div class="col card card-blue">
-            <p style="color:#93c5fd;font-weight:700;margin:0 0 .38em;font-size:.88em"><i class="fa-solid fa-lightbulb"></i> 활용 방안</p>
+            <p style="color:#93c5fd;font-weight:700;margin:0 0 .42em;font-size:.9em"><i class="fa-solid fa-lightbulb"></i> 활용 방안</p>
             <ul>
               <li><span class="hl">AI가 게임 콘텐츠를 무한 생성</span>하는 프로토타입</li>
               <li>개발자 없이 <span class="hl">무한한 캐릭터</span> 자동 생성</li>
@@ -248,7 +264,7 @@
             </ul>
           </div>
           <div class="col card card-gold">
-            <p style="color:#f5c842;font-weight:700;margin:0 0 .38em;font-size:.88em"><i class="fa-solid fa-star"></i> 기대 효과</p>
+            <p style="color:#f5c842;font-weight:700;margin:0 0 .42em;font-size:.9em"><i class="fa-solid fa-star"></i> 기대 효과</p>
             <ul>
               <li>게임 개발 비용 절감: 캐릭터 설계 공수 <span class="hl">제로</span></li>
               <li>유저 이탈률 감소: 내 캐릭터라 <span class="hl">애착도 UP</span></li>
@@ -262,30 +278,30 @@
       </div>
     </section>
 
-    <!-- ⑥ ADR 요약 (질의응답 준비) -->
+    <!-- ⑥ ADR 요약 -->
     <section>
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-file-lines"></i> ADR 요약 <span class="slide-num">Architecture Decision Records · 5개</span></div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:.38em;justify-content:center">
-          <div class="card" style="display:flex;gap:.6em;align-items:flex-start;padding:.52em .85em">
-            <span class="badge" style="flex-shrink:0;margin-top:.12em">ADR-001</span>
-            <span style="font-size:.78em"><span class="hl">Unity 2D 선택</span> — 씬 관리·게임 루프·Android/iOS 동시 빌드 내장. Flutter·React Native는 게임 기능 없어 탈락.</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:.4em;min-height:0">
+          <div class="card" style="flex:1;display:flex;gap:.65em;align-items:center;padding:.55em .9em">
+            <span class="badge" style="flex-shrink:0;font-size:.72em">ADR-001</span>
+            <span style="font-size:.8em"><span class="hl">Unity 2D 선택</span> — 씬 관리·게임 루프·Android/iOS 동시 빌드 내장. Flutter·React Native는 게임 기능 없어 탈락.</span>
           </div>
-          <div class="card" style="display:flex;gap:.6em;align-items:flex-start;padding:.52em .85em">
-            <span class="badge" style="flex-shrink:0;margin-top:.12em">ADR-002</span>
-            <span style="font-size:.78em"><span class="hl">Node.js + Express</span> — Groq·Firebase SDK가 npm으로 제공, 비동기 I/O에 적합. Spring은 1인 프로젝트엔 과대 설계.</span>
+          <div class="card" style="flex:1;display:flex;gap:.65em;align-items:center;padding:.55em .9em">
+            <span class="badge" style="flex-shrink:0;font-size:.72em">ADR-002</span>
+            <span style="font-size:.8em"><span class="hl">Node.js + Express</span> — Groq·Firebase SDK가 npm으로 제공, 비동기 I/O에 적합. Spring은 1인 프로젝트엔 과대 설계.</span>
           </div>
-          <div class="card" style="display:flex;gap:.6em;align-items:flex-start;padding:.52em .85em">
-            <span class="badge" style="flex-shrink:0;margin-top:.12em">ADR-003</span>
-            <span style="font-size:.78em"><span class="hl">Firebase Firestore</span> — 서버리스, JSON 캐릭터 데이터와 NoSQL 구조가 자연 일치. 무료 티어로 충분.</span>
+          <div class="card" style="flex:1;display:flex;gap:.65em;align-items:center;padding:.55em .9em">
+            <span class="badge" style="flex-shrink:0;font-size:.72em">ADR-003</span>
+            <span style="font-size:.8em"><span class="hl">Firebase Firestore</span> — 서버리스, JSON 캐릭터 데이터와 NoSQL 구조가 자연 일치. 무료 티어로 충분.</span>
           </div>
-          <div class="card" style="display:flex;gap:.6em;align-items:flex-start;padding:.52em .85em">
-            <span class="badge" style="flex-shrink:0;margin-top:.12em">ADR-004</span>
-            <span style="font-size:.78em"><span class="hl">AI 레벨업 스킬 생성</span> — 캐릭터 생성 시 함께 생성해 추가 API 비용 없이 컨셉 맞춤 스킬 확보.</span>
+          <div class="card" style="flex:1;display:flex;gap:.65em;align-items:center;padding:.55em .9em">
+            <span class="badge" style="flex-shrink:0;font-size:.72em">ADR-004</span>
+            <span style="font-size:.8em"><span class="hl">AI 레벨업 스킬 생성</span> — 캐릭터 생성 시 함께 생성해 추가 API 비용 없이 컨셉 맞춤 스킬 확보.</span>
           </div>
-          <div class="card" style="display:flex;gap:.6em;align-items:flex-start;padding:.52em .85em">
-            <span class="badge" style="flex-shrink:0;margin-top:.12em">ADR-005</span>
-            <span style="font-size:.78em"><span class="hl">GameState 정적 클래스</span> — 씬 전환 무관 유지, 어디서나 접근. LoadCharacter()로 캐릭터 전환 시 완전 초기화.</span>
+          <div class="card" style="flex:1;display:flex;gap:.65em;align-items:center;padding:.55em .9em">
+            <span class="badge" style="flex-shrink:0;font-size:.72em">ADR-005</span>
+            <span style="font-size:.8em"><span class="hl">GameState 정적 클래스</span> — 씬 전환 무관 유지, 어디서나 접근. LoadCharacter()로 캐릭터 전환 시 완전 초기화.</span>
           </div>
         </div>
         <div class="quote">각 결정의 대안·이유를 <span class="hl">.planning/decisions/</span> 폴더에 문서화</div>
@@ -297,33 +313,31 @@
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-diagram-project"></i> 앱 구조 설명 &amp; 아키텍처 다이어그램</div>
         <div class="cols">
-          <div class="col" style="display:flex;flex-direction:column;gap:.45em">
-            <!-- 씬 구조 -->
+          <div class="col" style="gap:.45em">
             <div class="card" style="flex:1">
-              <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0 0 .28em"><i class="fa-solid fa-mobile-screen"></i> Unity 씬 구조 (레이어)</p>
-              <div style="display:flex;flex-direction:column;gap:.18em;font-size:.7em">
-                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.25em .55em;border-radius:0 5px 5px 0">
-                  <span style="color:#c4b5fd;font-weight:700">TitleScene</span><span style="color:#555;font-size:.88em"> — 서버 연결 확인</span>
+              <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .32em"><i class="fa-solid fa-mobile-screen"></i> Unity 씬 구조 (5개)</p>
+              <div style="display:flex;flex-direction:column;gap:.2em;font-size:.74em">
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.28em .58em;border-radius:0 5px 5px 0">
+                  <span style="color:#c4b5fd;font-weight:700">TitleScene</span><span style="color:#888;font-size:.9em"> — 서버 연결 확인</span>
                 </div>
-                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.25em .55em;border-radius:0 5px 5px 0">
-                  <span style="color:#c4b5fd;font-weight:700">MainMenuScene</span><span style="color:#555;font-size:.88em"> — 캐릭터 목록·선택·삭제</span>
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.28em .58em;border-radius:0 5px 5px 0">
+                  <span style="color:#c4b5fd;font-weight:700">MainMenuScene</span><span style="color:#888;font-size:.9em"> — 캐릭터 목록·선택·삭제</span>
                 </div>
-                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.25em .55em;border-radius:0 5px 5px 0">
-                  <span style="color:#c4b5fd;font-weight:700">CharacterCreationScene</span><span style="color:#555;font-size:.88em"> — 입력 → API → 결과</span>
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.28em .58em;border-radius:0 5px 5px 0">
+                  <span style="color:#c4b5fd;font-weight:700">CharacterCreationScene</span><span style="color:#888;font-size:.9em"> — 입력 → API → 결과</span>
                 </div>
-                <div style="background:#1a3a20;border-left:3px solid #22c55e;padding:.25em .55em;border-radius:0 5px 5px 0">
-                  <span style="color:#4ade80;font-weight:700">VillageScene</span><span style="color:#555;font-size:.88em"> — 상점·미션·출석·가방</span>
+                <div style="background:#1a3a20;border-left:3px solid #22c55e;padding:.28em .58em;border-radius:0 5px 5px 0">
+                  <span style="color:#4ade80;font-weight:700">VillageScene</span><span style="color:#888;font-size:.9em"> — 상점·미션·출석·가방</span>
                 </div>
-                <div style="background:#2a1040;border-left:3px solid #f5c842;padding:.25em .55em;border-radius:0 5px 5px 0">
-                  <span style="color:#f5c842;font-weight:700">GameScene (던전)</span><span style="color:#555;font-size:.88em"> — 전투·레벨업·사망</span>
+                <div style="background:#2a1040;border-left:3px solid #f5c842;padding:.28em .58em;border-radius:0 5px 5px 0">
+                  <span style="color:#f5c842;font-weight:700">GameScene (던전)</span><span style="color:#888;font-size:.9em"> — 전투·레벨업·사망</span>
                 </div>
               </div>
-              <div style="margin-top:.28em;font-size:.62em;color:#a78bfa;text-align:center">씬 간 데이터 → <span class="hl">GameState 정적 클래스</span></div>
+              <div style="margin-top:.3em;font-size:.64em;color:#a78bfa;text-align:center">씬 간 데이터 → <span class="hl">GameState 정적 클래스</span></div>
             </div>
-            <!-- 디렉토리 구조 -->
             <div class="card" style="flex:1">
-              <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0 0 .25em"><i class="fa-solid fa-folder-tree"></i> 디렉토리 구조</p>
-              <div class="code-block" style="font-size:.62em;line-height:1.7;color:#c4b5fd">
+              <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .28em"><i class="fa-solid fa-folder-tree"></i> 디렉토리 구조</p>
+              <div class="code-block" style="font-size:.66em;line-height:1.75;color:#c4b5fd">
 <span style="color:#4ade80">backend/</span>src/routes/ · services/ · app.js<br>
 <span style="color:#9b6dff">game/</span>Assets/Scripts/Managers/ · Models/ · Network/<br>
 <span style="color:#f5c842">docs/</span>architecture · deploy · testing · llm-wiki<br>
@@ -332,10 +346,10 @@
               </div>
             </div>
           </div>
-          <div class="col" style="display:flex;flex-direction:column;justify-content:center;gap:.6em">
-            <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0"><i class="fa-solid fa-server"></i> 3-Tier 아키텍처 다이어그램</p>
-            <div style="display:flex;align-items:center;gap:.35em">
-              <div class="arch-node node-unity" style="flex:1;padding:.65em .2em">
+          <div class="col" style="gap:.6em">
+            <p style="color:#a78bfa;font-size:.8em;font-weight:700;margin:0;flex-shrink:0"><i class="fa-solid fa-server"></i> 3-Tier 아키텍처 다이어그램</p>
+            <div style="display:flex;align-items:center;gap:.38em;flex-shrink:0">
+              <div class="arch-node node-unity" style="flex:1;padding:.7em .2em">
                 <div class="n-icon"><i class="fa-solid fa-mobile-screen"></i></div>
                 <div class="n-label">Unity 2D</div>
                 <div class="n-sub">C# · UnityWebRequest</div>
@@ -344,26 +358,26 @@
                 <div class="arch-arrow" style="font-size:.62em">REST API</div>
                 <div class="arch-arrow">⇄</div>
               </div>
-              <div class="arch-node node-server" style="flex:1;padding:.65em .2em">
+              <div class="arch-node node-server" style="flex:1;padding:.7em .2em">
                 <div class="n-icon"><i class="fa-solid fa-server"></i></div>
                 <div class="n-label">Node.js</div>
                 <div class="n-sub">Express · Routes</div>
               </div>
               <div class="arch-arrow">→</div>
               <div style="flex:1;display:flex;flex-direction:column;gap:.3em">
-                <div class="arch-node node-ai" style="padding:.4em .2em">
-                  <div class="n-icon" style="font-size:.9em"><i class="fa-solid fa-robot"></i></div>
-                  <div class="n-label" style="font-size:.55em">Groq AI</div>
-                  <div class="n-sub" style="font-size:.48em">LLaMA 3.3 70B</div>
+                <div class="arch-node node-ai" style="padding:.45em .2em">
+                  <div class="n-icon" style="font-size:.95em"><i class="fa-solid fa-robot"></i></div>
+                  <div class="n-label" style="font-size:.56em">Groq AI</div>
+                  <div class="n-sub" style="font-size:.5em">LLaMA 3.3 70B</div>
                 </div>
-                <div class="arch-node node-db" style="padding:.4em .2em">
-                  <div class="n-icon" style="font-size:.9em"><i class="fa-solid fa-database"></i></div>
-                  <div class="n-label" style="font-size:.55em">Firebase</div>
-                  <div class="n-sub" style="font-size:.48em">Firestore</div>
+                <div class="arch-node node-db" style="padding:.45em .2em">
+                  <div class="n-icon" style="font-size:.95em"><i class="fa-solid fa-database"></i></div>
+                  <div class="n-label" style="font-size:.56em">Firebase</div>
+                  <div class="n-sub" style="font-size:.5em">Firestore</div>
                 </div>
               </div>
             </div>
-            <div class="card" style="font-size:.68em;padding:.42em .7em">
+            <div class="card" style="font-size:.7em;padding:.45em .75em;flex-shrink:0">
               <span style="color:#f5c842;font-weight:700">API 엔드포인트</span>&nbsp;
               <span style="color:#a78bfa">POST</span> /characters &nbsp;
               <span style="color:#4ade80">GET</span> /characters &nbsp;
@@ -383,8 +397,8 @@
         <div class="slide-title"><i class="fa-solid fa-terminal"></i> 개발 환경 설정 &amp; 빌드·배포 과정</div>
         <div class="cols">
           <div class="col card">
-            <p style="color:#93c5fd;font-weight:700;margin:0 0 .32em;font-size:.85em"><i class="fa-solid fa-screwdriver-wrench"></i> 개발 환경 설정</p>
-            <ul style="margin-bottom:.4em">
+            <p style="color:#93c5fd;font-weight:700;margin:0 0 .38em;font-size:.88em"><i class="fa-solid fa-screwdriver-wrench"></i> 개발 환경 설정</p>
+            <ul style="margin-bottom:.42em">
               <li>Node.js 18+ · npm</li>
               <li>Unity 2022.3 LTS + Android Build Support 모듈</li>
               <li>Git / GitHub</li>
@@ -395,22 +409,22 @@ npm install<br>
 cp .env.example .env<span style="color:#5b3fa0">  # API 키 입력</span><br>
 npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
             </div>
-            <div style="margin-top:.35em;font-size:.68em;color:#a78bfa">
+            <div style="margin-top:.4em;font-size:.7em;color:#a78bfa">
               .env 항목: GROQ_API_KEY · FIREBASE_PROJECT_ID<br>
               FIREBASE_CLIENT_EMAIL · FIREBASE_PRIVATE_KEY
             </div>
           </div>
-          <div class="col" style="display:flex;flex-direction:column;gap:.48em">
-            <div class="card card-green">
-              <p style="color:#4ade80;font-weight:700;margin:0 0 .28em;font-size:.85em"><i class="fa-solid fa-hammer"></i> 빌드 — 소스 코드 → 실행 파일</p>
+          <div class="col" style="gap:.5em">
+            <div class="card card-green" style="flex:1">
+              <p style="color:#4ade80;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-hammer"></i> 빌드 — 소스 코드 → 실행 파일</p>
               <ul>
                 <li><span class="hl-blue">백엔드</span>: Node.js 직접 실행 (별도 빌드 없음)</li>
                 <li><span class="hl-green">Unity</span>: File → Build Settings → Android<br>
                   → Switch Platform → <span class="hl">Build → APK 생성</span></li>
               </ul>
             </div>
-            <div class="card card-gold">
-              <p style="color:#f5c842;font-weight:700;margin:0 0 .28em;font-size:.85em"><i class="fa-solid fa-rocket"></i> 배포 — 실행 환경에 올리기</p>
+            <div class="card card-gold" style="flex:1">
+              <p style="color:#f5c842;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-rocket"></i> 배포 — 실행 환경에 올리기</p>
               <ul>
                 <li><span class="hl-blue">백엔드</span>: Railway 클라우드 (GitHub 연동 → 자동 배포)</li>
                 <li><span class="hl-green">클라이언트</span>: APK → 기기 직접 설치 / ADB</li>
@@ -428,24 +442,26 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-bug"></i> 구현 시행착오 &amp; 성능 최적화 &amp; 코드 품질</div>
         <div class="cols">
-          <div class="col card card-red" style="flex:1.2">
-            <p style="color:#f87171;font-weight:700;margin:0 0 .3em;font-size:.82em"><i class="fa-solid fa-triangle-exclamation"></i> 시행착오 사례</p>
-            <div style="margin-bottom:.28em;padding-bottom:.28em;border-bottom:1px solid #2d1010">
-              <div style="font-size:.73em;color:#f5c842;font-weight:700">① null 스킬 역직렬화</div>
-              <div style="font-size:.67em;color:#ddd6fe">JsonUtility null → 빈 SkillData 생성 → <span class="hl-green">RemoveAll + 이름 가드</span>로 해결</div>
-            </div>
-            <div style="margin-bottom:.28em;padding-bottom:.28em;border-bottom:1px solid #2d1010">
-              <div style="font-size:.73em;color:#f5c842;font-weight:700">② GameState 오염</div>
-              <div style="font-size:.67em;color:#ddd6fe">캐릭터 전환 시 이전 데이터 잔류 → <span class="hl-green">ID 감지 후 하드 리셋</span>으로 해결</div>
-            </div>
-            <div>
-              <div style="font-size:.73em;color:#f5c842;font-weight:700">③ 한자 섞임</div>
-              <div style="font-size:.67em;color:#ddd6fe">LLM 한국어에 한자 자동 삽입 → <span class="hl-green">/[一-鿿]/g sanitize</span>로 해결</div>
+          <div class="col card card-red" style="flex:1.15">
+            <p style="color:#f87171;font-weight:700;margin:0 0 .35em;font-size:.85em"><i class="fa-solid fa-triangle-exclamation"></i> 시행착오 사례</p>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-around">
+              <div style="padding-bottom:.3em;border-bottom:1px solid #2d1010">
+                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">① null 스킬 역직렬화</div>
+                <div style="font-size:.7em;color:#ddd6fe">JsonUtility null → 빈 SkillData 생성 → <span class="hl-green">RemoveAll + 이름 가드</span>로 해결</div>
+              </div>
+              <div style="padding-bottom:.3em;border-bottom:1px solid #2d1010">
+                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">② GameState 오염</div>
+                <div style="font-size:.7em;color:#ddd6fe">캐릭터 전환 시 이전 데이터 잔류 → <span class="hl-green">ID 감지 후 하드 리셋</span>으로 해결</div>
+              </div>
+              <div>
+                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">③ 한자 섞임</div>
+                <div style="font-size:.7em;color:#ddd6fe">LLM 한국어에 한자 자동 삽입 → <span class="hl-green">/[一-鿿]/g sanitize</span>로 해결</div>
+              </div>
             </div>
           </div>
-          <div class="col" style="display:flex;flex-direction:column;gap:.45em">
-            <div class="card card-gold">
-              <p style="color:#f5c842;font-weight:700;margin:0 0 .25em;font-size:.82em"><i class="fa-solid fa-bolt"></i> 성능 최적화</p>
+          <div class="col" style="gap:.45em">
+            <div class="card card-gold" style="flex:1">
+              <p style="color:#f5c842;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-solid fa-bolt"></i> 성능 최적화</p>
               <ul>
                 <li>Groq API <span class="hl">시스템 프롬프트 재사용</span></li>
                 <li>서버 스키마 검증 → 1회 재시도 후 기본값</li>
@@ -453,13 +469,13 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
                 <li>레벨스킬 캐릭터 생성 시 미리 생성 (추가 비용 없음)</li>
               </ul>
             </div>
-            <div class="card card-blue">
-              <p style="color:#93c5fd;font-weight:700;margin:0 0 .25em;font-size:.82em"><i class="fa-solid fa-code-branch"></i> 코드 품질 &amp; 기술 습득</p>
+            <div class="card card-blue" style="flex:1">
+              <p style="color:#93c5fd;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-solid fa-code-branch"></i> 코드 품질 &amp; 기술 습득</p>
               <ul>
                 <li>GitHub <span class="hl">30+ 의미 있는 커밋</span> (한국어 메시지)</li>
                 <li><span class="hl">AGENTS.md</span> — Agent·Skills·Rules·Commands 단일 통합</li>
                 <li><span class="hl">ADR 5개</span> — 기술 결정 근거 문서화</li>
-                <li><span class="hl">LLM Wiki</span>(docs/llm-wiki.md) — 시행착오·노하우 기록으로 <span class="hl-green">지속적 기술 개선</span></li>
+                <li><span class="hl">LLM Wiki</span> — 시행착오·노하우 기록으로 <span class="hl-green">지속적 기술 개선</span></li>
               </ul>
             </div>
           </div>
@@ -473,13 +489,13 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
         <div class="slide-title"><i class="fa-solid fa-flask"></i> 테스트 결과 &amp; GitHub 설치 가이드</div>
         <div class="cols">
           <div class="col card">
-            <p style="color:#4ade80;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-solid fa-vial"></i> 테스트 결과</p>
-            <p style="color:#a78bfa;font-size:.73em;font-weight:700;margin:.1em 0 .15em">단위 테스트</p>
+            <p style="color:#4ade80;font-weight:700;margin:0 0 .35em;font-size:.88em"><i class="fa-solid fa-vial"></i> 테스트 결과</p>
+            <p style="color:#a78bfa;font-size:.76em;font-weight:700;margin:.12em 0 .2em">단위 테스트</p>
             <ul>
               <li>PowerShell로 REST API 전 엔드포인트 검증 <span class="hl-green">✓ 통과</span></li>
               <li>AI 스키마 검증·재시도 로직 확인 <span class="hl-green">✓ 통과</span></li>
             </ul>
-            <p style="color:#a78bfa;font-size:.73em;font-weight:700;margin:.35em 0 .15em">통합 테스트 (3 시나리오)</p>
+            <p style="color:#a78bfa;font-size:.76em;font-weight:700;margin:.38em 0 .2em">통합 테스트 (3 시나리오)</p>
             <ul>
               <li><span class="hl">정상 플레이</span>: 생성 → 던전 → 레벨업 <span class="hl-green">✓</span></li>
               <li><span class="hl">사망 처리</span>: HP 0 → 캐릭터 삭제 → 메뉴 복귀 <span class="hl-green">✓</span></li>
@@ -487,7 +503,7 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
             </ul>
           </div>
           <div class="col card card-purple">
-            <p style="color:#c4b5fd;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-brands fa-github"></i> GitHub 설치 가이드</p>
+            <p style="color:#c4b5fd;font-weight:700;margin:0 0 .35em;font-size:.88em"><i class="fa-brands fa-github"></i> GitHub 설치 가이드</p>
             <div class="code-block">
 <span style="color:#5b3fa0"># 1. 클론</span><br>
 git clone https://github.com/alstjdalsdud12/vibe-coding-project<br>
@@ -497,19 +513,19 @@ cp .env.example .env &amp;&amp; npm run dev<br>
 <span style="color:#5b3fa0"># 3. Unity</span><br>
 Unity Hub → game/VibeCodingGame → Play ▶
             </div>
-            <div style="margin-top:.38em;font-size:.68em;color:#a78bfa">상세 가이드: <span class="hl">README.md</span> · <span class="hl">docs/deploy.md</span></div>
+            <div style="margin-top:.42em;font-size:.72em;color:#a78bfa">상세 가이드: <span class="hl">README.md</span> · <span class="hl">docs/deploy.md</span></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ⑪ 시연 데모 (앱 형태 & 기능 + 사용자 시나리오 기반 시연 + 임팩트 있는 데모 장면) -->
+    <!-- ⑪ 시연 데모 -->
     <section>
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-play"></i> 시연 데모 <span class="slide-num">앱 형태 · 사용자 시나리오 · 임팩트 장면</span></div>
         <div class="cols">
           <div class="col card">
-            <p style="color:#f5c842;font-weight:700;margin:0 0 .32em;font-size:.85em"><i class="fa-solid fa-list-ol"></i> 사용자 시나리오 기반 시연 순서 (30초)</p>
+            <p style="color:#f5c842;font-weight:700;margin:0 0 .38em;font-size:.88em"><i class="fa-solid fa-list-ol"></i> 사용자 시나리오 기반 시연 순서 (30초)</p>
             <div class="step-row">
               <div class="step-num">1</div>
               <div class="step-text"><span class="hl-purple">메인 메뉴</span> — 앱 실행, 캐릭터 목록 화면 확인</div>
@@ -531,52 +547,52 @@ Unity Hub → game/VibeCodingGame → Play ▶
               <div class="step-text"><span class="hl">던전 입장</span> — 몬스터 처치 → XP → <span class="hl">레벨업 + 스킬 획득</span></div>
             </div>
           </div>
-          <div class="col" style="display:flex;flex-direction:column;gap:.45em">
-            <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0"><i class="fa-solid fa-fire"></i> 임팩트 있는 데모 장면</p>
+          <div class="col" style="gap:.45em">
+            <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0;flex-shrink:0"><i class="fa-solid fa-fire"></i> 임팩트 있는 데모 장면</p>
             <div class="card" style="border-color:#9b6dff;flex:1">
-              <p style="color:#c4b5fd;font-weight:700;margin:0 0 .22em;font-size:.82em"><i class="fa-solid fa-wand-magic-sparkles"></i> 임팩트 ①  AI 캐릭터 완성</p>
-              <p style="font-size:.73em;color:#ddd6fe;margin:0">텍스트 3줄 → <span class="hl">5초 후 완전한 캐릭터 생성</span><br>AI가 붙인 고유 스킬 이름 확인하는 순간</p>
+              <p style="color:#c4b5fd;font-weight:700;margin:0 0 .25em;font-size:.85em"><i class="fa-solid fa-wand-magic-sparkles"></i> 임팩트 ①  AI 캐릭터 완성</p>
+              <p style="font-size:.76em;color:#ddd6fe;margin:0">텍스트 3줄 → <span class="hl">5초 후 완전한 캐릭터 생성</span><br>AI가 붙인 고유 스킬 이름 확인하는 순간</p>
             </div>
             <div class="card" style="border-color:#f5c842;flex:1">
-              <p style="color:#f5c842;font-weight:700;margin:0 0 .22em;font-size:.82em"><i class="fa-solid fa-book-open"></i> 임팩트 ②  AI 소설 속 주인공</p>
-              <p style="font-size:.73em;color:#ddd6fe;margin:0">소설 화면 — 내가 입력한 캐릭터가<br><span class="hl">AI 소설의 주인공</span>으로 등장하는 순간</p>
+              <p style="color:#f5c842;font-weight:700;margin:0 0 .25em;font-size:.85em"><i class="fa-solid fa-book-open"></i> 임팩트 ②  AI 소설 속 주인공</p>
+              <p style="font-size:.76em;color:#ddd6fe;margin:0">소설 화면 — 내가 입력한 캐릭터가<br><span class="hl">AI 소설의 주인공</span>으로 등장하는 순간</p>
             </div>
             <div class="card" style="border-color:#22c55e;flex:1">
-              <p style="color:#4ade80;font-weight:700;margin:0 0 .22em;font-size:.82em"><i class="fa-solid fa-arrow-up"></i> 임팩트 ③  레벨업 + 스킬 획득</p>
-              <p style="font-size:.73em;color:#ddd6fe;margin:0">레벨업 배너 + <span class="hl">컨셉 맞춤 스킬 자동 획득</span><br>내 캐릭터 컨셉에 딱 맞는 스킬명 확인 순간</p>
+              <p style="color:#4ade80;font-weight:700;margin:0 0 .25em;font-size:.85em"><i class="fa-solid fa-arrow-up"></i> 임팩트 ③  레벨업 + 스킬 획득</p>
+              <p style="font-size:.76em;color:#ddd6fe;margin:0">레벨업 배너 + <span class="hl">컨셉 맞춤 스킬 자동 획득</span><br>내 캐릭터 컨셉에 딱 맞는 스킬명 확인 순간</p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ⑫ 마무리 및 향후 발전 방향 -->
+    <!-- ⑫ 마무리 -->
     <section>
       <div class="inner-wrap" style="align-items:center;justify-content:center;text-align:center">
-        <h1 style="font-size:2em;margin-bottom:.08em">감사합니다</h1>
+        <h1 style="font-size:2em;margin-bottom:.1em">감사합니다</h1>
         <div class="divider"></div>
-        <div style="display:flex;gap:.8em;justify-content:center;margin:.45em 0">
-          <div class="card" style="padding:.5em .9em;text-align:left;min-width:230px">
-            <p style="color:#f5c842;font-size:.78em;font-weight:700;margin:0 0 .28em"><i class="fa-solid fa-check-double"></i> 구현 완료</p>
-            <ul style="font-size:.72em">
+        <div style="display:flex;gap:.85em;justify-content:center;margin:.48em 0">
+          <div class="card" style="padding:.55em 1em;text-align:left;min-width:240px">
+            <p style="color:#f5c842;font-size:.8em;font-weight:700;margin:0 0 .3em"><i class="fa-solid fa-check-double"></i> 구현 완료</p>
+            <ul style="font-size:.75em">
               <li>AI 캐릭터 생성 (스탯·스킬·스토리)</li>
               <li>마을·던전·전투·레벨·HP 지속</li>
               <li>AI 소설 생성 · 캐릭터 영구 삭제</li>
             </ul>
           </div>
-          <div class="card" style="padding:.5em .9em;text-align:left;min-width:230px">
-            <p style="color:#c4b5fd;font-size:.78em;font-weight:700;margin:0 0 .28em"><i class="fa-solid fa-road"></i> 향후 발전 방향</p>
-            <ul style="font-size:.72em">
+          <div class="card" style="padding:.55em 1em;text-align:left;min-width:240px">
+            <p style="color:#c4b5fd;font-size:.8em;font-weight:700;margin:0 0 .3em"><i class="fa-solid fa-road"></i> 향후 발전 방향</p>
+            <ul style="font-size:.75em">
               <li>AI가 생성하는 퀘스트·맵·이벤트</li>
               <li>멀티플레이어 PVP 시스템</li>
               <li>AI 소설 커뮤니티 공유 플랫폼</li>
             </ul>
           </div>
         </div>
-        <div style="font-size:.72em;color:#a78bfa;background:#12103a;border-radius:10px;padding:.5em 1.2em;display:inline-block;margin:.2em 0">
+        <div style="font-size:.74em;color:#a78bfa;background:#12103a;border-radius:10px;padding:.52em 1.4em;display:inline-block;margin:.22em 0">
           <i class="fa-solid fa-robot"></i> Claude Code(AI Agent)로 <span class="hl">1인 개발, 7주 완성</span>
         </div>
-        <p style="font-size:.6em;color:#6b5fa0;margin:.4em 0 0">
+        <p style="font-size:.62em;color:#6b5fa0;margin:.45em 0 0">
           <i class="fa-brands fa-github"></i> github.com/alstjdalsdud12/vibe-coding-project<br>
           ADR 5개 · 단위/통합 테스트 완료 · README 설치 가이드 포함
         </p>
@@ -587,35 +603,35 @@ Unity Hub → game/VibeCodingGame → Play ▶
     <section>
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-q"></i> 질의응답 준비</div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:.32em;justify-content:center">
-          <div style="display:flex;gap:.5em">
-            <div class="card" style="flex:1;padding:.48em .7em">
-              <p style="color:#f5c842;font-size:.72em;font-weight:700;margin:0 0 .18em">Q. 앱 구조는?</p>
-              <p style="color:#ddd6fe;font-size:.7em;margin:0">Unity 5씬 + Node.js 백엔드 + Firebase. 씬 간 데이터는 GameState 정적 클래스로 공유.</p>
+        <div style="flex:1;display:flex;flex-direction:column;gap:.35em;min-height:0">
+          <div style="display:flex;gap:.5em;flex:1">
+            <div class="card" style="flex:1;padding:.52em .78em">
+              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. 앱 구조는?</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">Unity 5씬 + Node.js 백엔드 + Firebase. 씬 간 데이터는 GameState 정적 클래스로 공유.</p>
             </div>
-            <div class="card" style="flex:1;padding:.48em .7em">
-              <p style="color:#f5c842;font-size:.72em;font-weight:700;margin:0 0 .18em">Q. 개발 환경 설정은?</p>
-              <p style="color:#ddd6fe;font-size:.7em;margin:0">Node.js 18 + Unity 2022.3 LTS. backend/에서 npm install, .env 키 입력 후 npm run dev.</p>
-            </div>
-          </div>
-          <div style="display:flex;gap:.5em">
-            <div class="card" style="flex:1;padding:.48em .7em">
-              <p style="color:#f5c842;font-size:.72em;font-weight:700;margin:0 0 .18em">Q. 빌드와 배포 차이는?</p>
-              <p style="color:#ddd6fe;font-size:.7em;margin:0">빌드 = 소스 → 실행파일(APK). 배포 = 실행파일을 실제 환경에 올리는 것(Railway, ADB).</p>
-            </div>
-            <div class="card" style="flex:1;padding:.48em .7em">
-              <p style="color:#f5c842;font-size:.72em;font-weight:700;margin:0 0 .18em">Q. AI 오류 처리는?</p>
-              <p style="color:#ddd6fe;font-size:.7em;margin:0">스키마 검증 실패 시 1회 재시도. 한자 섞임은 정규식 sanitize. 최종 실패 시 기본값 반환.</p>
+            <div class="card" style="flex:1;padding:.52em .78em">
+              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. 개발 환경 설정은?</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">Node.js 18 + Unity 2022.3 LTS. backend/에서 npm install, .env 키 입력 후 npm run dev.</p>
             </div>
           </div>
-          <div style="display:flex;gap:.5em">
-            <div class="card" style="flex:1;padding:.48em .7em">
-              <p style="color:#f5c842;font-size:.72em;font-weight:700;margin:0 0 .18em">Q. HP 지속성 구현은?</p>
-              <p style="color:#ddd6fe;font-size:.7em;margin:0">GameState.CurrentHp/Mp에 씬 이동 전 저장, 씬 시작 시 복원. 새 캐릭터는 풀 HP로 리셋.</p>
+          <div style="display:flex;gap:.5em;flex:1">
+            <div class="card" style="flex:1;padding:.52em .78em">
+              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. 빌드와 배포 차이는?</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">빌드 = 소스 → 실행파일(APK). 배포 = 실행파일을 실제 환경에 올리는 것(Railway, ADB).</p>
             </div>
-            <div class="card" style="flex:1;padding:.48em .7em">
-              <p style="color:#f5c842;font-size:.72em;font-weight:700;margin:0 0 .18em">Q. Firebase 선택 이유?</p>
-              <p style="color:#ddd6fe;font-size:.7em;margin:0">서버리스 · 무료 티어 충분 · JSON 캐릭터 데이터와 NoSQL 구조가 자연스럽게 일치.</p>
+            <div class="card" style="flex:1;padding:.52em .78em">
+              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. AI 오류 처리는?</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">스키마 검증 실패 시 1회 재시도. 한자 섞임은 정규식 sanitize. 최종 실패 시 기본값 반환.</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:.5em;flex:1">
+            <div class="card" style="flex:1;padding:.52em .78em">
+              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. HP 지속성 구현은?</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">GameState.CurrentHp/Mp에 씬 이동 전 저장, 씬 시작 시 복원. 새 캐릭터는 풀 HP로 리셋.</p>
+            </div>
+            <div class="card" style="flex:1;padding:.52em .78em">
+              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. Firebase 선택 이유?</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">서버리스 · 무료 티어 충분 · JSON 캐릭터 데이터와 NoSQL 구조가 자연스럽게 일치.</p>
             </div>
           </div>
         </div>
