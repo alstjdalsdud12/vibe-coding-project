@@ -57,6 +57,7 @@
     /* 컬럼 레이아웃 — flex:1 로 빈공간 채움 */
     .cols { display:flex; gap:.65em; flex:1; min-height:0; }
     .col  { flex:1; min-height:0; overflow:hidden; display:flex; flex-direction:column; }
+    .card { min-height:0; }
 
     /* 하단 인용구 */
     .quote { margin-top:.32em; flex-shrink:0; text-align:center; font-size:.68em; color:#c4b5fd; border-top:1px solid #5b3fa0; padding-top:.3em; }
@@ -224,14 +225,14 @@
               생성 내용: 이름 · HP/ATK/DEF/MP · 고유스킬 · <span class="hl">레벨 5/10/15 스킬</span> · 배경스토리 · 던전 지역명
             </div>
           </div>
-          <div class="col" style="gap:.5em">
+          <div class="col" style="gap:.45em;font-size:.88em">
             <div class="card" style="flex:1">
-              <p style="color:#4ade80;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-gamepad"></i> 게임 시스템</p>
+              <p style="color:#4ade80;font-weight:700;margin:0 0 .28em;font-size:.88em"><i class="fa-solid fa-gamepad"></i> 게임 시스템</p>
               <ul>
                 <li><span class="hl">마을 씬</span>: 상점·미션·출석·가방 관리</li>
-                <li><span class="hl">던전</span>: 5구역 탑다운 탐험 (Slime→Goblin→Skull)</li>
+                <li><span class="hl">던전</span>: 5구역 탑다운 탐험</li>
                 <li><span class="hl">전투</span>: 공격·스킬·아이템·도망 4버튼 구성</li>
-                <li><span class="hl">HP 지속성</span>: GameState로 던전 ↔ 마을 간 유지</li>
+                <li><span class="hl">HP 지속성</span>: 던전↔마을 씬 간 유지</li>
               </ul>
             </div>
             <div class="card" style="flex:1">
@@ -323,7 +324,7 @@
                   <span style="color:#c4b5fd;font-weight:700">MainMenuScene</span><span style="color:#888;font-size:.9em"> — 캐릭터 목록·선택·삭제</span>
                 </div>
                 <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.16em .5em;border-radius:0 5px 5px 0">
-                  <span style="color:#c4b5fd;font-weight:700">CharacterCreationScene</span><span style="color:#888;font-size:.9em"> — 입력 → API → 결과</span>
+                  <span style="color:#c4b5fd;font-weight:700">캐릭터 생성</span><span style="color:#888;font-size:.9em"> — 입력 → API → 결과</span>
                 </div>
                 <div style="background:#1a3a20;border-left:3px solid #22c55e;padding:.16em .5em;border-radius:0 5px 5px 0">
                   <span style="color:#4ade80;font-weight:700">VillageScene</span><span style="color:#888;font-size:.9em"> — 상점·미션·출석·가방</span>
@@ -455,14 +456,14 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
               </div>
             </div>
           </div>
-          <div class="col" style="gap:.45em">
+          <div class="col" style="gap:.45em;font-size:.88em">
             <div class="card card-gold" style="flex:1">
-              <p style="color:#f5c842;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-solid fa-bolt"></i> 성능 최적화</p>
+              <p style="color:#f5c842;font-weight:700;margin:0 0 .28em;font-size:.85em"><i class="fa-solid fa-bolt"></i> 성능 최적화</p>
               <ul>
                 <li>API 요청 설정 캐싱으로 <span class="hl">재전송 방지</span></li>
                 <li>결과물 형식 확인 → 1회 재요청 후 기본값 사용</li>
                 <li>GameState 캐싱으로 <span class="hl">불필요 API 호출 방지</span></li>
-                <li>레벨스킬 캐릭터 생성 시 미리 생성 (추가 비용 없음)</li>
+                <li>레벨스킬 생성 시 <span class="hl">추가 비용 없음</span></li>
               </ul>
             </div>
             <div class="card card-blue" style="flex:1">
