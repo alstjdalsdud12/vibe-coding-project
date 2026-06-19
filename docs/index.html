@@ -301,31 +301,40 @@
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-diagram-project"></i> 앱 구조 설명 &amp; 아키텍처 다이어그램</div>
         <div class="cols">
-          <div class="col card">
-            <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .35em"><i class="fa-solid fa-mobile-screen"></i> Unity 씬 구조 (앱 구조)</p>
-            <div style="display:flex;flex-direction:column;gap:.25em;font-size:.75em">
-              <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.3em .6em;border-radius:0 6px 6px 0">
-                <span style="color:#c4b5fd;font-weight:700">TitleScene</span>
-                <span style="color:#666;font-size:.88em"> — 서버 연결 확인, 메뉴 이동</span>
+          <div class="col" style="display:flex;flex-direction:column;gap:.45em">
+            <!-- 씬 구조 -->
+            <div class="card" style="flex:1">
+              <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0 0 .28em"><i class="fa-solid fa-mobile-screen"></i> Unity 씬 구조 (레이어)</p>
+              <div style="display:flex;flex-direction:column;gap:.18em;font-size:.7em">
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.25em .55em;border-radius:0 5px 5px 0">
+                  <span style="color:#c4b5fd;font-weight:700">TitleScene</span><span style="color:#555;font-size:.88em"> — 서버 연결 확인</span>
+                </div>
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.25em .55em;border-radius:0 5px 5px 0">
+                  <span style="color:#c4b5fd;font-weight:700">MainMenuScene</span><span style="color:#555;font-size:.88em"> — 캐릭터 목록·선택·삭제</span>
+                </div>
+                <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.25em .55em;border-radius:0 5px 5px 0">
+                  <span style="color:#c4b5fd;font-weight:700">CharacterCreationScene</span><span style="color:#555;font-size:.88em"> — 입력 → API → 결과</span>
+                </div>
+                <div style="background:#1a3a20;border-left:3px solid #22c55e;padding:.25em .55em;border-radius:0 5px 5px 0">
+                  <span style="color:#4ade80;font-weight:700">VillageScene</span><span style="color:#555;font-size:.88em"> — 상점·미션·출석·가방</span>
+                </div>
+                <div style="background:#2a1040;border-left:3px solid #f5c842;padding:.25em .55em;border-radius:0 5px 5px 0">
+                  <span style="color:#f5c842;font-weight:700">GameScene (던전)</span><span style="color:#555;font-size:.88em"> — 전투·레벨업·사망</span>
+                </div>
               </div>
-              <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.3em .6em;border-radius:0 6px 6px 0">
-                <span style="color:#c4b5fd;font-weight:700">MainMenuScene</span>
-                <span style="color:#666;font-size:.88em"> — 캐릭터 목록 조회·선택·삭제</span>
-              </div>
-              <div style="background:#2d1f55;border-left:3px solid #9b6dff;padding:.3em .6em;border-radius:0 6px 6px 0">
-                <span style="color:#c4b5fd;font-weight:700">CharacterCreationScene</span>
-                <span style="color:#666;font-size:.88em"> — 입력 → API → 생성 결과</span>
-              </div>
-              <div style="background:#1a3a20;border-left:3px solid #22c55e;padding:.3em .6em;border-radius:0 6px 6px 0">
-                <span style="color:#4ade80;font-weight:700">VillageScene</span>
-                <span style="color:#666;font-size:.88em"> — 상점·미션·출석·가방 (VillageManager)</span>
-              </div>
-              <div style="background:#2a1040;border-left:3px solid #f5c842;padding:.3em .6em;border-radius:0 6px 6px 0">
-                <span style="color:#f5c842;font-weight:700">GameScene (던전)</span>
-                <span style="color:#666;font-size:.88em"> — 전투·레벨업·사망 (GameManager)</span>
+              <div style="margin-top:.28em;font-size:.62em;color:#a78bfa;text-align:center">씬 간 데이터 → <span class="hl">GameState 정적 클래스</span></div>
+            </div>
+            <!-- 디렉토리 구조 -->
+            <div class="card" style="flex:1">
+              <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0 0 .25em"><i class="fa-solid fa-folder-tree"></i> 디렉토리 구조</p>
+              <div class="code-block" style="font-size:.62em;line-height:1.7;color:#c4b5fd">
+<span style="color:#4ade80">backend/</span>src/routes/ · services/ · app.js<br>
+<span style="color:#9b6dff">game/</span>Assets/Scripts/Managers/ · Models/ · Network/<br>
+<span style="color:#f5c842">docs/</span>architecture · deploy · testing · llm-wiki<br>
+<span style="color:#93c5fd">.planning/</span>decisions/ (ADR 5개)<br>
+<span style="color:#f87171">AGENTS.md</span> · README.md
               </div>
             </div>
-            <div style="margin-top:.35em;font-size:.65em;color:#a78bfa;text-align:center">씬 간 데이터 → <span class="hl">GameState 정적 클래스</span></div>
           </div>
           <div class="col" style="display:flex;flex-direction:column;justify-content:center;gap:.6em">
             <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0"><i class="fa-solid fa-server"></i> 3-Tier 아키텍처 다이어그램</p>
@@ -449,12 +458,12 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
               </ul>
             </div>
             <div class="card card-blue">
-              <p style="color:#93c5fd;font-weight:700;margin:0 0 .25em;font-size:.82em"><i class="fa-solid fa-code-branch"></i> 코드 품질 관리</p>
+              <p style="color:#93c5fd;font-weight:700;margin:0 0 .25em;font-size:.82em"><i class="fa-solid fa-code-branch"></i> 코드 품질 &amp; 기술 습득</p>
               <ul>
                 <li>GitHub <span class="hl">30+ 의미 있는 커밋</span> (한국어 메시지)</li>
                 <li><span class="hl">AGENTS.md</span> — Agent·Skills·Rules·Commands 단일 통합</li>
                 <li><span class="hl">ADR 5개</span> — 기술 결정 근거 문서화</li>
-                <li>Claude Code AI Agent로 코드·커밋·문서 자동화</li>
+                <li><span class="hl">LLM Wiki</span>(docs/llm-wiki.md) — 시행착오·노하우 기록으로 <span class="hl-green">지속적 기술 개선</span></li>
               </ul>
             </div>
           </div>
