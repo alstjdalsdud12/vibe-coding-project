@@ -73,11 +73,7 @@ router.post('/:id/novel', async (req, res, next) => {
         error: { code: 'NO_LOG', message: '모험 기록이 없습니다.' },
       });
     }
-    const novel = await generateNovel(
-      character.generated.name,
-      character.generated.story || '',
-      log,
-    );
+    const novel = await generateNovel(character);
     res.json({ success: true, data: novel, error: null });
   } catch (err) {
     next(err);

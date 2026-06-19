@@ -24,6 +24,7 @@ public class VillageManager : MonoBehaviour
     private Transform     _canvasTF;
     private GameObject    _shopPanel, _missionPanel, _mailPanel, _infoPanel, _bagPanel, _eventPanel, _expeditionPanel;
     private TextMeshProUGUI _goldText;
+    private TextMeshProUGUI _levelText;
     private bool _attendanceCollected;
     private int[]                _bagQty      = new int[4];
     private TextMeshProUGUI[]    _bagQtyTexts = new TextMeshProUGUI[4];
@@ -31,10 +32,10 @@ public class VillageManager : MonoBehaviour
 
     private static readonly int[] _missionTargets  = { 1, 3, 10, 500 };
     private static readonly int[] _missionRewards  = { 1000, 200, 300, 100 };
+    private const int _missionLevelUpReward = 5; // 0번 미션 보상: 레벨 5 즉시 상승
     private static readonly int[] _missionXpRewards = { 300, 100, 150, 80 };
     private TextMeshProUGUI[]     _missionProgTexts = new TextMeshProUGUI[4];
     private Button[]              _missionRewBtns   = new Button[4];
-    private bool[]                _missionRewarded  = new bool[4];
 
     private void Start()
     {
@@ -82,10 +83,15 @@ public class VillageManager : MonoBehaviour
                 _ch.learnedSkills.Add(_ch.generated.uniqueSkill);
             for (int lv = 2; lv <= GameState.Level; lv++)
             {
-                var sk = GameState.GetSkillForLevel(lv);
+                var sk = GameState.GetSkillForLevel(lv, _ch);
                 if (sk != null) _ch.learnedSkills.Add(sk);
             }
         }
+
+        // 손상된 스킬 데이터(이름 없음) 제거 후 필요 시 재저장
+        int beforeCount = _ch.learnedSkills.Count;
+        _ch.learnedSkills.RemoveAll(s => s == null || string.IsNullOrEmpty(s.name));
+        if (_ch.learnedSkills.Count != beforeCount) SaveState();
 
         SetupCamera();
         SetupWorld();
@@ -100,9 +106,9 @@ public class VillageManager : MonoBehaviour
     }
 
     // 인벤토리 + 골드를 Firebase에 저장
-    private void SaveState()
+    private void SaveState(Action onDone = null)
     {
-        if (_ch == null || _api == null) return;
+        if (_ch == null || _api == null) { onDone?.Invoke(); return; }
 
         if (_ch.inventory == null) _ch.inventory = new System.Collections.Generic.List<InventoryItem>();
 
@@ -136,7 +142,7 @@ public class VillageManager : MonoBehaviour
         _ch.xp    = GameState.Xp;
         _ch.level = GameState.Level;
         if (_ch.learnedSkills == null) _ch.learnedSkills = new List<SkillData>();
-        StartCoroutine(_api.UpdateCharacterState(_ch, null, null));
+        StartCoroutine(_api.UpdateCharacterState(_ch, onDone, err => onDone?.Invoke()));
     }
 
     // ── 카메라 ──────────────────────────────────────────────────
@@ -245,7 +251,7 @@ public class VillageManager : MonoBehaviour
         var lv = UIHelper.CreatePanel(t, new Color(0.20f, 0.38f, 0.85f), "LvBadge");
         UIHelper.SetAnchors(lv.GetComponent<RectTransform>(),
             new Vector2(0.01f, 0.935f), new Vector2(0.12f, 0.994f));
-        UIHelper.CreateText(lv.transform, $"Lv.{CalcLevel()}", 24, Vector2.zero, Vector2.one);
+        _levelText = UIHelper.CreateText(lv.transform, $"Lv.{CalcLevel()}", 24, Vector2.zero, Vector2.one);
 
         // HP 바
         var hpBG = UIHelper.CreatePanel(t, new Color(0.28f, 0.05f, 0.05f), "HPBG");
@@ -297,10 +303,11 @@ public class VillageManager : MonoBehaviour
         GameState.Level = GameState.LevelFromXp(GameState.Xp);
         _ch.xp    = GameState.Xp;
         _ch.level = GameState.Level;
+        if (_levelText != null) _levelText.text = $"Lv.{GameState.Level}";
 
         for (int lv = oldLevel + 1; lv <= GameState.Level; lv++)
         {
-            var skill = GameState.GetSkillForLevel(lv);
+            var skill = GameState.GetSkillForLevel(lv, _ch);
             if (skill != null)
             {
                 if (_ch.learnedSkills == null) _ch.learnedSkills = new List<SkillData>();
@@ -328,9 +335,12 @@ public class VillageManager : MonoBehaviour
             new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.66f))
             .color = Color.white;
         if (newSkill != null)
-            UIHelper.CreateText(inner.transform, $"새 스킬: {newSkill.name}", 20,
+        {
+            string skillType = newSkill.isPassive ? "패시브 스킬" : "액티브 스킬";
+            UIHelper.CreateText(inner.transform, $"{skillType}  '{newSkill.name}'  획득!", 20,
                 new Vector2(0.05f, 0.03f), new Vector2(0.95f, 0.31f))
                 .color = new Color(0.5f, 0.9f, 1f);
+        }
 
         var rt = panel.GetComponent<RectTransform>();
         for (float t = 0; t < 0.35f; t += Time.deltaTime)
@@ -413,6 +423,50 @@ public class VillageManager : MonoBehaviour
         Destroy(panel);
     }
 
+    private const int NovelCharsPerPage = 450;
+
+    // 너무 긴 소설을 문단/문장 경계 기준으로 페이지 단위로 나눈다
+    private static List<string> SplitNovelIntoPages(string text, int maxChars)
+    {
+        var pages = new List<string>();
+        if (string.IsNullOrEmpty(text)) { pages.Add(""); return pages; }
+
+        var paragraphs = text.Replace("\r\n", "\n").Split('\n');
+        var current = new System.Text.StringBuilder();
+
+        void FlushIfAny()
+        {
+            if (current.Length > 0) { pages.Add(current.ToString().Trim()); current.Clear(); }
+        }
+
+        foreach (var para in paragraphs)
+        {
+            if (para.Length == 0) continue;
+
+            if (para.Length > maxChars)
+            {
+                // 문단 자체가 너무 길면 문장 단위(. / 다. / 요.)로 쪼개서 채운다
+                int start = 0;
+                while (start < para.Length)
+                {
+                    int take = Mathf.Min(maxChars - current.Length, para.Length - start);
+                    if (take <= 0) { FlushIfAny(); continue; }
+                    current.Append(para.Substring(start, take));
+                    start += take;
+                    if (current.Length >= maxChars) FlushIfAny();
+                }
+                current.Append('\n');
+                continue;
+            }
+
+            if (current.Length + para.Length > maxChars) FlushIfAny();
+            current.Append(para).Append('\n');
+        }
+        FlushIfAny();
+
+        return pages.Count > 0 ? pages : new List<string> { text };
+    }
+
     private void OpenNovelView()
     {
         var overlay = UIHelper.CreatePanel(_canvasTF, new Color(0f, 0f, 0f, 0.97f), "NovelOverlay");
@@ -430,10 +484,22 @@ public class VillageManager : MonoBehaviour
         loadingTxt.color = new Color(0.70f, 0.70f, 0.90f);
 
         var novelTxt = UIHelper.CreateText(nt, "", 22,
-            new Vector2(0.04f, 0.08f), new Vector2(0.96f, 0.86f), TextAlignmentOptions.TopLeft);
+            new Vector2(0.04f, 0.14f), new Vector2(0.96f, 0.86f), TextAlignmentOptions.TopLeft);
         novelTxt.color              = new Color(0.88f, 0.88f, 0.98f);
         novelTxt.enableWordWrapping = true;
         novelTxt.gameObject.SetActive(false);
+
+        var pageTxt = UIHelper.CreateText(nt, "", 18,
+            new Vector2(0.04f, 0.08f), new Vector2(0.96f, 0.135f), TextAlignmentOptions.Center);
+        pageTxt.color = new Color(0.6f, 0.6f, 0.8f);
+        pageTxt.gameObject.SetActive(false);
+
+        var prevBtn = UIHelper.CreateButton(nt, "◀ 이전",
+            new Vector2(0.04f, 0.085f), new Vector2(0.24f, 0.135f), new Color(0.18f, 0.18f, 0.30f));
+        var nextBtn = UIHelper.CreateButton(nt, "다음 ▶",
+            new Vector2(0.76f, 0.085f), new Vector2(0.96f, 0.135f), new Color(0.18f, 0.18f, 0.30f));
+        prevBtn.gameObject.SetActive(false);
+        nextBtn.gameObject.SetActive(false);
 
         var closeBtn = UIHelper.CreateButton(nt, "닫기",
             new Vector2(0.20f, 0.01f), new Vector2(0.80f, 0.07f),
@@ -444,8 +510,28 @@ public class VillageManager : MonoBehaviour
             novel =>
             {
                 loadingTxt.gameObject.SetActive(false);
-                novelTxt.text = novel;
+
+                var pages = SplitNovelIntoPages(novel, NovelCharsPerPage);
+                int pageIdx = 0;
+
+                void Render()
+                {
+                    novelTxt.text = pages[pageIdx];
+                    pageTxt.text  = $"{pageIdx + 1} / {pages.Count}";
+                    prevBtn.interactable = pageIdx > 0;
+                    nextBtn.interactable = pageIdx < pages.Count - 1;
+                }
+
                 novelTxt.gameObject.SetActive(true);
+                if (pages.Count > 1)
+                {
+                    pageTxt.gameObject.SetActive(true);
+                    prevBtn.gameObject.SetActive(true);
+                    nextBtn.gameObject.SetActive(true);
+                    prevBtn.onClick.AddListener(() => { if (pageIdx > 0) { pageIdx--; Render(); } });
+                    nextBtn.onClick.AddListener(() => { if (pageIdx < pages.Count - 1) { pageIdx++; Render(); } });
+                }
+                Render();
             },
             err =>
             {
@@ -522,9 +608,14 @@ public class VillageManager : MonoBehaviour
             new Vector2(0.944f, 0.852f), new Vector2(0.992f, 0.876f));
         UIHelper.CreateText(badge.transform, "1", 14, Vector2.zero, Vector2.one);
 
-        // 우측 — 캐릭터 정보
+        // 우측 — 캐릭터 정보 (매번 재빌드하여 레벨/스킬 최신 상태 반영)
         MakeSideIcon(t, "정보", new Vector2(0.88f, 0.648f), new Vector2(0.99f, 0.748f),
-            new Color(0.10f, 0.18f, 0.28f), () => TogglePanel(_infoPanel));
+            new Color(0.10f, 0.18f, 0.28f), () =>
+            {
+                if (_infoPanel != null) { _infoPanel.SetActive(false); Destroy(_infoPanel); }
+                _infoPanel = BuildInfoPopup();
+                TogglePanel(_infoPanel);
+            });
 
         // 우측 — 상점 (정보 아래)
         MakeSideIcon(t, "상점", new Vector2(0.88f, 0.528f), new Vector2(0.99f, 0.628f),
@@ -643,8 +734,7 @@ public class VillageManager : MonoBehaviour
         dungeonBtn.onClick.AddListener(() =>
         {
             GameState.DungeonCount++;
-            SaveState();
-            SceneManager.LoadScene("GameScene");
+            SaveState(() => SceneManager.LoadScene("GameScene"));
         });
         var dTmp = dungeonBtn.GetComponentInChildren<TextMeshProUGUI>();
         if (dTmp != null) dTmp.fontSize = 42;
@@ -788,7 +878,7 @@ public class VillageManager : MonoBehaviour
 
         var missionDefs = new (string tag, string name)[]
         {
-            ("[주]", "강력한 던전 보스를 처치하라"),
+            ("[주]", "던전 1회 입장하기"),
             ("[일]", "던전 3회 입장하기"),
             ("[일]", "몬스터 10마리 처치"),
             ("[일]", "골드 500 획득하기"),
@@ -833,12 +923,22 @@ public class VillageManager : MonoBehaviour
             string capturedMissionName = m.name;
             rewBtn.onClick.AddListener(() =>
             {
-                if (_missionRewarded[capturedIdx]) return;
-                _missionRewarded[capturedIdx] = true;
+                if (GameState.MissionRewarded[capturedIdx]) return;
+                GameState.MissionRewarded[capturedIdx] = true;
                 GameState.Gold += _missionRewards[capturedIdx];
                 RefreshGold();
-                GainXp(_missionXpRewards[capturedIdx]);
-                ShowMsg($"미션 보상 획득! +{_missionRewards[capturedIdx]}G  +{_missionXpRewards[capturedIdx]}XP");
+                if (capturedIdx == 0)
+                {
+                    int targetLevel = GameState.Level + _missionLevelUpReward;
+                    int xpNeeded = GameState.TotalXpForLevel(targetLevel) - GameState.Xp;
+                    GainXp(xpNeeded);
+                    ShowMsg($"미션 보상 획득! +{_missionRewards[capturedIdx]}G  레벨 +{_missionLevelUpReward}");
+                }
+                else
+                {
+                    GainXp(_missionXpRewards[capturedIdx]);
+                    ShowMsg($"미션 보상 획득! +{_missionRewards[capturedIdx]}G  +{_missionXpRewards[capturedIdx]}XP");
+                }
                 if (rewTmp != null) rewTmp.text = "수령됨";
                 rewBtn.image.color  = new Color(0.25f, 0.25f, 0.32f);
                 rewBtn.interactable = false;
@@ -852,7 +952,7 @@ public class VillageManager : MonoBehaviour
 
     private void RefreshMissionPopup()
     {
-        int[] currents = { GameState.BossCount, GameState.DungeonCount, GameState.MonsterCount, GameState.Gold };
+        int[] currents = { GameState.DungeonCount, GameState.DungeonCount, GameState.MonsterCount, GameState.Gold };
         for (int i = 0; i < 4; i++)
         {
             if (_missionProgTexts[i] == null) continue;
@@ -863,7 +963,7 @@ public class VillageManager : MonoBehaviour
 
             if (_missionRewBtns[i] == null) continue;
             _missionRewBtns[i].gameObject.SetActive(done);
-            if (done && !_missionRewarded[i])
+            if (done && !GameState.MissionRewarded[i])
             {
                 _missionRewBtns[i].interactable = true;
                 _missionRewBtns[i].image.color  = new Color(0.18f, 0.45f, 0.18f);

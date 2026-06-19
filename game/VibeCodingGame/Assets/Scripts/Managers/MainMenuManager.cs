@@ -204,6 +204,15 @@ public class MainMenuManager : MonoBehaviour
         UIHelper.CreateText(badge.transform, $"No.{_cardIndex}", 24,
             Vector2.zero, Vector2.one);
 
+        // 삭제 버튼 (좌상단)
+        var delBtn = UIHelper.CreateButton(portrait.transform, "X",
+            new Vector2(0f, 0.78f), new Vector2(0.18f, 1f),
+            new Color(0.55f, 0.12f, 0.12f));
+        var delTmp = delBtn.GetComponentInChildren<TextMeshProUGUI>();
+        if (delTmp != null) delTmp.fontSize = 22;
+        string capturedName = item.name;
+        delBtn.onClick.AddListener(() => ConfirmDeleteCharacter(capturedId, capturedName, card));
+
         // ── 하단 정보 영역 ───────────────────────
         var nameTmp = UIHelper.CreateText(card.transform, item.name, 36,
             new Vector2(0.07f, 0.32f), new Vector2(0.93f, 0.46f));
@@ -292,13 +301,54 @@ public class MainMenuManager : MonoBehaviour
         Destroy(camGO);
     }
 
+    // ── 캐릭터 삭제 ──────────────────────────────────────────
+    private void ConfirmDeleteCharacter(string id, string name, GameObject card)
+    {
+        var overlay = UIHelper.CreatePanel(_canvas, new Color(0f, 0f, 0f, 0.75f), "DeleteConfirm");
+        UIHelper.Stretch(overlay.GetComponent<RectTransform>());
+        overlay.transform.SetAsLastSibling();
+
+        var box = UIHelper.CreatePanel(overlay.transform, new Color(0.10f, 0.08f, 0.18f), "Box");
+        UIHelper.SetAnchors(box.GetComponent<RectTransform>(),
+            new Vector2(0.22f, 0.40f), new Vector2(0.78f, 0.60f));
+
+        UIHelper.CreateText(box.transform, $"'{name}' 캐릭터를\n삭제하시겠습니까?", 26,
+            new Vector2(0.05f, 0.40f), new Vector2(0.95f, 0.95f));
+
+        var yesBtn = UIHelper.CreateButton(box.transform, "삭제",
+            new Vector2(0.08f, 0.08f), new Vector2(0.46f, 0.35f),
+            new Color(0.55f, 0.12f, 0.12f));
+        var noBtn = UIHelper.CreateButton(box.transform, "취소",
+            new Vector2(0.54f, 0.08f), new Vector2(0.92f, 0.35f),
+            new Color(0.20f, 0.20f, 0.30f));
+
+        noBtn.onClick.AddListener(() => Destroy(overlay));
+        yesBtn.onClick.AddListener(() =>
+        {
+            yesBtn.interactable = false;
+            noBtn.interactable  = false;
+            StartCoroutine(_api.DeleteCharacter(id,
+                () =>
+                {
+                    if (GameState.LoadedCharacterId == id) GameState.LoadedCharacterId = null;
+                    Destroy(card);
+                    Destroy(overlay);
+                },
+                err =>
+                {
+                    _statusText.text = "삭제 오류: " + err;
+                    Destroy(overlay);
+                }));
+        });
+    }
+
     // ── 캐릭터 선택 ──────────────────────────────────────────
     private void OnCharacterSelected(string id)
     {
         StartCoroutine(_api.GetCharacterById(id,
             ch =>
             {
-                GameState.CurrentCharacter = ch;
+                GameState.LoadCharacter(ch);
                 SceneManager.LoadScene("VillageScene");
             },
             err => _statusText.text = "오류: " + err));

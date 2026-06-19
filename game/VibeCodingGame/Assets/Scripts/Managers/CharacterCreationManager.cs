@@ -132,7 +132,7 @@ public class CharacterCreationManager : MonoBehaviour
         StartCoroutine(_api.CreateCharacter(n, a, w, c, wv,
             character =>
             {
-                GameState.CurrentCharacter = character;
+                GameState.LoadCharacter(character);
                 SceneManager.LoadScene("VillageScene");
             },
             err =>

@@ -82,6 +82,7 @@ public class GeneratedData
     public string story;
     public List<LocationData> locations;
     public SkillData uniqueSkill;
+    public List<SkillData> levelSkills; // [0]=Lv5, [1]=Lv10, [2]=Lv15
 }
 
 [Serializable]

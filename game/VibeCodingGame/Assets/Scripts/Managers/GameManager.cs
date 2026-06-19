@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System;
 using System.Collections;
 
 public class GameManager : MonoBehaviour
@@ -16,6 +17,7 @@ public class GameManager : MonoBehaviour
     private MonsterController _currentMonster;
     private readonly System.Collections.Generic.HashSet<int> _visitedZones = new System.Collections.Generic.HashSet<int>();
     private int _monsterCountAtEntry;
+    private bool _fledThisRun;
 
     // HUD
     private TextMeshProUGUI _hudHpText, _hudMpText, _zoneNameText;
@@ -73,10 +75,13 @@ public class GameManager : MonoBehaviour
             _player.learnedSkills.Add(_player.generated.uniqueSkill);
             for (int lv = 2; lv <= GameState.Level; lv++)
             {
-                var s = GameState.GetSkillForLevel(lv);
+                var s = GameState.GetSkillForLevel(lv, _player);
                 if (s != null) _player.learnedSkills.Add(s);
             }
         }
+
+        // 손상된 스킬 데이터(이름 없음) 제거
+        _player.learnedSkills.RemoveAll(s => s == null || string.IsNullOrEmpty(s.name));
 
         SetupCamera();
         SetupMap();
@@ -280,18 +285,7 @@ public class GameManager : MonoBehaviour
         var villageBtn = UIHelper.CreateButton(canvas, "마을",
             new Vector2(0.82f, 0.913f), new Vector2(0.98f, 0.993f),
             new Color(0.12f, 0.28f, 0.18f));
-        villageBtn.onClick.AddListener(() =>
-        {
-            int killed = GameState.MonsterCount - _monsterCountAtEntry;
-            if (killed > 0)
-            {
-                string entry = killed == 1
-                    ? $"{_player.generated.name}은(는) 몬스터 1마리를 처치하고 마을로 귀환했다."
-                    : $"{_player.generated.name}은(는) {killed}마리의 몬스터를 처치하고 마을로 귀환했다.";
-                AddStoryEntry(entry);
-            }
-            SceneManager.LoadScene("VillageScene");
-        });
+        villageBtn.onClick.AddListener(() => StartCoroutine(ReturnToVillage()));
 
         // 구역 진입 알림 (배경 박스 포함)
         _zoneBox = UIHelper.CreatePanel(canvas, new Color(0.06f, 0.04f, 0.16f, 0.82f), "ZoneBox");
@@ -599,26 +593,53 @@ public class GameManager : MonoBehaviour
     private void OnFlee()
     {
         AppendLog("도망쳤습니다.");
+        _fledThisRun = true;
         StartCoroutine(DelayEndBattle(0.8f));
     }
 
-    private void SaveGameState()
+    private IEnumerator ReturnToVillage()
     {
-        if (_player == null || _api == null) return;
-        _player.gold = GameState.Gold;
+        int killed = GameState.MonsterCount - _monsterCountAtEntry;
+        bool waiting = false;
+
+        if (killed > 0)
+        {
+            string entry = killed == 1
+                ? $"{_player.generated.name}은(는) 몬스터 1마리를 처치하고 마을로 귀환했다."
+                : $"{_player.generated.name}은(는) {killed}마리의 몬스터를 처치하고 마을로 귀환했다.";
+            waiting = true;
+            AddStoryEntry(entry, () => waiting = false);
+        }
+        else if (_fledThisRun)
+        {
+            waiting = true;
+            AddStoryEntry($"{_player.generated.name}은(는) 위협을 느끼고 던전에서 도망쳐 마을로 돌아왔다.", () => waiting = false);
+        }
+
+        while (waiting) yield return null;
+        SceneManager.LoadScene("VillageScene");
+    }
+
+    private void SaveGameState(Action onDone = null)
+    {
+        if (_player == null || _api == null) { onDone?.Invoke(); return; }
+        _player.gold  = GameState.Gold;
+        _player.xp    = GameState.Xp;
+        _player.level = GameState.Level;
         if (_player.questProgress == null) _player.questProgress = new QuestProgress();
         _player.questProgress.monsterCount = GameState.MonsterCount;
         _player.questProgress.dungeonCount = GameState.DungeonCount;
         _player.questProgress.bossCount    = GameState.BossCount;
-        StartCoroutine(_api.UpdateCharacterState(_player, null, null));
+        if (_player.learnedSkills == null) _player.learnedSkills = new System.Collections.Generic.List<SkillData>();
+        StartCoroutine(_api.UpdateCharacterState(_player, onDone, _ => onDone?.Invoke()));
     }
 
-    private void AddStoryEntry(string text)
+    private void AddStoryEntry(string text, Action onSaved = null)
     {
         if (_player.storyLog == null) _player.storyLog = new System.Collections.Generic.List<string>();
         _player.storyLog.Add($"[{System.DateTime.Now:yyyy.MM.dd}] {text}");
         GameState.StoryUpdated = true;
-        SaveGameState();
+        SaveGameState(onSaved);
         StartCoroutine(ShowToast($"{_player.generated.name}의 이야기가 갱신되었습니다"));
     }
 
@@ -656,7 +677,7 @@ public class GameManager : MonoBehaviour
 
         for (int lv = oldLevel + 1; lv <= GameState.Level; lv++)
         {
-            var skill = GameState.GetSkillForLevel(lv);
+            var skill = GameState.GetSkillForLevel(lv, _player);
             if (skill != null)
             {
                 if (_player.learnedSkills == null) _player.learnedSkills = new System.Collections.Generic.List<SkillData>();
@@ -682,9 +703,12 @@ public class GameManager : MonoBehaviour
             new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.66f))
             .color = Color.white;
         if (newSkill != null)
-            UIHelper.CreateText(inner.transform, $"새 스킬: {newSkill.name}", 20,
+        {
+            string skillType = newSkill.isPassive ? "패시브 스킬" : "액티브 스킬";
+            UIHelper.CreateText(inner.transform, $"{skillType}  '{newSkill.name}'  획득!", 20,
                 new Vector2(0.05f, 0.03f), new Vector2(0.95f, 0.31f))
                 .color = new Color(0.5f, 0.9f, 1f);
+        }
 
         var rt = panel.GetComponent<RectTransform>();
         // 오른쪽 밖에서 슬라이드 인
