@@ -18,7 +18,7 @@
     .reveal .slides section { box-sizing:border-box; padding:0; background:#09071a; height:100%; overflow:hidden; }
 
     /* 슬라이드 전체 레이아웃 */
-    .inner-wrap { box-sizing:border-box; width:100%; height:100%; padding:16px 44px; display:flex; flex-direction:column; overflow:hidden; }
+    .inner-wrap { box-sizing:border-box; width:100%; height:100%; padding:13px 42px; display:flex; flex-direction:column; overflow:hidden; }
 
     /* 타이포그래피 */
     .reveal h1,.reveal h2,.reveal h3 { font-family:'Noto Sans KR',sans-serif !important; text-transform:none !important; margin:0; }
@@ -26,9 +26,9 @@
     .slide-title { font-size:1.1em; font-weight:700; color:#f5c842; border-bottom:2px solid #5b3fa0; padding-bottom:.14em; margin-bottom:.38em; flex-shrink:0; }
     .slide-num { font-size:.58em; color:#5b3fa0; font-weight:400; margin-left:.4em; }
 
-    .reveal p,.reveal li { color:#ddd6fe; }
+    .reveal p,.reveal li { color:#ddd6fe; word-break:keep-all; }
     .reveal ul { margin:0; padding-left:1.1em; }
-    .reveal li { margin-bottom:.28em; line-height:1.52; font-size:.8em; }
+    .reveal li { margin-bottom:.18em; line-height:1.52; font-size:.8em; }
 
     /* 뱃지 */
     .badge { display:inline-block; background:#4c1d95; color:#e9d5ff; border-radius:4px; padding:.1em .52em; font-size:.68em; margin:.08em .05em; }
@@ -47,7 +47,7 @@
     .divider { width:55%; height:2px; margin:.4em auto; background:linear-gradient(90deg,transparent,#9b6dff,transparent); }
 
     /* 카드 */
-    .card { background:#12103a; border:1px solid #5b3fa0; border-radius:8px; padding:.58em .9em; }
+    .card { background:#12103a; border:1px solid #5b3fa0; border-radius:8px; padding:.44em .82em; }
     .card-red    { border-color:#e74c3c; }
     .card-green  { border-color:#27ae60; }
     .card-blue   { border-color:#3b82f6; }
@@ -159,31 +159,31 @@
         <div class="slide-title"><i class="fa-solid fa-list-check"></i> 프로젝트 계획 &amp; 진행 과정</div>
         <div class="cols">
           <div class="col" style="flex:1.3;overflow:hidden">
-            <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .38em;flex-shrink:0"><i class="fa-solid fa-calendar"></i> WBS (7주 일정)</p>
-            <div style="display:flex;gap:.45em;flex:1;min-height:0">
-              <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
-                <div class="wbs-header phase-plan">1–2주 · 설계</div>
-                <div class="wbs-item done-item">기획·요구사항</div>
-                <div class="wbs-item done-item">Node.js 백엔드</div>
-                <div class="wbs-item done-item">Groq AI 연동</div>
+            <p style="color:#a78bfa;font-size:.82em;font-weight:700;margin:0 0 .32em;flex-shrink:0"><i class="fa-solid fa-calendar"></i> WBS (7주 일정)</p>
+            <div style="display:flex;flex-direction:column;gap:.3em;flex:1;min-height:0">
+              <div style="display:flex;gap:.3em;align-items:stretch">
+                <div class="wbs-header phase-plan" style="min-width:5.6em;font-size:.74em;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.35;flex-shrink:0">1–2주<br>설계</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">기획·요구사항</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">Node.js 백엔드</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">Groq AI 연동</div>
               </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
-                <div class="wbs-header phase-impl">3–4주 · 클라이언트</div>
-                <div class="wbs-item done-item">Unity 씬 구성</div>
-                <div class="wbs-item done-item">캐릭터 생성 UI</div>
-                <div class="wbs-item done-item">Firebase 연동</div>
+              <div style="display:flex;gap:.3em;align-items:stretch">
+                <div class="wbs-header phase-impl" style="min-width:5.6em;font-size:.74em;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.35;flex-shrink:0">3–4주<br>클라이언트</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">Unity 씬 구성</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">캐릭터 생성 UI</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">Firebase 연동</div>
               </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
-                <div class="wbs-header phase-game">5–6주 · 게임</div>
-                <div class="wbs-item done-item">마을·던전 씬</div>
-                <div class="wbs-item done-item">전투·레벨 시스템</div>
-                <div class="wbs-item done-item">AI 소설 생성</div>
+              <div style="display:flex;gap:.3em;align-items:stretch">
+                <div class="wbs-header phase-game" style="min-width:5.6em;font-size:.74em;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.35;flex-shrink:0">5–6주<br>게임</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">마을·던전 씬</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">전투·레벨 시스템</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">AI 소설 생성</div>
               </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
-                <div class="wbs-header phase-done">7주 · 마무리</div>
-                <div class="wbs-item done-item">버그 수정</div>
-                <div class="wbs-item done-item">문서 완성</div>
-                <div class="wbs-item done-item">최종 발표</div>
+              <div style="display:flex;gap:.3em;align-items:stretch">
+                <div class="wbs-header phase-done" style="min-width:5.6em;font-size:.74em;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.35;flex-shrink:0">7주<br>마무리</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">버그 수정</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">문서 완성</div>
+                <div class="wbs-item done-item" style="flex:1;font-size:.76em;display:flex;align-items:center">최종 발표</div>
               </div>
             </div>
           </div>
@@ -244,7 +244,7 @@
             </div>
           </div>
         </div>
-        <div class="quote">모든 UI는 <span class="hl">코드로만 생성</span> — 디자인 툴 없이 C# 코드만으로 화면 구성</div>
+        <div class="quote">모든 화면은 <span class="hl">C# 코드만으로</span> 구성 — 디자인 툴 없이 절차적으로 생성</div>
       </div>
     </section>
 
@@ -304,7 +304,6 @@
             <span style="font-size:.8em"><span class="hl">GameState 정적 클래스</span> — 씬 전환 무관 유지, 어디서나 접근. LoadCharacter()로 캐릭터 전환 시 완전 초기화.</span>
           </div>
         </div>
-        <div class="quote">각 결정의 대안·이유를 <span class="hl">.planning/decisions/</span> 폴더에 문서화</div>
       </div>
     </section>
 
@@ -337,7 +336,7 @@
             </div>
             <div class="card" style="flex:1">
               <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .28em"><i class="fa-solid fa-folder-tree"></i> 디렉토리 구조</p>
-              <div class="code-block" style="font-size:.66em;line-height:1.75;color:#c4b5fd">
+              <div class="code-block" style="font-size:.62em;line-height:1.6;color:#c4b5fd">
 <span style="color:#4ade80">backend/</span>src/routes/ · services/ · app.js<br>
 <span style="color:#9b6dff">game/</span>Assets/Scripts/Managers/ · Models/ · Network/<br>
 <span style="color:#f5c842">docs/</span>architecture · deploy · testing · llm-wiki<br>
@@ -427,8 +426,7 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
               <p style="color:#f5c842;font-weight:700;margin:0 0 .32em;font-size:.88em"><i class="fa-solid fa-rocket"></i> 배포 — 실행 환경에 올리기</p>
               <ul>
                 <li><span class="hl-blue">백엔드</span>: Railway 클라우드 (GitHub 연동 → 자동 배포)</li>
-                <li><span class="hl-green">클라이언트</span>: APK → 기기 직접 설치 / ADB</li>
-                <li>Unity Remote로 에디터 상태에서 기기 테스트 가능</li>
+                <li><span class="hl-green">클라이언트</span>: APK → 기기 직접 설치 (ADB)</li>
               </ul>
             </div>
           </div>
@@ -475,7 +473,7 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
                 <li>GitHub <span class="hl">30+ 의미 있는 커밋</span> (한국어 메시지)</li>
                 <li><span class="hl">AGENTS.md</span> — Agent·Skills·Rules·Commands 단일 통합</li>
                 <li><span class="hl">ADR 5개</span> — 기술 결정 근거 문서화</li>
-                <li><span class="hl">LLM Wiki</span> — 시행착오·노하우 기록으로 <span class="hl-green">지속적 기술 개선</span></li>
+                <li><span class="hl">LLM Wiki</span> — 노하우 기록으로 <span class="hl-green">지속적 기술 개선</span></li>
               </ul>
             </div>
           </div>
