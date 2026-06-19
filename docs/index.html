@@ -199,9 +199,9 @@
               <p style="color:#a78bfa;font-size:.78em;font-weight:700;margin:0 0 .35em"><i class="fa-solid fa-layer-group"></i> 기술 선택 근거</p>
               <ul style="list-style:none;padding:0;font-size:.76em;line-height:2.0">
                 <li><span class="badge badge-green">Game</span> Unity — 씬관리·Android/iOS 빌드</li>
-                <li><span class="badge badge-blue">Server</span> Node.js — AI SDK npm, 비동기 I/O</li>
+                <li><span class="badge badge-blue">Server</span> Node.js — AI 라이브러리 즉시 설치, 동시 처리</li>
                 <li><span class="badge">AI</span> Groq — 빠른 응답, 한국어 이해</li>
-                <li><span class="badge badge-orange">DB</span> Firebase — 서버리스·JSON 구조 일치</li>
+                <li><span class="badge badge-orange">DB</span> Firebase — 서버 관리 불필요, 무료 사용</li>
               </ul>
             </div>
           </div>
@@ -218,8 +218,8 @@
             <p style="color:#c4b5fd;font-weight:700;margin:0 0 .38em;font-size:.88em"><i class="fa-solid fa-robot"></i> AI 캐릭터 생성 흐름</p>
             <div class="step-row"><div class="step-num">1</div><div class="step-text">외형·무기·컨셉·세계관 입력 → 서버 전달</div></div>
             <div class="step-row"><div class="step-num">2</div><div class="step-text">Groq API (LLaMA 3.3 70B) 호출 → JSON 1개 생성</div></div>
-            <div class="step-row"><div class="step-num">3</div><div class="step-text">스키마 검증 실패 시 <span class="hl">자동 재시도</span> (1회)</div></div>
-            <div class="step-row"><div class="step-num">4</div><div class="step-text">한자 sanitize 후 <span class="hl">Firebase 저장</span></div></div>
+            <div class="step-row"><div class="step-num">3</div><div class="step-text">결과물 형식이 맞는지 확인, 틀리면 <span class="hl">자동 재시도</span> (1회)</div></div>
+            <div class="step-row"><div class="step-num">4</div><div class="step-text">한자 필터링 후 <span class="hl">Firebase 저장</span></div></div>
             <div style="margin-top:.45em;padding:.4em .65em;background:#1a1040;border-radius:7px;font-size:.74em;color:#a78bfa">
               생성 내용: 이름 · HP/ATK/DEF/MP · 고유스킬 · <span class="hl">레벨 5/10/15 스킬</span> · 배경스토리 · 던전 지역명
             </div>
@@ -244,7 +244,7 @@
             </div>
           </div>
         </div>
-        <div class="quote">모든 UI는 <span class="hl">C# 절차적 생성</span> — 프리팹 없이 코드로만 구성</div>
+        <div class="quote">모든 UI는 <span class="hl">코드로만 생성</span> — 디자인 툴 없이 C# 코드만으로 화면 구성</div>
       </div>
     </section>
 
@@ -289,11 +289,11 @@
           </div>
           <div class="card" style="flex:1;display:flex;gap:.65em;align-items:center;padding:.55em .9em">
             <span class="badge" style="flex-shrink:0;font-size:.72em">ADR-002</span>
-            <span style="font-size:.8em"><span class="hl">Node.js + Express</span> — Groq·Firebase SDK가 npm으로 제공, 비동기 I/O에 적합. Spring은 1인 프로젝트엔 과대 설계.</span>
+            <span style="font-size:.8em"><span class="hl">Node.js + Express</span> — AI·DB 라이브러리가 바로 설치 가능, 여러 요청 동시 처리에 최적. Spring은 1인 프로젝트엔 과대 설계.</span>
           </div>
           <div class="card" style="flex:1;display:flex;gap:.65em;align-items:center;padding:.55em .9em">
             <span class="badge" style="flex-shrink:0;font-size:.72em">ADR-003</span>
-            <span style="font-size:.8em"><span class="hl">Firebase Firestore</span> — 서버리스, JSON 캐릭터 데이터와 NoSQL 구조가 자연 일치. 무료 티어로 충분.</span>
+            <span style="font-size:.8em"><span class="hl">Firebase Firestore</span> — 서버 직접 관리 불필요, AI가 만든 캐릭터 데이터 저장 구조와 딱 맞음. 무료 티어로 충분.</span>
           </div>
           <div class="card" style="flex:1;display:flex;gap:.65em;align-items:center;padding:.55em .9em">
             <span class="badge" style="flex-shrink:0;font-size:.72em">ADR-004</span>
@@ -446,16 +446,16 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
             <p style="color:#f87171;font-weight:700;margin:0 0 .35em;font-size:.85em"><i class="fa-solid fa-triangle-exclamation"></i> 시행착오 사례</p>
             <div style="flex:1;display:flex;flex-direction:column;justify-content:space-around">
               <div style="padding-bottom:.3em;border-bottom:1px solid #2d1010">
-                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">① null 스킬 역직렬화</div>
-                <div style="font-size:.7em;color:#ddd6fe">JsonUtility null → 빈 SkillData 생성 → <span class="hl-green">RemoveAll + 이름 가드</span>로 해결</div>
+                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">① AI 생성 스킬이 빈 값으로 저장되는 버그</div>
+                <div style="font-size:.7em;color:#ddd6fe">AI가 만든 스킬 중 일부가 이름 없이 빈 채로 저장됨 → <span class="hl-green">빈 스킬 자동 제거 로직</span>으로 해결</div>
               </div>
               <div style="padding-bottom:.3em;border-bottom:1px solid #2d1010">
-                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">② GameState 오염</div>
-                <div style="font-size:.7em;color:#ddd6fe">캐릭터 전환 시 이전 데이터 잔류 → <span class="hl-green">ID 감지 후 하드 리셋</span>으로 해결</div>
+                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">② 캐릭터 바꿨을 때 이전 데이터가 남는 버그</div>
+                <div style="font-size:.7em;color:#ddd6fe">캐릭터 교체 시 이전 캐릭터 골드·레벨이 그대로 남아있음 → <span class="hl-green">교체 감지 즉시 데이터 초기화</span>로 해결</div>
               </div>
               <div>
-                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">③ 한자 섞임</div>
-                <div style="font-size:.7em;color:#ddd6fe">LLM 한국어에 한자 자동 삽입 → <span class="hl-green">/[一-鿿]/g sanitize</span>로 해결</div>
+                <div style="font-size:.76em;color:#f5c842;font-weight:700;margin-bottom:.1em">③ AI가 한국어에 한자를 섞어 출력하는 문제</div>
+                <div style="font-size:.7em;color:#ddd6fe">LLM이 한국어 생성 중 한자를 자동 삽입함 → <span class="hl-green">한자 자동 감지·제거 필터</span>로 해결</div>
               </div>
             </div>
           </div>
@@ -463,8 +463,8 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
             <div class="card card-gold" style="flex:1">
               <p style="color:#f5c842;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-solid fa-bolt"></i> 성능 최적화</p>
               <ul>
-                <li>Groq API <span class="hl">시스템 프롬프트 재사용</span></li>
-                <li>서버 스키마 검증 → 1회 재시도 후 기본값</li>
+                <li>AI 요청 설정을 미리 캐싱해 <span class="hl">불필요한 재전송 방지</span></li>
+                <li>결과물 형식 확인 → 1회 재요청 후 기본값 사용</li>
                 <li>GameState 캐싱으로 <span class="hl">불필요 API 호출 방지</span></li>
                 <li>레벨스킬 캐릭터 생성 시 미리 생성 (추가 비용 없음)</li>
               </ul>
@@ -621,17 +621,17 @@ Unity Hub → game/VibeCodingGame → Play ▶
             </div>
             <div class="card" style="flex:1;padding:.52em .78em">
               <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. AI 오류 처리는?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">스키마 검증 실패 시 1회 재시도. 한자 섞임은 정규식 sanitize. 최종 실패 시 기본값 반환.</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">결과물 형식이 틀리면 1회 자동 재요청. 한자 섞임은 자동 필터 제거. 최종 실패 시 기본값으로 대체.</p>
             </div>
           </div>
           <div style="display:flex;gap:.5em;flex:1">
             <div class="card" style="flex:1;padding:.52em .78em">
               <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. HP 지속성 구현은?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">GameState.CurrentHp/Mp에 씬 이동 전 저장, 씬 시작 시 복원. 새 캐릭터는 풀 HP로 리셋.</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">화면 전환 직전에 HP를 저장해두고, 다음 화면 시작 시 그대로 복원. 새 캐릭터는 항상 풀 HP로 시작.</p>
             </div>
             <div class="card" style="flex:1;padding:.52em .78em">
               <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. Firebase 선택 이유?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">서버리스 · 무료 티어 충분 · JSON 캐릭터 데이터와 NoSQL 구조가 자연스럽게 일치.</p>
+              <p style="color:#ddd6fe;font-size:.74em;margin:0">서버 직접 관리 불필요 · 무료 사용 가능 · AI가 만든 캐릭터 데이터 저장 구조와 딱 맞음.</p>
             </div>
           </div>
         </div>
