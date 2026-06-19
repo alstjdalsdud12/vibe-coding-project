@@ -12,9 +12,9 @@
   <style>
     html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#09071a; }
     .reveal-viewport { background:#09071a; }
-    .reveal { font-family:'Noto Sans KR',sans-serif !important; }
+    .reveal { font-family:'Noto Sans KR',sans-serif !important; font-size:30px !important; }
     .reveal .slides section { box-sizing:border-box; padding:0; background:#09071a; height:100%; overflow:hidden; }
-    .inner-wrap { box-sizing:border-box; width:100%; height:100%; padding:16px 38px; display:flex; flex-direction:column; }
+    .inner-wrap { box-sizing:border-box; width:100%; height:100%; padding:14px 36px; display:flex; flex-direction:column; overflow:hidden; }
 
     .reveal h1,.reveal h2,.reveal h3 { font-family:'Noto Sans KR',sans-serif !important; text-transform:none !important; margin:0; }
     .reveal h1 { font-size:2.6em; font-weight:900; color:#f5c842; text-shadow:0 4px 24px rgba(155,109,255,.6); }
@@ -145,33 +145,29 @@
           <div class="col" style="flex:1.3">
             <p style="color:#a78bfa;font-size:.75em;font-weight:700;margin:0 0 .35em"><i class="fa-solid fa-calendar"></i> WBS (7주) — 기술 스택</p>
             <div style="display:flex;gap:.45em;height:calc(100% - 1.8em)">
-              <div style="flex:1;display:flex;flex-direction:column;gap:.3em">
+              <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
                 <div class="wbs-header phase-plan">1–2주 · 설계</div>
                 <div class="wbs-item done-item">기획·요구사항</div>
                 <div class="wbs-item done-item">Node.js 백엔드</div>
                 <div class="wbs-item done-item">Groq AI 연동</div>
-                <div style="font-size:.62em;color:#3b82f6;margin-top:.2em;padding-left:.3em">→ Node.js · Express<br>→ Groq LLaMA 3.3</div>
               </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.3em">
+              <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
                 <div class="wbs-header phase-impl">3–4주 · 클라이언트</div>
                 <div class="wbs-item done-item">Unity 씬 구성</div>
                 <div class="wbs-item done-item">캐릭터 생성 UI</div>
                 <div class="wbs-item done-item">Firebase 연동</div>
-                <div style="font-size:.62em;color:#22c55e;margin-top:.2em;padding-left:.3em">→ Unity 2022.3 LTS<br>→ Firebase Firestore</div>
               </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.3em">
+              <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
                 <div class="wbs-header phase-game">5–6주 · 게임</div>
                 <div class="wbs-item done-item">마을·던전 씬</div>
                 <div class="wbs-item done-item">전투·레벨 시스템</div>
                 <div class="wbs-item done-item">AI 소설 생성</div>
-                <div style="font-size:.62em;color:#9b6dff;margin-top:.2em;padding-left:.3em">→ C# 절차적 UI<br>→ GameState 패턴</div>
               </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:.3em">
+              <div style="flex:1;display:flex;flex-direction:column;gap:.28em">
                 <div class="wbs-header phase-done">7주 · 마무리</div>
                 <div class="wbs-item done-item">버그 수정</div>
                 <div class="wbs-item done-item">문서 완성</div>
                 <div class="wbs-item done-item">최종 발표</div>
-                <div style="font-size:.62em;color:#f59e0b;margin-top:.2em;padding-left:.3em">→ ADR 5개<br>→ Claude Code</div>
               </div>
             </div>
           </div>
@@ -434,17 +430,17 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
         <div class="cols">
           <div class="col card card-red" style="flex:1.2">
             <p style="color:#f87171;font-weight:700;margin:0 0 .3em;font-size:.82em"><i class="fa-solid fa-triangle-exclamation"></i> 시행착오 사례</p>
-            <div style="margin-bottom:.3em;padding-bottom:.3em;border-bottom:1px solid #2d1010">
-              <div style="font-size:.75em;color:#f5c842;font-weight:700">① null 스킬 역직렬화</div>
-              <div style="font-size:.7em;color:#ddd6fe">JsonUtility가 null을 빈 SkillData로 만들어 이름 없는 스킬 생성<br>→ <span class="hl-green">RemoveAll + 이름 가드</span>로 해결</div>
+            <div style="margin-bottom:.28em;padding-bottom:.28em;border-bottom:1px solid #2d1010">
+              <div style="font-size:.73em;color:#f5c842;font-weight:700">① null 스킬 역직렬화</div>
+              <div style="font-size:.67em;color:#ddd6fe">JsonUtility null → 빈 SkillData 생성 → <span class="hl-green">RemoveAll + 이름 가드</span>로 해결</div>
             </div>
-            <div style="margin-bottom:.3em;padding-bottom:.3em;border-bottom:1px solid #2d1010">
-              <div style="font-size:.75em;color:#f5c842;font-weight:700">② GameState 오염</div>
-              <div style="font-size:.7em;color:#ddd6fe">캐릭터 전환 시 이전 캐릭터의 골드·레벨 잔류<br>→ <span class="hl-green">LoadCharacter() ID 감지 후 하드 리셋</span></div>
+            <div style="margin-bottom:.28em;padding-bottom:.28em;border-bottom:1px solid #2d1010">
+              <div style="font-size:.73em;color:#f5c842;font-weight:700">② GameState 오염</div>
+              <div style="font-size:.67em;color:#ddd6fe">캐릭터 전환 시 이전 데이터 잔류 → <span class="hl-green">ID 감지 후 하드 리셋</span>으로 해결</div>
             </div>
             <div>
-              <div style="font-size:.75em;color:#f5c842;font-weight:700">③ 한자 섞임</div>
-              <div style="font-size:.7em;color:#ddd6fe">LLM이 한국어 텍스트에 한자 자동 삽입<br>→ <span class="hl-green">정규식 /[一-鿿]/g sanitize</span> 적용</div>
+              <div style="font-size:.73em;color:#f5c842;font-weight:700">③ 한자 섞임</div>
+              <div style="font-size:.67em;color:#ddd6fe">LLM 한국어에 한자 자동 삽입 → <span class="hl-green">/[一-鿿]/g sanitize</span>로 해결</div>
             </div>
           </div>
           <div class="col" style="display:flex;flex-direction:column;gap:.45em">
@@ -493,18 +489,13 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
           <div class="col card card-purple">
             <p style="color:#c4b5fd;font-weight:700;margin:0 0 .3em;font-size:.85em"><i class="fa-brands fa-github"></i> GitHub 설치 가이드</p>
             <div class="code-block">
-<span style="color:#5b3fa0"># 1. 저장소 클론</span><br>
-git clone https://github.com/<br>
-&nbsp;&nbsp;alstjdalsdud12/vibe-coding-project<br>
-<br>
-<span style="color:#5b3fa0"># 2. 백엔드 설치 &amp; 실행</span><br>
+<span style="color:#5b3fa0"># 1. 클론</span><br>
+git clone https://github.com/alstjdalsdud12/vibe-coding-project<br>
+<span style="color:#5b3fa0"># 2. 백엔드</span><br>
 cd backend &amp;&amp; npm install<br>
-cp .env.example .env<span style="color:#5b3fa0">  # 키 입력</span><br>
-npm run dev<br>
-<br>
-<span style="color:#5b3fa0"># 3. Unity 실행</span><br>
-Unity Hub → game/VibeCodingGame/<br>
-→ TitleScene → Play ▶
+cp .env.example .env &amp;&amp; npm run dev<br>
+<span style="color:#5b3fa0"># 3. Unity</span><br>
+Unity Hub → game/VibeCodingGame → Play ▶
             </div>
             <div style="margin-top:.38em;font-size:.68em;color:#a78bfa">상세 가이드: <span class="hl">README.md</span> · <span class="hl">docs/deploy.md</span></div>
           </div>
