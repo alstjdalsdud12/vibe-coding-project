@@ -1,5 +1,7 @@
 # AI 기반 캐릭터 생성 2D 모바일 게임
 
+[![발표자료 보기](https://img.shields.io/badge/발표자료-보기-9b6dff?style=for-the-badge)](https://alstjdalsdud12.github.io/vibe-coding-project/)
+
 유저가 외형·무기·컨셉·세계관을 입력하면 AI(LLaMA 3.3 70B)가 이름·스탯·스킬·배경 스토리를 자동 생성하고,
 생성된 캐릭터로 즉시 2D 모바일 게임을 플레이할 수 있는 프로젝트.
 
