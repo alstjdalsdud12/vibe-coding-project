@@ -596,45 +596,6 @@ Unity Hub → game/VibeCodingGame → Play ▶
       </div>
     </section>
 
-    <!-- (보조) 질의응답 상세 -->
-    <section>
-      <div class="inner-wrap">
-        <div class="slide-title"><i class="fa-solid fa-q"></i> 질의응답 준비</div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:.35em;min-height:0">
-          <div style="display:flex;gap:.5em;flex:1">
-            <div class="card" style="flex:1;padding:.52em .78em">
-              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. 앱 구조는?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">Unity 5씬 + Node.js 백엔드 + Firebase. 씬 간 데이터는 GameState 정적 클래스로 공유.</p>
-            </div>
-            <div class="card" style="flex:1;padding:.52em .78em">
-              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. 개발 환경 설정은?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">Node.js 18 + Unity 2022.3 LTS. backend/에서 npm install, .env 키 입력 후 npm run dev.</p>
-            </div>
-          </div>
-          <div style="display:flex;gap:.5em;flex:1">
-            <div class="card" style="flex:1;padding:.52em .78em">
-              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. 빌드와 배포 차이는?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">빌드 = 소스 → 실행파일(APK). 배포 = 실행파일을 실제 환경에 올리는 것(Railway, ADB).</p>
-            </div>
-            <div class="card" style="flex:1;padding:.52em .78em">
-              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. AI 오류 처리는?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">결과물 형식이 틀리면 1회 자동 재요청. 한자 섞임은 자동 필터 제거. 최종 실패 시 기본값으로 대체.</p>
-            </div>
-          </div>
-          <div style="display:flex;gap:.5em;flex:1">
-            <div class="card" style="flex:1;padding:.52em .78em">
-              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. HP 지속성 구현은?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">화면 전환 직전에 HP를 저장해두고, 다음 화면 시작 시 그대로 복원. 새 캐릭터는 항상 풀 HP로 시작.</p>
-            </div>
-            <div class="card" style="flex:1;padding:.52em .78em">
-              <p style="color:#f5c842;font-size:.76em;font-weight:700;margin:0 0 .2em">Q. Firebase 선택 이유?</p>
-              <p style="color:#ddd6fe;font-size:.74em;margin:0">서버 직접 관리 불필요 · 무료 사용 가능 · AI가 만든 캐릭터 데이터 저장 구조와 딱 맞음.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </div>
 </div>
 
