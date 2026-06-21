@@ -480,7 +480,47 @@ npm run dev<span style="color:#5b3fa0">          # localhost:3000</span>
       </div>
     </section>
 
-    <!-- ⑩ 테스트 결과 + GitHub 설치 가이드 -->
+    <!-- ⑩ 본인만의 기법 — AGENTS.md -->
+    <section>
+      <div class="inner-wrap">
+        <div class="slide-title"><i class="fa-solid fa-robot"></i> 본인만의 기법 — AGENTS.md 통합 관리</div>
+        <div class="cols">
+          <div class="col card card-purple" style="flex:1.2">
+            <p style="color:#c4b5fd;font-weight:700;margin:0 0 .4em;font-size:.88em"><i class="fa-solid fa-file-code"></i> AGENTS.md — 단일 파일 통합 정의서</p>
+            <ul>
+              <li><span class="hl">Agent 정의</span> — Claude Code · Groq API 역할 분리</li>
+              <li><span class="hl">Skills</span> — generateCharacter · generateNovel 등 AI 기능 목록</li>
+              <li><span class="hl">Rules</span> — 한국어 처리 · 스킬 검증 · 커밋 규칙 등 코딩 규칙</li>
+              <li><span class="hl">Commands</span> — 커밋해줘 · 버그 고쳐줘 등 자연어 명령 패턴</li>
+            </ul>
+            <div style="margin-top:.45em;padding:.35em .65em;background:#1a1040;border-radius:6px;font-size:.72em;color:#a78bfa">
+              파일 하나로 AI 협업 규칙 전체 통합 → Claude Code가 자동으로 읽어 적용
+            </div>
+          </div>
+          <div class="col" style="gap:.45em">
+            <div class="card card-gold" style="flex:1">
+              <p style="color:#f5c842;font-weight:700;margin:0 0 .28em;font-size:.85em"><i class="fa-solid fa-lightbulb"></i> 왜 단일 파일인가?</p>
+              <ul>
+                <li>여러 파일로 분산 시 AI가 규칙을 <span class="hl-red">놓치는 문제</span> 발생</li>
+                <li>AGENTS.md 하나만 읽으면 <span class="hl">전체 규칙 파악</span></li>
+                <li>신규 규칙 추가 시 <span class="hl">한 곳만 수정</span></li>
+              </ul>
+            </div>
+            <div class="card card-green" style="flex:1">
+              <p style="color:#4ade80;font-weight:700;margin:0 0 .28em;font-size:.85em"><i class="fa-solid fa-check"></i> 실제 효과</p>
+              <ul>
+                <li>커밋 메시지 형식 자동 유지</li>
+                <li>한국어 처리 규칙 일관 적용</li>
+                <li><span class="hl">AI 행동 예측 가능</span> — 오작동 감소</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="quote">Agent · Skills · Rules · Commands → <span class="hl">AGENTS.md 단일 파일로 통합</span></div>
+      </div>
+    </section>
+
+    <!-- ⑪ 테스트 결과 + GitHub 설치 가이드 -->
     <section>
       <div class="inner-wrap">
         <div class="slide-title"><i class="fa-solid fa-flask"></i> 테스트 결과 &amp; GitHub 설치 가이드</div>
